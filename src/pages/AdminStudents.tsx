@@ -11,6 +11,7 @@ interface Student {
   full_name: string | null;
   created_at: string;
   enrollmentCount?: number;
+  cgpa?: number;
 }
 
 const AdminStudents = () => {
@@ -35,7 +36,26 @@ const AdminStudents = () => {
             .select('*', { count: 'exact', head: true })
             .eq('student_id', student.id);
 
-          return { ...student, enrollmentCount: count || 0 };
+          // Fetch CGPA semesters to calculate overall CGPA
+          const { data: semesters } = await supabase
+            .from('cgpa_semesters')
+            .select('gpa, graded_credits')
+            .eq('student_id', student.id);
+
+          let cgpa = 0;
+          if (semesters && semesters.length > 0) {
+            const totalWeightedGPA = semesters.reduce(
+              (sum, sem) => sum + (sem.gpa * sem.graded_credits),
+              0
+            );
+            const totalCredits = semesters.reduce(
+              (sum, sem) => sum + sem.graded_credits,
+              0
+            );
+            cgpa = totalCredits > 0 ? totalWeightedGPA / totalCredits : 0;
+          }
+
+          return { ...student, enrollmentCount: count || 0, cgpa };
         })
       );
 
@@ -78,6 +98,12 @@ const AdminStudents = () => {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Enrolled Courses</span>
                   <Badge variant="secondary">{student.enrollmentCount}</Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">CGPA</span>
+                  <Badge variant={student.cgpa && student.cgpa >= 8.0 ? "default" : "secondary"}>
+                    {student.cgpa ? student.cgpa.toFixed(2) : 'N/A'}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Joined</span>

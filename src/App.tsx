@@ -9,12 +9,14 @@ import Auth from "./pages/Auth";
 import LMSDashboard from "./pages/LMSDashboard";
 import DashboardHome from "./pages/DashboardHome";
 import Courses from "./pages/Courses";
+import CourseMaterials from "./pages/CourseMaterials";
 import Assignments from "./pages/Assignments";
 import Progress from "./pages/Progress";
 import ChatPage from "./pages/ChatPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminHome from "./pages/AdminHome";
 import AdminCourses from "./pages/AdminCourses";
+import AdminCourseMaterials from "./pages/AdminCourseMaterials";
 import AdminStudents from "./pages/AdminStudents";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import NotFound from "./pages/NotFound";
@@ -34,6 +36,7 @@ const App = () => (
             <Route path="/dashboard" element={<LMSDashboard />}>
               <Route index element={<DashboardHome />} />
               <Route path="courses" element={<Courses />} />
+              <Route path="courses/:courseId/materials" element={<CourseMaterials />} />
               <Route path="assignments" element={<Assignments />} />
               <Route path="progress" element={<Progress />} />
               <Route path="chat" element={<ChatPage />} />
@@ -41,6 +44,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />}>
               <Route index element={<AdminHome />} />
               <Route path="courses" element={<AdminCourses />} />
+              <Route path="courses/:courseId/materials" element={<AdminCourseMaterials />} />
               <Route path="students" element={<AdminStudents />} />
               <Route path="analytics" element={<AdminAnalytics />} />
             </Route>

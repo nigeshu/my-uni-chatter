@@ -14,10 +14,25 @@ import {
   BarChart,
   Home,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Edit2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { z } from 'zod';
+
+const nameSchema = z.object({
+  full_name: z.string().trim().min(1, "Name cannot be empty").max(100, "Name must be less than 100 characters"),
+});
 
 interface Profile {
   id: string;
@@ -33,6 +48,9 @@ const LMSDashboard = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [editNameOpen, setEditNameOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [nameError, setNameError] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -114,6 +132,43 @@ const LMSDashboard = () => {
     });
   };
 
+  const handleEditName = () => {
+    setNewName(profile?.full_name || '');
+    setNameError('');
+    setEditNameOpen(true);
+  };
+
+  const handleSaveName = async () => {
+    try {
+      const validation = nameSchema.safeParse({ full_name: newName });
+      
+      if (!validation.success) {
+        setNameError(validation.error.errors[0].message);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: newName.trim() })
+        .eq('id', user?.id);
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, full_name: newName.trim() } : null);
+      setEditNameOpen(false);
+      toast({
+        title: 'Success',
+        description: 'Name updated successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update name.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -159,7 +214,47 @@ const LMSDashboard = () => {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
+                <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0 hover:bg-primary/10"
+                      onClick={handleEditName}
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Name</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input
+                          id="name"
+                          value={newName}
+                          onChange={(e) => {
+                            setNewName(e.target.value);
+                            setNameError('');
+                          }}
+                          placeholder="Enter your name"
+                          maxLength={100}
+                        />
+                        {nameError && (
+                          <p className="text-sm text-destructive">{nameError}</p>
+                        )}
+                      </div>
+                      <Button onClick={handleSaveName} className="w-full">
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
             </div>
           </div>

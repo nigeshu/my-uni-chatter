@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, FileText, Link, Video, File, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Link, Video, File, Download, Share2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
+import ShareDocumentDialog from '@/components/ShareDocumentDialog';
 
 interface Material {
   id: string;
@@ -50,6 +51,8 @@ const CourseMaterials = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareDocument, setShareDocument] = useState<{ title: string; url: string } | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -124,6 +127,19 @@ const CourseMaterials = () => {
       case 'video': return <Video className="h-5 w-5" />;
       default: return <FileText className="h-5 w-5" />;
     }
+  };
+
+  const handleShareDocument = (title: string, url: string | null) => {
+    if (!url) {
+      toast({
+        title: 'Cannot share',
+        description: 'This document has no file URL.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShareDocument({ title, url });
+    setShareDialogOpen(true);
   };
 
   if (!isEnrolled) {
@@ -206,20 +222,31 @@ const CourseMaterials = () => {
                             <CardTitle className="text-lg">{material.title}</CardTitle>
                             <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
                           </div>
-                          {material.file_url && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setPreviewUrl(material.file_url);
-                                setPreviewTitle(material.title);
-                                setPreviewOpen(true);
-                              }}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Open
-                            </Button>
-                          )}
+                          <div className="flex gap-2">
+                            {material.file_url && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleShareDocument(material.title, material.file_url)}
+                                >
+                                  <Share2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setPreviewUrl(material.file_url);
+                                    setPreviewTitle(material.title);
+                                    setPreviewOpen(true);
+                                  }}
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Open
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
                       {material.description && (
@@ -284,6 +311,13 @@ const CourseMaterials = () => {
         course={selectedCourse}
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
+      />
+
+      <ShareDocumentDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        documentTitle={shareDocument?.title || ''}
+        documentUrl={shareDocument?.url || ''}
       />
     </div>
   );

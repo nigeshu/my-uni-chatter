@@ -93,7 +93,7 @@ const Index = () => {
                 onClick={() => navigate('/auth')}
                 className="min-w-[200px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300"
               >
-                Get Started Free
+                Get Started
               </Button>
             </div>
           </div>
@@ -138,7 +138,7 @@ const Index = () => {
             Ready to Start Learning?
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of students already learning on EduHub
+            Empowering students to achieve their academic goals
           </p>
           <Button
             size="lg"

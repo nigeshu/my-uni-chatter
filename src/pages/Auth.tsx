@@ -108,8 +108,8 @@ const Auth = () => {
               <MessageSquare className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Let's Talk</CardTitle>
-          <CardDescription>Connect and chat with friends securely</CardDescription>
+          <CardTitle className="text-3xl font-bold">Start Learning</CardTitle>
+          <CardDescription>Access your courses and connect with peers</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={userType} onValueChange={(v) => setUserType(v as 'student' | 'admin')} className="mb-6">

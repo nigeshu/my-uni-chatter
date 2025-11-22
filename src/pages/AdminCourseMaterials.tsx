@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 
@@ -19,6 +19,13 @@ interface Material {
   description: string | null;
   file_url: string | null;
   material_type: string;
+  order_index: number;
+}
+
+interface Module {
+  id: string;
+  serial_no: string;
+  topic: string;
   order_index: number;
 }
 
@@ -38,10 +45,13 @@ const AdminCourseMaterials = () => {
   const { toast } = useToast();
   const [course, setCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
   const [showDialog, setShowDialog] = useState(false);
+  const [showModuleDialog, setShowModuleDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -51,10 +61,16 @@ const AdminCourseMaterials = () => {
     material_type: 'document',
   });
 
+  const [moduleFormData, setModuleFormData] = useState({
+    serial_no: '',
+    topic: '',
+  });
+
   useEffect(() => {
     if (courseId) {
       fetchCourse();
       fetchMaterials();
+      fetchModules();
     }
   }, [courseId]);
 
@@ -77,6 +93,15 @@ const AdminCourseMaterials = () => {
       .eq('course_id', courseId)
       .order('order_index');
     if (data) setMaterials(data);
+  };
+
+  const fetchModules = async () => {
+    const { data } = await supabase
+      .from('course_modules')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('order_index');
+    if (data) setModules(data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,6 +162,65 @@ const AdminCourseMaterials = () => {
     } else {
       toast({ title: 'Success', description: 'Material deleted successfully.' });
       fetchMaterials();
+    }
+  };
+
+  const handleModuleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (editingModule) {
+        const { error } = await supabase
+          .from('course_modules')
+          .update(moduleFormData)
+          .eq('id', editingModule.id);
+        if (error) throw error;
+        toast({ title: 'Success!', description: 'Module updated successfully.' });
+      } else {
+        const { error } = await supabase.from('course_modules').insert({
+          ...moduleFormData,
+          course_id: courseId,
+          order_index: modules.length,
+        });
+        if (error) throw error;
+        toast({ title: 'Success!', description: 'Module added successfully.' });
+      }
+
+      setShowModuleDialog(false);
+      setEditingModule(null);
+      setModuleFormData({ serial_no: '', topic: '' });
+      fetchModules();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save module.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditModule = (module: Module) => {
+    setEditingModule(module);
+    setModuleFormData({
+      serial_no: module.serial_no,
+      topic: module.topic,
+    });
+    setShowModuleDialog(true);
+  };
+
+  const handleDeleteModule = async (moduleId: string) => {
+    if (!confirm('Are you sure you want to delete this module?')) return;
+
+    const { error } = await supabase.from('course_modules').delete().eq('id', moduleId);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to delete module.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Success', description: 'Module deleted successfully.' });
+      fetchModules();
     }
   };
 
@@ -261,6 +345,112 @@ const AdminCourseMaterials = () => {
           <TabsTrigger value="materials">Course Materials</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      {/* Modules Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <List className="h-6 w-6 text-primary" />
+            Course Modules
+          </h2>
+          <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-gradient-accent hover:opacity-90"
+                onClick={() => {
+                  setEditingModule(null);
+                  setModuleFormData({ serial_no: '', topic: '' });
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Module
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>{editingModule ? 'Edit Module' : 'Add New Module'}</DialogTitle>
+              </DialogHeader>
+
+              <form onSubmit={handleModuleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="serial_no">Module S.No *</Label>
+                  <Input
+                    id="serial_no"
+                    placeholder="e.g., 1.1, Module 1"
+                    value={moduleFormData.serial_no}
+                    onChange={(e) => setModuleFormData({ ...moduleFormData, serial_no: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="topic">Topic *</Label>
+                  <Textarea
+                    id="topic"
+                    placeholder="Module topic or title"
+                    value={moduleFormData.topic}
+                    onChange={(e) => setModuleFormData({ ...moduleFormData, topic: e.target.value })}
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button type="submit" disabled={loading} className="flex-1 bg-gradient-accent hover:opacity-90">
+                    {loading ? 'Saving...' : editingModule ? 'Update Module' : 'Add Module'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setShowModuleDialog(false)} disabled={loading}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {modules.length > 0 ? (
+          <div className="grid grid-cols-1 gap-3">
+            {modules.map((module) => (
+              <Card key={module.id} className="hover:shadow-lg transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex gap-3 flex-1">
+                      <span className="font-bold text-primary text-lg min-w-[4rem]">{module.serial_no}</span>
+                      <span className="text-foreground">{module.topic}</span>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button size="sm" variant="outline" onClick={() => handleEditModule(module)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteModule(module.id)}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <List className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground">No modules added yet</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Materials Section */}
+      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+        <FileText className="h-6 w-6 text-primary" />
+        Course Materials
+      </h2>
 
       <div className="grid grid-cols-1 gap-4">
         {materials.map((material) => (

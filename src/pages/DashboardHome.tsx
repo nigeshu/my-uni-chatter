@@ -3,8 +3,7 @@ import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { BookOpen, Award, Clock, TrendingUp, ArrowRight, Edit2 } from 'lucide-react';
+import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -19,9 +18,9 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface Stats {
   enrolledCourses: number;
-  completedCourses: number;
-  pendingAssignments: number;
-  averageProgress: number;
+  cgpa: number;
+  totalCreditsEarned: number;
+  totalCreditsEnrolled: number;
 }
 
 const DashboardHome = () => {
@@ -30,9 +29,9 @@ const DashboardHome = () => {
   const { toast } = useToast();
   const [stats, setStats] = useState<Stats>({
     enrolledCourses: 0,
-    completedCourses: 0,
-    pendingAssignments: 0,
-    averageProgress: 0,
+    cgpa: 0,
+    totalCreditsEarned: 0,
+    totalCreditsEnrolled: 0,
   });
   const [recentCourses, setRecentCourses] = useState<any[]>([]);
   const [semesterText, setSemesterText] = useState('');
@@ -96,24 +95,46 @@ const DashboardHome = () => {
   };
 
   const fetchStats = async () => {
+    // Fetch enrollments with course credits
     const { data: enrollments } = await supabase
       .from('enrollments')
-      .select('progress, completed_at')
+      .select('*, course:courses(credits)')
       .eq('student_id', user?.id);
 
-    if (enrollments) {
-      const completed = enrollments.filter(e => e.completed_at).length;
-      const avgProgress = enrollments.length > 0
-        ? enrollments.reduce((sum, e) => sum + (e.progress || 0), 0) / enrollments.length
-        : 0;
+    // Fetch CGPA data
+    const { data: semesters } = await supabase
+      .from('cgpa_semesters')
+      .select('credits, gpa')
+      .eq('student_id', user?.id);
 
-      setStats({
-        enrolledCourses: enrollments.length,
-        completedCourses: completed,
-        pendingAssignments: 0,
-        averageProgress: Math.round(avgProgress),
-      });
+    let cgpa = 0;
+    if (semesters && semesters.length > 0) {
+      const totalCredits = semesters.reduce((sum, sem) => sum + sem.credits, 0);
+      const weightedSum = semesters.reduce((sum, sem) => sum + sem.credits * sem.gpa, 0);
+      cgpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
     }
+
+    // Calculate total credits
+    let totalCreditsEnrolled = 0;
+    let totalCreditsEarned = 0;
+    
+    if (enrollments) {
+      totalCreditsEnrolled = enrollments.reduce((sum, e: any) => {
+        return sum + (e.course?.credits || 0);
+      }, 0);
+      
+      // For credits earned, count completed courses
+      totalCreditsEarned = enrollments
+        .filter((e: any) => e.completed_at)
+        .reduce((sum, e: any) => sum + (e.course?.credits || 0), 0);
+    }
+
+    setStats({
+      enrolledCourses: enrollments?.length || 0,
+      cgpa: cgpa,
+      totalCreditsEarned,
+      totalCreditsEnrolled,
+    });
   };
 
   const fetchRecentCourses = async () => {
@@ -140,21 +161,21 @@ const DashboardHome = () => {
       gradient: 'from-primary to-purple-600',
     },
     {
-      title: 'Completed',
-      value: stats.completedCourses,
-      icon: Award,
+      title: 'Your CGPA',
+      value: stats.cgpa.toFixed(2),
+      icon: GraduationCap,
       gradient: 'from-success to-emerald-600',
     },
     {
-      title: 'Average Progress',
-      value: `${stats.averageProgress}%`,
-      icon: TrendingUp,
+      title: 'Credits Earned',
+      value: stats.totalCreditsEarned,
+      icon: Award,
       gradient: 'from-accent to-rose-600',
     },
     {
-      title: 'Pending Tasks',
-      value: stats.pendingAssignments,
-      icon: Clock,
+      title: 'Credits Enrolled',
+      value: stats.totalCreditsEnrolled,
+      icon: BookMarked,
       gradient: 'from-warning to-orange-600',
     },
   ];
@@ -269,7 +290,7 @@ const DashboardHome = () => {
               <Card 
                 key={enrollment.id} 
                 className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg overflow-hidden"
-                onClick={() => navigate(`/dashboard/courses/${enrollment.course.id}`)}
+                onClick={() => navigate(`/dashboard/course-materials/${enrollment.course.id}`)}
               >
                 <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
@@ -283,12 +304,9 @@ const DashboardHome = () => {
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {enrollment.course.description || 'No description available'}
                   </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-semibold text-primary">{enrollment.progress}%</span>
-                    </div>
-                    <Progress value={enrollment.progress} className="h-2" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Credits</span>
+                    <span className="font-bold text-xl text-primary">{enrollment.course.credits || 0}</span>
                   </div>
                 </CardContent>
               </Card>

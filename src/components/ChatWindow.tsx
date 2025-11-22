@@ -67,9 +67,13 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
 
   useEffect(() => {
     if (userId && friendId) {
-      fetchFriend();
-      fetchMessages();
-      markMessagesAsRead();
+      const initChat = async () => {
+        await fetchFriend();
+        await fetchMessages();
+        await markMessagesAsRead();
+      };
+      
+      initChat();
       const cleanup = subscribeToMessages();
       return cleanup;
     }

@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
   id: string;
@@ -27,6 +25,7 @@ interface Module {
   id: string;
   serial_no: string;
   topic: string;
+  heading: string | null;
   order_index: number;
 }
 
@@ -49,8 +48,6 @@ const AdminCourseMaterials = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [showModuleDialog, setShowModuleDialog] = useState(false);
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,6 +63,7 @@ const AdminCourseMaterials = () => {
   const [moduleFormData, setModuleFormData] = useState({
     serial_no: '',
     topic: '',
+    heading: '',
   });
 
   useEffect(() => {
@@ -84,7 +82,6 @@ const AdminCourseMaterials = () => {
       .single();
     if (data) {
       setCourse(data);
-      setSelectedCourse(data);
     }
   };
 
@@ -200,7 +197,7 @@ const AdminCourseMaterials = () => {
 
       setShowModuleDialog(false);
       setEditingModule(null);
-      setModuleFormData({ serial_no: '', topic: '' });
+      setModuleFormData({ serial_no: '', topic: '', heading: '' });
       fetchModules();
     } catch (error: any) {
       toast({
@@ -218,6 +215,7 @@ const AdminCourseMaterials = () => {
     setModuleFormData({
       serial_no: module.serial_no,
       topic: module.topic,
+      heading: module.heading || '',
     });
     setShowModuleDialog(true);
   };
@@ -342,7 +340,7 @@ const AdminCourseMaterials = () => {
                     <SelectItem value="none">No Module</SelectItem>
                     {modules.map((module) => (
                       <SelectItem key={module.id} value={module.id}>
-                        {module.serial_no} - {module.topic}
+                        {module.heading ? `${module.heading} - ` : ''}{module.serial_no} - {module.topic}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -362,21 +360,6 @@ const AdminCourseMaterials = () => {
         </Dialog>
       </div>
 
-      <Tabs value="materials" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger 
-            value="course" 
-            onClick={() => {
-              setSelectedCourse(course);
-              setShowDetailDialog(true);
-            }}
-          >
-            Course Page
-          </TabsTrigger>
-          <TabsTrigger value="materials">Course Materials</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       {/* Modules Section */}
       <Card className="mb-8">
         <CardHeader className="border-b">
@@ -389,10 +372,10 @@ const AdminCourseMaterials = () => {
               <DialogTrigger asChild>
                 <Button
                   className="bg-gradient-accent hover:opacity-90"
-                  onClick={() => {
-                    setEditingModule(null);
-                    setModuleFormData({ serial_no: '', topic: '' });
-                  }}
+                onClick={() => {
+                  setEditingModule(null);
+                  setModuleFormData({ serial_no: '', topic: '', heading: '' });
+                }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Module
@@ -404,6 +387,16 @@ const AdminCourseMaterials = () => {
                 </DialogHeader>
 
                 <form onSubmit={handleModuleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="heading">Module Heading</Label>
+                    <Input
+                      id="heading"
+                      placeholder="e.g., Introduction, Advanced Topics"
+                      value={moduleFormData.heading}
+                      onChange={(e) => setModuleFormData({ ...moduleFormData, heading: e.target.value })}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="serial_no">Module S.No *</Label>
                     <Input
@@ -554,7 +547,12 @@ const AdminCourseMaterials = () => {
                   <div className="w-12 h-12 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0">
                     <span className="font-bold text-white">{module.serial_no}</span>
                   </div>
-                  <h3 className="text-lg font-semibold">{module.topic}</h3>
+                  <div className="flex-1">
+                    {module.heading && (
+                      <p className="text-sm font-semibold text-primary uppercase tracking-wide">{module.heading}</p>
+                    )}
+                    <h3 className="text-lg font-semibold">{module.topic}</h3>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   {moduleMaterials.map((material) => (
@@ -619,12 +617,6 @@ const AdminCourseMaterials = () => {
           )}
         </CardContent>
       </Card>
-
-      <CourseDetailDialog
-        course={selectedCourse}
-        open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
-      />
     </div>
   );
 };

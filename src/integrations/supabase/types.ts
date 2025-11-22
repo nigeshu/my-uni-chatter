@@ -696,6 +696,27 @@ export type Database = {
         }
         Relationships: []
       }
+      semester_settings: {
+        Row: {
+          created_at: string
+          id: string
+          semester_completion_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          semester_completion_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          semester_completion_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           assignment_id: string

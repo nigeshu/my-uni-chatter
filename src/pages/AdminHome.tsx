@@ -2,22 +2,63 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Users, FileText, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { BookOpen, Users, FileText, TrendingUp, GraduationCap } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const AdminHome = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [stats, setStats] = useState({
     totalCourses: 0,
     totalStudents: 0,
     totalAssignments: 0,
     activeEnrollments: 0,
   });
+  const [semesterCompletionEnabled, setSemesterCompletionEnabled] = useState(false);
+  const [settingsId, setSettingsId] = useState<string>('');
 
   useEffect(() => {
     if (user) {
       fetchStats();
+      fetchSemesterSettings();
     }
   }, [user]);
+
+  const fetchSemesterSettings = async () => {
+    const { data } = await supabase
+      .from('semester_settings')
+      .select('*')
+      .single();
+    
+    if (data) {
+      setSemesterCompletionEnabled(data.semester_completion_enabled);
+      setSettingsId(data.id);
+    }
+  };
+
+  const handleToggleSemesterCompletion = async (enabled: boolean) => {
+    const { error } = await supabase
+      .from('semester_settings')
+      .update({ semester_completion_enabled: enabled })
+      .eq('id', settingsId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update settings',
+        variant: 'destructive',
+      });
+    } else {
+      setSemesterCompletionEnabled(enabled);
+      toast({
+        title: 'Success',
+        description: `Semester completion ${enabled ? 'enabled' : 'disabled'} for all students`,
+      });
+    }
+  };
 
   const fetchStats = async () => {
     const [courses, students, assignments, enrollments] = await Promise.all([
@@ -93,6 +134,30 @@ const AdminHome = () => {
           );
         })}
       </div>
+
+      {/* Semester Completion Control */}
+      <Card className="border-0 shadow-lg">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-primary" />
+                <Label htmlFor="semester-completion" className="text-base font-semibold cursor-pointer">
+                  Enable Semester Completion
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Allow students to complete their semester and add enrolled credits to earned credits
+              </p>
+            </div>
+            <Switch
+              id="semester-completion"
+              checked={semesterCompletionEnabled}
+              onCheckedChange={handleToggleSemesterCompletion}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

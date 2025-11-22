@@ -419,7 +419,7 @@ const Assignments = () => {
               <Card 
                 key={assignment.id} 
                 className={`group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden relative cursor-pointer ${
-                  isCompleted ? 'opacity-75' : ''
+                  isCompleted ? 'bg-muted/50' : ''
                 }`}
                 onClick={() => {
                   setSelectedAssignment(assignment);
@@ -482,23 +482,14 @@ const Assignments = () => {
                   {!isAdmin && (
                     <Button
                       className="w-full gap-2"
-                      variant={isCompleted ? "outline" : "default"}
+                      variant={isCompleted ? "secondary" : "default"}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleToggleCompletion(assignment.id, isCompleted);
                       }}
                     >
-                      {isCompleted ? (
-                        <>
-                          <RotateCcw className="h-4 w-4" />
-                          Revert Completion
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="h-4 w-4" />
-                          Mark as Completed
-                        </>
-                      )}
+                      <CheckCircle2 className="h-4 w-4" />
+                      {isCompleted ? 'Completed' : 'Mark as Completed'}
                     </Button>
                   )}
                 </CardContent>

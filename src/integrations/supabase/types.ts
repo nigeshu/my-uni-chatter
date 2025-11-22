@@ -63,6 +63,7 @@ export type Database = {
           file_url: string | null
           id: string
           material_type: string
+          module_id: string | null
           order_index: number
           title: string
           updated_at: string
@@ -74,6 +75,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           material_type: string
+          module_id?: string | null
           order_index?: number
           title: string
           updated_at?: string
@@ -85,6 +87,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           material_type?: string
+          module_id?: string | null
           order_index?: number
           title?: string
           updated_at?: string
@@ -95,6 +98,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_materials_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
             referencedColumns: ["id"]
           },
         ]

@@ -45,6 +45,7 @@ export type Database = {
           course_name: string
           created_at: string
           deadline: string
+          file_url: string | null
           id: string
           status: string
           student_id: string
@@ -57,6 +58,7 @@ export type Database = {
           course_name: string
           created_at?: string
           deadline: string
+          file_url?: string | null
           id?: string
           status?: string
           student_id: string
@@ -69,6 +71,7 @@ export type Database = {
           course_name?: string
           created_at?: string
           deadline?: string
+          file_url?: string | null
           id?: string
           status?: string
           student_id?: string

@@ -5,7 +5,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Clock, Calendar, Award } from 'lucide-react';
+import { BookOpen, Clock, Calendar, Award, List } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Module {
+  id: string;
+  serial_no: string;
+  topic: string;
+  order_index: number;
+}
 
 interface CourseDetailDialogProps {
   course: {
@@ -25,6 +34,26 @@ interface CourseDetailDialogProps {
 }
 
 const CourseDetailDialog = ({ course, open, onOpenChange }: CourseDetailDialogProps) => {
+  const [modules, setModules] = useState<Module[]>([]);
+
+  useEffect(() => {
+    if (course?.id && open) {
+      fetchModules();
+    }
+  }, [course?.id, open]);
+
+  const fetchModules = async () => {
+    if (!course?.id) return;
+    
+    const { data } = await supabase
+      .from('course_modules')
+      .select('*')
+      .eq('course_id', course.id)
+      .order('order_index');
+    
+    if (data) setModules(data);
+  };
+
   if (!course) return null;
 
   const getDifficultyColor = (difficulty: string) => {
@@ -99,6 +128,24 @@ const CourseDetailDialog = ({ course, open, onOpenChange }: CourseDetailDialogPr
                   <Badge key={index} variant="outline" className="px-4 py-2 text-sm">
                     {day}
                   </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Modules */}
+          {modules.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <List className="h-5 w-5 text-primary" />
+                Course Modules
+              </h3>
+              <div className="space-y-2">
+                {modules.map((module) => (
+                  <div key={module.id} className="p-3 rounded-lg border bg-card flex gap-3">
+                    <span className="font-semibold text-primary min-w-[3rem]">{module.serial_no}</span>
+                    <span className="text-foreground">{module.topic}</span>
+                  </div>
                 ))}
               </div>
             </div>

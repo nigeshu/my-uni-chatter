@@ -11,7 +11,8 @@ import {
   GraduationCap,
   FileText,
   BarChart,
-  Home
+  Home,
+  Shield
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { NavLink } from '@/components/NavLink';

@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      assignment_requests: {
+        Row: {
+          admin_response: string | null
+          assignment_title: string
+          course_name: string
+          created_at: string
+          deadline: string
+          id: string
+          status: string
+          student_id: string
+          updated_at: string
+          what_to_do: string
+        }
+        Insert: {
+          admin_response?: string | null
+          assignment_title: string
+          course_name: string
+          created_at?: string
+          deadline: string
+          id?: string
+          status?: string
+          student_id: string
+          updated_at?: string
+          what_to_do: string
+        }
+        Update: {
+          admin_response?: string | null
+          assignment_title?: string
+          course_name?: string
+          created_at?: string
+          deadline?: string
+          id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+          what_to_do?: string
+        }
+        Relationships: []
+      }
       assignments: {
         Row: {
           course_id: string
@@ -485,6 +524,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      material_contributions: {
+        Row: {
+          admin_response: string | null
+          course_title: string
+          created_at: string
+          file_url: string
+          id: string
+          module_name: string
+          status: string
+          student_id: string
+          topic_name: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          course_title: string
+          created_at?: string
+          file_url: string
+          id?: string
+          module_name: string
+          status?: string
+          student_id: string
+          topic_name: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          course_title?: string
+          created_at?: string
+          file_url?: string
+          id?: string
+          module_name?: string
+          status?: string
+          student_id?: string
+          topic_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {

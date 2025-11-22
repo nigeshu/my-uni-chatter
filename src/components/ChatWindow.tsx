@@ -193,11 +193,11 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
     const message = newMessage.trim();
     setNewMessage('');
 
-    const { error } = await supabase.from('messages').insert({
+    const { data, error } = await supabase.from('messages').insert({
       sender_id: userId,
       receiver_id: friendId,
       content: message,
-    });
+    }).select();
 
     if (error) {
       toast({
@@ -206,6 +206,9 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
         variant: 'destructive',
       });
       setNewMessage(message);
+    } else if (data && data[0]) {
+      // Add the sent message to state immediately
+      setMessages((prev) => [...prev, data[0] as Message]);
     }
   };
 

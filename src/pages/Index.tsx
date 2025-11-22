@@ -88,13 +88,17 @@ const Index = () => {
             </p>
 
             <div className="flex justify-center pt-8">
-              <Button
-                size="lg"
-                onClick={() => navigate('/auth')}
-                className="min-w-[200px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300"
-              >
-                Get Started
-              </Button>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-accent rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/auth')}
+                  className="relative min-w-[200px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group-hover:scale-105"
+                >
+                  <span className="relative z-10">Get Started</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -140,13 +144,17 @@ const Index = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Empowering students to achieve their academic goals
           </p>
-          <Button
-            size="lg"
-            onClick={() => navigate('/auth')}
-            className="min-w-[250px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300"
-          >
-            Start Your Journey
-          </Button>
+          <div className="relative group inline-block">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-accent rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            <Button
+              size="lg"
+              onClick={() => navigate('/auth')}
+              className="relative min-w-[250px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group-hover:scale-105"
+            >
+              <span className="relative z-10">Start Your Journey</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

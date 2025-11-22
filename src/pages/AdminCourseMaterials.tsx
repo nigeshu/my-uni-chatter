@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 
@@ -616,15 +616,19 @@ const AdminCourseMaterials = () => {
                             <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
                           )}
                           {material.file_url && (
-                            <a
-                              href={material.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-accent hover:underline inline-flex items-center gap-1"
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setPreviewUrl(material.file_url);
+                                setPreviewTitle(material.title);
+                                setPreviewOpen(true);
+                              }}
+                              className="mt-2"
                             >
-                              <FileText className="h-3 w-3" />
-                              Open Resource
-                            </a>
+                              <FileText className="h-3 w-3 mr-2" />
+                              Preview &amp; Download
+                            </Button>
                           )}
                         </CardContent>
                       )}
@@ -646,6 +650,40 @@ const AdminCourseMaterials = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>{previewTitle || 'Resource preview'}</DialogTitle>
+          </DialogHeader>
+          {previewUrl ? (
+            <div className="mt-4 h-[70vh]">
+              <iframe
+                src={previewUrl}
+                className="w-full h-full rounded-md border"
+                title={previewTitle || 'Course resource preview'}
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-4">
+              Preview not available for this resource.
+            </p>
+          )}
+          <div className="mt-4 flex justify-between gap-3">
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Close
+            </Button>
+            {previewUrl && (
+              <Button asChild>
+                <a href={previewUrl} download target="_blank" rel="noopener noreferrer">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </a>
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <CourseDetailDialog
         course={selectedCourse}

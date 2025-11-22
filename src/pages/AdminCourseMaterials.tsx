@@ -9,9 +9,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Share2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
+import ShareDocumentDialog from '@/components/ShareDocumentDialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Material {
   id: string;
@@ -58,6 +76,15 @@ const AdminCourseMaterials = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareDocument, setShareDocument] = useState<{ title: string; url: string } | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const [formData, setFormData] = useState({
     title: '',
@@ -284,6 +311,81 @@ const AdminCourseMaterials = () => {
       toast({ title: 'Success', description: 'Module deleted successfully.' });
       fetchModules();
     }
+  };
+
+  const handleModuleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = modules.findIndex((m) => m.id === active.id);
+    const newIndex = modules.findIndex((m) => m.id === over.id);
+
+    const reorderedModules = arrayMove(modules, oldIndex, newIndex);
+    setModules(reorderedModules);
+
+    // Update order_index in database
+    const updates = reorderedModules.map((module, index) => ({
+      id: module.id,
+      order_index: index,
+    }));
+
+    for (const update of updates) {
+      await supabase
+        .from('course_modules')
+        .update({ order_index: update.order_index })
+        .eq('id', update.id);
+    }
+
+    toast({ title: 'Success', description: 'Module order updated.' });
+  };
+
+  const handleMaterialDragEnd = async (event: DragEndEvent, moduleId: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const moduleMaterials = materials.filter((m) => m.module_id === moduleId);
+    const oldIndex = moduleMaterials.findIndex((m) => m.id === active.id);
+    const newIndex = moduleMaterials.findIndex((m) => m.id === over.id);
+
+    const reorderedMaterials = arrayMove(moduleMaterials, oldIndex, newIndex);
+
+    // Update local state
+    const otherMaterials = materials.filter((m) => m.module_id !== moduleId);
+    const newMaterials = [...otherMaterials, ...reorderedMaterials].sort((a, b) => {
+      if (a.module_id === b.module_id) {
+        return reorderedMaterials.findIndex((m) => m.id === a.id) - reorderedMaterials.findIndex((m) => m.id === b.id);
+      }
+      return 0;
+    });
+    setMaterials(newMaterials);
+
+    // Update order_index in database
+    const updates = reorderedMaterials.map((material, index) => ({
+      id: material.id,
+      order_index: index,
+    }));
+
+    for (const update of updates) {
+      await supabase
+        .from('course_materials')
+        .update({ order_index: update.order_index })
+        .eq('id', update.id);
+    }
+
+    toast({ title: 'Success', description: 'Material order updated.' });
+  };
+
+  const handleShareDocument = (title: string, url: string | null) => {
+    if (!url) {
+      toast({
+        title: 'Cannot share',
+        description: 'This document has no file URL.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShareDocument({ title, url });
+    setShareDialogOpen(true);
   };
 
   const getMaterialIcon = (type: string) => {
@@ -521,33 +623,27 @@ const AdminCourseMaterials = () => {
 
         <CardContent className="pt-6">
           {modules.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3">
-              {modules.map((module) => (
-                <Card key={module.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex gap-3 flex-1">
-                        <span className="font-bold text-primary text-lg min-w-[4rem]">{module.serial_no}</span>
-                        <span className="text-foreground">{module.topic}</span>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <Button size="sm" variant="outline" onClick={() => handleEditModule(module)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteModule(module.id)}
-                          className="text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleModuleDragEnd}
+            >
+              <SortableContext
+                items={modules.map((m) => m.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid grid-cols-1 gap-3">
+                  {modules.map((module) => (
+                    <SortableModuleItem
+                      key={module.id}
+                      module={module}
+                      onEdit={handleEditModule}
+                      onDelete={handleDeleteModule}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           ) : (
             <div className="py-12 text-center">
               <List className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
@@ -583,58 +679,34 @@ const AdminCourseMaterials = () => {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4">
-                  {moduleMaterials.map((material) => (
-                    <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {getMaterialIcon(material.material_type)}
-                            <div>
-                              <CardTitle className="text-lg">{material.title}</CardTitle>
-                              <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(material.id)}
-                              className="text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      {(material.description || material.file_url) && (
-                        <CardContent>
-                          {material.description && (
-                            <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
-                          )}
-                          {material.file_url && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setPreviewUrl(material.file_url);
-                                setPreviewTitle(material.title);
-                                setPreviewOpen(true);
-                              }}
-                              className="mt-2"
-                            >
-                              <FileText className="h-3 w-3 mr-2" />
-                              Preview &amp; Download
-                            </Button>
-                          )}
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleMaterialDragEnd(event, module.id)}
+                >
+                  <SortableContext
+                    items={moduleMaterials.map((m) => m.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="grid grid-cols-1 gap-4">
+                      {moduleMaterials.map((material) => (
+                        <SortableMaterialItem
+                          key={material.id}
+                          material={material}
+                          getMaterialIcon={getMaterialIcon}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onPreview={(url, title) => {
+                            setPreviewUrl(url);
+                            setPreviewTitle(title);
+                            setPreviewOpen(true);
+                          }}
+                          onShare={handleShareDocument}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </div>
             );
           })}
@@ -690,7 +762,166 @@ const AdminCourseMaterials = () => {
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
       />
+
+      <ShareDocumentDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        documentTitle={shareDocument?.title || ''}
+        documentUrl={shareDocument?.url || ''}
+      />
     </div>
+  );
+};
+
+// Sortable Module Item Component
+const SortableModuleItem = ({
+  module,
+  onEdit,
+  onDelete,
+}: {
+  module: Module;
+  onEdit: (module: Module) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: module.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="hover:shadow-lg transition-all duration-300">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex gap-3 flex-1">
+            <button
+              className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-5 w-5" />
+            </button>
+            <span className="font-bold text-primary text-lg min-w-[4rem]">{module.serial_no}</span>
+            <span className="text-foreground">{module.topic}</span>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button size="sm" variant="outline" onClick={() => onEdit(module)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDelete(module.id)}
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+};
+
+// Sortable Material Item Component
+const SortableMaterialItem = ({
+  material,
+  getMaterialIcon,
+  onEdit,
+  onDelete,
+  onPreview,
+  onShare,
+}: {
+  material: Material;
+  getMaterialIcon: (type: string) => JSX.Element;
+  onEdit: (material: Material) => void;
+  onDelete: (id: string) => void;
+  onPreview: (url: string | null, title: string) => void;
+  onShare: (title: string, url: string | null) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: material.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-5 w-5" />
+            </button>
+            {getMaterialIcon(material.material_type)}
+            <div>
+              <CardTitle className="text-lg">{material.title}</CardTitle>
+              <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onShare(material.title, material.file_url)}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => onEdit(material)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onDelete(material.id)}
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      {(material.description || material.file_url) && (
+        <CardContent>
+          {material.description && (
+            <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
+          )}
+          {material.file_url && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onPreview(material.file_url, material.title)}
+              className="mt-2"
+            >
+              <FileText className="h-3 w-3 mr-2" />
+              Preview &amp; Download
+            </Button>
+          )}
+        </CardContent>
+      )}
+    </Card>
   );
 };
 

@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, FileText, Link, Video, File, Download } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
   id: string;
@@ -22,6 +20,7 @@ interface Module {
   id: string;
   serial_no: string;
   topic: string;
+  heading: string | null;
   order_index: number;
 }
 
@@ -43,8 +42,6 @@ const CourseMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -61,7 +58,6 @@ const CourseMaterials = () => {
       .single();
     if (data) {
       setCourse(data);
-      setSelectedCourse(data);
     }
   };
 
@@ -157,21 +153,6 @@ const CourseMaterials = () => {
         </div>
       </div>
 
-      <Tabs value="materials" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger 
-            value="course" 
-            onClick={() => {
-              setSelectedCourse(course);
-              setShowDetailDialog(true);
-            }}
-          >
-            Course Page
-          </TabsTrigger>
-          <TabsTrigger value="materials">Course Materials</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       <Card>
         <CardContent className="pt-6">
           {/* Materials without module */}
@@ -220,7 +201,12 @@ const CourseMaterials = () => {
                   <div className="w-12 h-12 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0">
                     <span className="font-bold text-white">{module.serial_no}</span>
                   </div>
-                  <h3 className="text-lg font-semibold">{module.topic}</h3>
+                  <div className="flex-1">
+                    {module.heading && (
+                      <p className="text-sm font-semibold text-primary uppercase tracking-wide">{module.heading}</p>
+                    )}
+                    <h3 className="text-lg font-semibold">{module.topic}</h3>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   {moduleMaterials.map((material) => (
@@ -265,12 +251,6 @@ const CourseMaterials = () => {
           )}
         </CardContent>
       </Card>
-
-      <CourseDetailDialog
-        course={selectedCourse}
-        open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
-      />
     </div>
   );
 };

@@ -113,6 +113,7 @@ export type Database = {
         Row: {
           course_id: string
           created_at: string
+          heading: string | null
           id: string
           order_index: number
           serial_no: string
@@ -122,6 +123,7 @@ export type Database = {
         Insert: {
           course_id: string
           created_at?: string
+          heading?: string | null
           id?: string
           order_index?: number
           serial_no: string
@@ -131,6 +133,7 @@ export type Database = {
         Update: {
           course_id?: string
           created_at?: string
+          heading?: string | null
           id?: string
           order_index?: number
           serial_no?: string

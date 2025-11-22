@@ -74,11 +74,22 @@ const CourseMaterials = () => {
   };
 
   const fetchMaterials = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('course_materials')
       .select('*')
       .eq('course_id', courseId)
       .order('order_index');
+    
+    if (error) {
+      console.error('Error fetching materials:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load course materials. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     if (data) setMaterials(data);
   };
 

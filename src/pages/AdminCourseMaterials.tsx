@@ -347,85 +347,136 @@ const AdminCourseMaterials = () => {
       </Tabs>
 
       {/* Modules Section */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <List className="h-6 w-6 text-primary" />
-            Course Modules
-          </h2>
-          <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-gradient-accent hover:opacity-90"
-                onClick={() => {
-                  setEditingModule(null);
-                  setModuleFormData({ serial_no: '', topic: '' });
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Module
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{editingModule ? 'Edit Module' : 'Add New Module'}</DialogTitle>
-              </DialogHeader>
+      <Card className="mb-8">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <List className="h-6 w-6 text-primary" />
+              Course Modules
+            </CardTitle>
+            <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-gradient-accent hover:opacity-90"
+                  onClick={() => {
+                    setEditingModule(null);
+                    setModuleFormData({ serial_no: '', topic: '' });
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Module
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>{editingModule ? 'Edit Module' : 'Add New Module'}</DialogTitle>
+                </DialogHeader>
 
-              <form onSubmit={handleModuleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="serial_no">Module S.No *</Label>
-                  <Input
-                    id="serial_no"
-                    placeholder="e.g., 1.1, Module 1"
-                    value={moduleFormData.serial_no}
-                    onChange={(e) => setModuleFormData({ ...moduleFormData, serial_no: e.target.value })}
-                    required
-                  />
-                </div>
+                <form onSubmit={handleModuleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="serial_no">Module S.No *</Label>
+                    <Input
+                      id="serial_no"
+                      placeholder="e.g., 1.1, Module 1"
+                      value={moduleFormData.serial_no}
+                      onChange={(e) => setModuleFormData({ ...moduleFormData, serial_no: e.target.value })}
+                      required
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="topic">Topic *</Label>
-                  <Textarea
-                    id="topic"
-                    placeholder="Module topic or title"
-                    value={moduleFormData.topic}
-                    onChange={(e) => setModuleFormData({ ...moduleFormData, topic: e.target.value })}
-                    rows={3}
-                    required
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="topic">Topic *</Label>
+                    <Textarea
+                      id="topic"
+                      placeholder="Module topic or title"
+                      value={moduleFormData.topic}
+                      onChange={(e) => setModuleFormData({ ...moduleFormData, topic: e.target.value })}
+                      rows={3}
+                      required
+                    />
+                  </div>
 
-                <div className="flex gap-3 pt-4">
-                  <Button type="submit" disabled={loading} className="flex-1 bg-gradient-accent hover:opacity-90">
-                    {loading ? 'Saving...' : editingModule ? 'Update Module' : 'Add Module'}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowModuleDialog(false)} disabled={loading}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+                  <div className="flex gap-3 pt-4">
+                    <Button type="submit" disabled={loading} className="flex-1 bg-gradient-accent hover:opacity-90">
+                      {loading ? 'Saving...' : editingModule ? 'Update Module' : 'Add Module'}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setShowModuleDialog(false)} disabled={loading}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
 
-        {modules.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3">
-            {modules.map((module) => (
-              <Card key={module.id} className="hover:shadow-lg transition-all duration-300">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex gap-3 flex-1">
-                      <span className="font-bold text-primary text-lg min-w-[4rem]">{module.serial_no}</span>
-                      <span className="text-foreground">{module.topic}</span>
+        <CardContent className="pt-6">
+          {modules.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3">
+              {modules.map((module) => (
+                <Card key={module.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex gap-3 flex-1">
+                        <span className="font-bold text-primary text-lg min-w-[4rem]">{module.serial_no}</span>
+                        <span className="text-foreground">{module.topic}</span>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button size="sm" variant="outline" onClick={() => handleEditModule(module)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteModule(module.id)}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button size="sm" variant="outline" onClick={() => handleEditModule(module)}>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+              <List className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground">No modules added yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Materials Section */}
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <FileText className="h-6 w-6 text-primary" />
+            Course Materials
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 gap-4">
+            {materials.map((material) => (
+              <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getMaterialIcon(material.material_type)}
+                      <div>
+                        <CardTitle className="text-lg">{material.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDeleteModule(module.id)}
+                        onClick={() => handleDelete(material.id)}
                         className="text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -433,82 +484,39 @@ const AdminCourseMaterials = () => {
                     </div>
                   </div>
                 </CardHeader>
+                {(material.description || material.file_url) && (
+                  <CardContent>
+                    {material.description && (
+                      <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
+                    )}
+                    {material.file_url && (
+                      <a
+                        href={material.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-accent hover:underline inline-flex items-center gap-1"
+                      >
+                        <FileText className="h-3 w-3" />
+                        Open Resource
+                      </a>
+                    )}
+                  </CardContent>
+                )}
               </Card>
             ))}
           </div>
-        ) : (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <List className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground">No modules added yet</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
 
-      {/* Materials Section */}
-      <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-        <FileText className="h-6 w-6 text-primary" />
-        Course Materials
-      </h2>
-
-      <div className="grid grid-cols-1 gap-4">
-        {materials.map((material) => (
-          <Card key={material.id} className="hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {getMaterialIcon(material.material_type)}
-                  <div>
-                    <CardTitle className="text-lg">{material.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(material.id)}
-                    className="text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+          {materials.length === 0 && (
+            <div className="text-center py-16">
+              <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
+                <FileText className="h-20 w-20 text-white" />
               </div>
-            </CardHeader>
-            {(material.description || material.file_url) && (
-              <CardContent>
-                {material.description && (
-                  <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
-                )}
-                {material.file_url && (
-                  <a
-                    href={material.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-accent hover:underline"
-                  >
-                    Open Resource
-                  </a>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
-
-      {materials.length === 0 && (
-        <div className="text-center py-16">
-          <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4">
-            <FileText className="h-20 w-20 text-white" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">No materials yet</h3>
-          <p className="text-muted-foreground mb-6">Add your first course material to get started</p>
-        </div>
-      )}
+              <h3 className="text-xl font-semibold mb-2">No materials yet</h3>
+              <p className="text-muted-foreground mb-6">Add your first course material to get started</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <CourseDetailDialog
         course={selectedCourse}

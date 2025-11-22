@@ -55,6 +55,98 @@ export type Database = {
           },
         ]
       }
+      cgpa_semesters: {
+        Row: {
+          created_at: string
+          credits: number
+          gpa: number
+          id: string
+          order_index: number
+          semester_name: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          gpa: number
+          id?: string
+          order_index?: number
+          semester_name: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          gpa?: number
+          id?: string
+          order_index?: number
+          semester_name?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      course_marks: {
+        Row: {
+          cat1_mark: number | null
+          cat2_mark: number | null
+          course_id: string
+          course_type: string
+          created_at: string
+          da1_mark: number | null
+          da2_mark: number | null
+          da3_mark: number | null
+          id: string
+          lab_fat: number | null
+          lab_internals: number | null
+          student_id: string
+          theory_fat: number | null
+          updated_at: string
+        }
+        Insert: {
+          cat1_mark?: number | null
+          cat2_mark?: number | null
+          course_id: string
+          course_type: string
+          created_at?: string
+          da1_mark?: number | null
+          da2_mark?: number | null
+          da3_mark?: number | null
+          id?: string
+          lab_fat?: number | null
+          lab_internals?: number | null
+          student_id: string
+          theory_fat?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cat1_mark?: number | null
+          cat2_mark?: number | null
+          course_id?: string
+          course_type?: string
+          created_at?: string
+          da1_mark?: number | null
+          da2_mark?: number | null
+          da3_mark?: number | null
+          id?: string
+          lab_fat?: number | null
+          lab_internals?: number | null
+          student_id?: string
+          theory_fat?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_marks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_materials: {
         Row: {
           course_id: string
@@ -153,6 +245,7 @@ export type Database = {
       courses: {
         Row: {
           class_days: string[] | null
+          course_type: string | null
           created_at: string
           credits: number | null
           description: string | null
@@ -167,6 +260,7 @@ export type Database = {
         }
         Insert: {
           class_days?: string[] | null
+          course_type?: string | null
           created_at?: string
           credits?: number | null
           description?: string | null
@@ -181,6 +275,7 @@ export type Database = {
         }
         Update: {
           class_days?: string[] | null
+          course_type?: string | null
           created_at?: string
           credits?: number | null
           description?: string | null
@@ -435,6 +530,30 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      semester_info: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          semester_text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          semester_text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          semester_text?: string
           updated_at?: string
         }
         Relationships: []

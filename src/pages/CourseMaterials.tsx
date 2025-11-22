@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, FileText, Link, Video, File, Download } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
   id: string;
@@ -19,6 +21,10 @@ interface Course {
   id: string;
   title: string;
   description: string | null;
+  difficulty: string;
+  duration_hours: number;
+  credits?: number;
+  class_days?: string[];
 }
 
 const CourseMaterials = () => {
@@ -28,6 +34,8 @@ const CourseMaterials = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -39,10 +47,13 @@ const CourseMaterials = () => {
   const fetchCourse = async () => {
     const { data } = await supabase
       .from('courses')
-      .select('id, title, description')
+      .select('*')
       .eq('id', courseId)
       .single();
-    if (data) setCourse(data);
+    if (data) {
+      setCourse(data);
+      setSelectedCourse(data);
+    }
   };
 
   const checkEnrollment = async () => {
@@ -110,22 +121,26 @@ const CourseMaterials = () => {
         </Button>
         <div>
           <h1 className="text-4xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-            Course Materials
+            {course?.title}
           </h1>
-          <p className="text-muted-foreground text-lg">{course?.title}</p>
+          <p className="text-muted-foreground text-lg">Course Content</p>
         </div>
       </div>
 
-      {course?.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle>About This Course</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">{course.description}</p>
-          </CardContent>
-        </Card>
-      )}
+      <Tabs value="materials" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger 
+            value="course" 
+            onClick={() => {
+              setSelectedCourse(course);
+              setShowDetailDialog(true);
+            }}
+          >
+            Course Page
+          </TabsTrigger>
+          <TabsTrigger value="materials">Course Materials</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <div className="grid grid-cols-1 gap-4">
         {materials.map((material) => (
@@ -165,6 +180,12 @@ const CourseMaterials = () => {
           <p className="text-muted-foreground">Check back later for course materials</p>
         </div>
       )}
+
+      <CourseDetailDialog
+        course={selectedCourse}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };

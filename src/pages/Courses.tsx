@@ -140,8 +140,12 @@ const Courses = () => {
             key={course.id}
             className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden cursor-pointer"
             onClick={() => {
-              setSelectedCourse(course);
-              setShowDetailDialog(true);
+              if (course.isEnrolled) {
+                navigate(`/dashboard/courses/${course.id}/materials`);
+              } else {
+                setSelectedCourse(course);
+                setShowDetailDialog(true);
+              }
             }}
           >
             <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
@@ -175,16 +179,10 @@ const Courses = () => {
               </div>
 
               {course.isEnrolled ? (
-                <Button
-                  className="w-full bg-gradient-primary hover:opacity-90"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/dashboard/courses/${course.id}/materials`);
-                  }}
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  View Materials
-                </Button>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Click to view materials</span>
+                </div>
               ) : (
                 <Button
                   className="w-full"

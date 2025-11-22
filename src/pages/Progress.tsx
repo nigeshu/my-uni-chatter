@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Plus, Trash2, Calculator, Award, FlaskConical, BookOpen, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, Plus, Trash2, Calculator, Award, FlaskConical, BookOpen, CheckCircle2, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +62,8 @@ const Progress = () => {
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [cgpa, setCgpa] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
   const [newSemester, setNewSemester] = useState({ name: '', credits: '', gradedCredits: '', gpa: '' });
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [courseMarks, setCourseMarks] = useState<Record<string, CourseMark>>({});
@@ -270,6 +272,41 @@ const Progress = () => {
     }
   };
 
+  const handleEditSemester = (semester: Semester) => {
+    setEditingSemester(semester);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateSemester = async () => {
+    if (!editingSemester) return;
+
+    const { error } = await supabase
+      .from('cgpa_semesters')
+      .update({
+        semester_name: editingSemester.semester_name,
+        credits: editingSemester.credits,
+        graded_credits: editingSemester.graded_credits,
+        gpa: editingSemester.gpa,
+      })
+      .eq('id', editingSemester.id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update semester',
+        variant: 'destructive',
+      });
+    } else {
+      setEditDialogOpen(false);
+      setEditingSemester(null);
+      fetchSemesters();
+      toast({
+        title: 'Success',
+        description: 'Semester updated successfully',
+      });
+    }
+  };
+
   const handleMarkChange = async (courseId: string, field: string, value: number) => {
     const currentMark = courseMarks[courseId];
     const course = enrolledCourses.find(e => e.course_id === courseId);
@@ -448,16 +485,26 @@ const Progress = () => {
                     Credits: {sem.credits} | GPA: {sem.gpa.toFixed(2)}
                   </p>
                 </div>
-                {isAdmin && (
+                <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteSemester(sem.id)}
-                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => handleEditSemester(sem)}
+                    className="hover:bg-primary/10"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
                   </Button>
-                )}
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteSemester(sem.id)}
+                      className="text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
             {semesters.length === 0 && (
@@ -467,6 +514,61 @@ const Progress = () => {
               </div>
             )}
           </div>
+
+          {/* Edit Semester Dialog */}
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Semester</DialogTitle>
+              </DialogHeader>
+              {editingSemester && (
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Semester Name</Label>
+                    <Input
+                      value={editingSemester.semester_name}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, semester_name: e.target.value })}
+                      placeholder="e.g., Semester 1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Credits</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={editingSemester.credits}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, credits: parseFloat(e.target.value) || 0 })}
+                      placeholder="e.g., 20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Graded Credits</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={editingSemester.graded_credits}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, graded_credits: parseFloat(e.target.value) || 0 })}
+                      placeholder="e.g., 18"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>GPA</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      max="10"
+                      value={editingSemester.gpa}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, gpa: parseFloat(e.target.value) || 0 })}
+                      placeholder="e.g., 8.5"
+                    />
+                  </div>
+                  <Button onClick={handleUpdateSemester} className="w-full">
+                    Update
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {!isAdmin && semesterCompletionEnabled && (
             <div className="pt-4 border-t">

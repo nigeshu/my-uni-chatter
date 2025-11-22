@@ -3,7 +3,8 @@ import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked } from 'lucide-react';
+import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -38,6 +39,13 @@ const DashboardHome = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newSemesterText, setNewSemesterText] = useState('');
+  const [alerts, setAlerts] = useState<{
+    messages: string[];
+    urgentAssignments: Array<{ id: string; title: string; course_title: string; due_date: string }>;
+  }>({
+    messages: [],
+    urgentAssignments: [],
+  });
 
   useEffect(() => {
     if (user) {
@@ -45,6 +53,7 @@ const DashboardHome = () => {
       fetchRecentCourses();
       fetchSemesterInfo();
       checkAdminRole();
+      fetchAlerts();
     }
   }, [user]);
 
@@ -153,6 +162,54 @@ const DashboardHome = () => {
     }
   };
 
+  const fetchAlerts = async () => {
+    if (!user) return;
+
+    // Fetch admin messages (placeholder - you can add a messages table later)
+    setAlerts(prev => ({
+      ...prev,
+      messages: ['Welcome to the new semester!', 'Please complete your profile information.'],
+    }));
+
+    // Fetch urgent assignments (deadline <= 2 days)
+    const twoDaysFromNow = new Date();
+    twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+
+    const { data: enrollments } = await supabase
+      .from('enrollments')
+      .select('course_id')
+      .eq('student_id', user.id);
+
+    const courseIds = enrollments?.map(e => e.course_id) || [];
+
+    if (courseIds.length > 0) {
+      const { data: assignments } = await supabase
+        .from('assignments')
+        .select(`
+          id,
+          title,
+          due_date,
+          course:courses!inner (title)
+        `)
+        .in('course_id', courseIds)
+        .lte('due_date', twoDaysFromNow.toISOString())
+        .gte('due_date', new Date().toISOString())
+        .order('due_date', { ascending: true });
+
+      if (assignments) {
+        setAlerts(prev => ({
+          ...prev,
+          urgentAssignments: assignments.map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            course_title: a.course.title,
+            due_date: a.due_date,
+          })),
+        }));
+      }
+    }
+  };
+
   const statCards = [
     {
       title: 'Enrolled Courses',
@@ -255,68 +312,89 @@ const DashboardHome = () => {
         })}
       </div>
 
-      {/* Recent Courses */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Continue Learning</h2>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/dashboard/courses')}
-            className="text-primary hover:text-primary"
-          >
-            View All <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+      {/* Alerts Section */}
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Alerts & Notifications</h2>
+          <p className="text-muted-foreground">Stay updated with important announcements</p>
         </div>
 
-        {recentCourses.length === 0 ? (
-          <Card className="border-2 border-dashed">
-            <CardContent className="p-12 text-center">
-              <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
-              <p className="text-muted-foreground mb-6">
-                Start your learning journey by enrolling in a course
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Admin Messages Box */}
+          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Admin Messages
+              </CardTitle>
+              <p className="text-blue-100 text-sm">
+                Important announcements from administration
               </p>
-              <Button 
-                onClick={() => navigate('/dashboard/courses')}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                Browse Courses
-              </Button>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {alerts.messages.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No new messages
+                  </p>
+                ) : (
+                  alerts.messages.map((message, index) => (
+                    <div key={index} className="p-4 bg-muted/50 rounded-lg border border-border/50">
+                      <p className="text-sm">{message}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentCourses.map((enrollment) => (
-              <Card 
-                key={enrollment.id} 
-                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg overflow-hidden"
-                onClick={() => {
-                  if (enrollment.course?.id) {
-                    navigate(`/dashboard/course-materials/${enrollment.course.id}`);
-                  }
-                }}
-              >
-                <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white font-bold text-xl line-clamp-2">
-                      {enrollment.course.title}
-                    </h3>
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {enrollment.course.description || 'No description available'}
+
+          {/* Urgent Assignments Box */}
+          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 text-white">
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" />
+                Urgent Assignments
+              </CardTitle>
+              <p className="text-orange-100 text-sm">
+                Assignments due within 2 days
+              </p>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                {alerts.urgentAssignments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No urgent assignments
                   </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Credits</span>
-                    <span className="font-bold text-xl text-primary">{enrollment.course.credits || 0}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                ) : (
+                  alerts.urgentAssignments.map((assignment) => (
+                    <div 
+                      key={assignment.id} 
+                      className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 hover:bg-orange-500/20 transition-colors cursor-pointer"
+                      onClick={() => navigate('/dashboard/assignments')}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm mb-1 truncate">
+                            {assignment.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {assignment.course_title}
+                          </p>
+                          <div className="flex items-center gap-1 text-xs text-orange-600">
+                            <Clock className="h-3 w-3" />
+                            <span className="font-medium">
+                              Due: {format(new Date(assignment.due_date), 'MMM dd, HH:mm')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

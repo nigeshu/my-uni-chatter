@@ -115,28 +115,33 @@ const LMSDashboard = () => {
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/dashboard'}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
-                activeClassName="bg-gradient-primary text-white hover:text-white shadow-md"
-              >
-                <Icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
-              </NavLink>
+              <div key={item.path} className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
+                <NavLink
+                  to={item.path}
+                  end={item.path === '/dashboard'}
+                  className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-300 hover:scale-105 z-10"
+                  activeClassName="bg-gradient-primary text-white hover:text-white shadow-md scale-105"
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="font-medium">{item.label}</span>
+                </NavLink>
+              </div>
             );
           })}
           
           {profile?.role === 'admin' && (
             <div className="pt-4 border-t border-border mt-4">
-              <NavLink
-                to="/admin"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-200"
-              >
-                <GraduationCap className="h-5 w-5" />
-                <span className="font-medium">Admin Panel</span>
-              </NavLink>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
+                <NavLink
+                  to="/admin"
+                  className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-300 hover:scale-105 z-10"
+                >
+                  <GraduationCap className="h-5 w-5" />
+                  <span className="font-medium">Admin Panel</span>
+                </NavLink>
+              </div>
             </div>
           )}
         </nav>

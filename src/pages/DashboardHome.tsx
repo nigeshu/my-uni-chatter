@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle } from 'lucide-react';
+import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -40,12 +40,14 @@ const DashboardHome = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newSemesterText, setNewSemesterText] = useState('');
   const [alerts, setAlerts] = useState<{
-    messages: string[];
+    messages: Array<{ id: string; message: string }>;
     urgentAssignments: Array<{ id: string; title: string; course_title: string; due_date: string }>;
   }>({
     messages: [],
     urgentAssignments: [],
   });
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -165,11 +167,19 @@ const DashboardHome = () => {
   const fetchAlerts = async () => {
     if (!user) return;
 
-    // Fetch admin messages (placeholder - you can add a messages table later)
-    setAlerts(prev => ({
-      ...prev,
-      messages: ['Welcome to the new semester!', 'Please complete your profile information.'],
-    }));
+    // Fetch admin messages from database
+    const { data: messages } = await supabase
+      .from('admin_messages')
+      .select('id, message')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (messages) {
+      setAlerts(prev => ({
+        ...prev,
+        messages: messages,
+      }));
+    }
 
     // Fetch urgent assignments (deadline <= 2 days)
     const twoDaysFromNow = new Date();
@@ -207,6 +217,51 @@ const DashboardHome = () => {
           })),
         }));
       }
+    }
+  };
+
+  const handleAddMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    const { error } = await supabase
+      .from('admin_messages')
+      .insert({ message: newMessage });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to add message.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Message added successfully.',
+      });
+      setNewMessage('');
+      setMessageDialogOpen(false);
+      fetchAlerts();
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    const { error } = await supabase
+      .from('admin_messages')
+      .delete()
+      .eq('id', messageId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete message.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Message deleted successfully.',
+      });
+      fetchAlerts();
     }
   };
 
@@ -321,26 +376,76 @@ const DashboardHome = () => {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Admin Messages Box */}
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white">
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Admin Messages
-              </CardTitle>
-              <p className="text-blue-100 text-sm">
-                Important announcements from administration
-              </p>
+          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div className="h-2 bg-gradient-accent" />
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-gradient-accent">
+                    <MessageSquare className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold">Admin Messages</div>
+                    <p className="text-sm text-muted-foreground font-normal">
+                      Important announcements
+                    </p>
+                  </div>
+                </CardTitle>
+                {isAdmin && (
+                  <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Admin Message</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                          <Label>Message</Label>
+                          <Input
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Enter your message..."
+                          />
+                        </div>
+                        <Button onClick={handleAddMessage} className="w-full">
+                          Add Message
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
+            <CardContent>
+              <div className="space-y-3">
                 {alerts.messages.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No new messages
                   </p>
                 ) : (
-                  alerts.messages.map((message, index) => (
-                    <div key={index} className="p-4 bg-muted/50 rounded-lg border border-border/50">
-                      <p className="text-sm">{message}</p>
+                  alerts.messages.map((msg) => (
+                    <div 
+                      key={msg.id} 
+                      className="group p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg border border-primary/10 hover:border-primary/30 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm flex-1">{msg.message}</p>
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteMessage(msg.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
@@ -349,17 +454,22 @@ const DashboardHome = () => {
           </Card>
 
           {/* Urgent Assignments Box */}
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 text-white">
+          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500" />
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Urgent Assignments
+                <div className="p-2 rounded-lg bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500">
+                  <AlertCircle className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold">Urgent Assignments</div>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Due within 2 days
+                  </p>
+                </div>
               </CardTitle>
-              <p className="text-orange-100 text-sm">
-                Assignments due within 2 days
-              </p>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="space-y-3">
                 {alerts.urgentAssignments.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
@@ -369,7 +479,7 @@ const DashboardHome = () => {
                   alerts.urgentAssignments.map((assignment) => (
                     <div 
                       key={assignment.id} 
-                      className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 hover:bg-orange-500/20 transition-colors cursor-pointer"
+                      className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/20 hover:border-orange-500/40 hover:shadow-lg transition-all cursor-pointer"
                       onClick={() => navigate('/dashboard/assignments')}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -380,9 +490,9 @@ const DashboardHome = () => {
                           <p className="text-xs text-muted-foreground mb-2">
                             {assignment.course_title}
                           </p>
-                          <div className="flex items-center gap-1 text-xs text-orange-600">
-                            <Clock className="h-3 w-3" />
-                            <span className="font-medium">
+                          <div className="flex items-center gap-1 text-xs">
+                            <Clock className="h-3 w-3 text-orange-600" />
+                            <span className="font-medium text-orange-600">
                               Due: {format(new Date(assignment.due_date), 'MMM dd, HH:mm')}
                             </span>
                           </div>

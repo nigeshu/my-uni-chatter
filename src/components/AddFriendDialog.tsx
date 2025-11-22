@@ -21,17 +21,17 @@ interface AddFriendDialogProps {
 }
 
 const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
-  const [friendEmail, setFriendEmail] = useState('');
+  const [friendName, setFriendName] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const shareableLink = `${window.location.origin}/friend-invite/${userId}`;
 
   const handleAddFriend = async () => {
-    if (!friendEmail.trim()) {
+    if (!friendName.trim()) {
       toast({
         title: 'Error',
-        description: 'Please enter a valid email address.',
+        description: 'Please enter a valid name.',
         variant: 'destructive',
       });
       return;
@@ -43,13 +43,13 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
       const { data: friendProfile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', friendEmail.trim())
+        .ilike('full_name', `%${friendName.trim()}%`)
         .single();
 
       if (!friendProfile) {
         toast({
           title: 'User not found',
-          description: 'No user found with that email address.',
+          description: 'No user found with that name.',
           variant: 'destructive',
         });
         return;
@@ -91,7 +91,7 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
         description: 'Friend request sent successfully.',
       });
 
-      setFriendEmail('');
+      setFriendName('');
       onClose();
     } catch (error: any) {
       toast({
@@ -118,7 +118,7 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
           <DialogDescription>
-            Search for friends by email or share your friend link
+            Search for friends by name or share your friend link
           </DialogDescription>
         </DialogHeader>
 
@@ -136,13 +136,13 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
 
           <TabsContent value="search" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Friend's Email</Label>
+              <Label htmlFor="name">Friend's Name</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter email address"
-                value={friendEmail}
-                onChange={(e) => setFriendEmail(e.target.value)}
+                id="name"
+                type="text"
+                placeholder="Enter friend's name"
+                value={friendName}
+                onChange={(e) => setFriendName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddFriend()}
               />
             </div>

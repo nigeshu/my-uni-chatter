@@ -290,7 +290,11 @@ const DashboardHome = () => {
               <Card 
                 key={enrollment.id} 
                 className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-lg overflow-hidden"
-                onClick={() => navigate(`/dashboard/course-materials/${enrollment.course.id}`)}
+                onClick={() => {
+                  if (enrollment.course?.id) {
+                    navigate(`/dashboard/course-materials/${enrollment.course.id}`);
+                  }
+                }}
               >
                 <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />

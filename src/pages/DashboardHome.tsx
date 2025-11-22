@@ -136,14 +136,21 @@ const DashboardHome = () => {
     let totalCreditsEarned = 0;
     
     if (enrollments) {
-      totalCreditsEnrolled = enrollments.reduce((sum, e: any) => {
-        return sum + (e.course?.credits || 0);
-      }, 0);
+      // Count only courses that haven't been completed yet as enrolled
+      totalCreditsEnrolled = enrollments
+        .filter((e: any) => !e.completed_at)
+        .reduce((sum, e: any) => sum + (e.course?.credits || 0), 0);
       
       // For credits earned, count completed courses
       totalCreditsEarned = enrollments
         .filter((e: any) => e.completed_at)
         .reduce((sum, e: any) => sum + (e.course?.credits || 0), 0);
+    }
+
+    // Add semester credits to earned credits
+    if (semesters && semesters.length > 0) {
+      const semesterCredits = semesters.reduce((sum, sem) => sum + sem.credits, 0);
+      totalCreditsEarned += semesterCredits;
     }
 
     setStats({

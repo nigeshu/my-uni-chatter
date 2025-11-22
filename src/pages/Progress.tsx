@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Plus, Trash2, Calculator, Award, FlaskConical, BookOpen } from 'lucide-react';
+import { TrendingUp, Plus, Trash2, Calculator, Award, FlaskConical, BookOpen, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,12 +65,14 @@ const Progress = () => {
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [courseMarks, setCourseMarks] = useState<Record<string, CourseMark>>({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [semesterCompletionEnabled, setSemesterCompletionEnabled] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchSemesters();
       fetchEnrolledCourses();
       checkAdminRole();
+      fetchSemesterSettings();
     }
   }, [user]);
 
@@ -185,6 +187,64 @@ const Progress = () => {
         description: 'Semester added successfully',
       });
     }
+  };
+
+  const fetchSemesterSettings = async () => {
+    const { data } = await supabase
+      .from('semester_settings')
+      .select('semester_completion_enabled')
+      .single();
+    
+    if (data) {
+      setSemesterCompletionEnabled(data.semester_completion_enabled);
+    }
+  };
+
+  const handleCompleteSemester = async () => {
+    if (!user) return;
+
+    // Get all enrolled courses
+    const { data: enrollments } = await supabase
+      .from('enrollments')
+      .select('*, course:courses(credits)')
+      .eq('student_id', user.id);
+
+    if (!enrollments || enrollments.length === 0) {
+      toast({
+        title: 'Info',
+        description: 'No enrolled courses to complete',
+      });
+      return;
+    }
+
+    // Calculate total enrolled credits
+    const totalEnrolledCredits = enrollments.reduce((sum, enrollment) => {
+      return sum + (enrollment.course?.credits || 0);
+    }, 0);
+
+    // Update all enrollments to completed
+    const { error: updateError } = await supabase
+      .from('enrollments')
+      .update({ completed_at: new Date().toISOString() })
+      .eq('student_id', user.id)
+      .is('completed_at', null);
+
+    if (updateError) {
+      toast({
+        title: 'Error',
+        description: 'Failed to complete semester',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: `Semester completed! ${totalEnrolledCredits} credits added to earned credits.`,
+    });
+
+    // Refresh data
+    fetchEnrolledCourses();
   };
 
   const handleDeleteSemester = async (id: string) => {
@@ -395,6 +455,19 @@ const Progress = () => {
               </div>
             )}
           </div>
+
+          {!isAdmin && semesterCompletionEnabled && (
+            <div className="pt-4 border-t">
+              <Button 
+                className="w-full gap-2" 
+                variant="default"
+                onClick={handleCompleteSemester}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Complete Semester
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

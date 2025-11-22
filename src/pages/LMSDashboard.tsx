@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { 
   BookOpen, 
   MessageSquare, 
@@ -15,7 +16,7 @@ import {
   Shield,
   HelpCircle
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
 
 interface Profile {
@@ -31,6 +32,7 @@ const LMSDashboard = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,6 +42,8 @@ const LMSDashboard = () => {
 
     if (user) {
       fetchProfile();
+      fetchUnreadCount();
+      subscribeToMessages();
     }
   }, [user, loading, navigate]);
 
@@ -51,6 +55,54 @@ const LMSDashboard = () => {
       .single();
 
     if (data) setProfile(data);
+  };
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+
+    const { count } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('receiver_id', user.id)
+      .eq('is_read', false);
+
+    setUnreadCount(count || 0);
+  };
+
+  const subscribeToMessages = () => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('unread-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   };
 
   const handleSignOut = async () => {
@@ -117,6 +169,9 @@ const LMSDashboard = () => {
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isLetsTalk = item.path === '/dashboard/chat';
+            const showBadge = isLetsTalk && unreadCount > 0;
+            
             return (
               <div key={item.path} className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
@@ -128,6 +183,14 @@ const LMSDashboard = () => {
                 >
                   <Icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
+                  {showBadge && (
+                    <Badge 
+                      className="ml-auto bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                      variant="default"
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Badge>
+                  )}
                 </NavLink>
               </div>
             );

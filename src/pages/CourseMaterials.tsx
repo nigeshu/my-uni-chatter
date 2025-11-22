@@ -175,41 +175,6 @@ const CourseMaterials = () => {
 
       <Card>
         <CardContent className="pt-6">
-          {/* Materials without module */}
-          {materials.filter(m => !m.module_id).length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4 text-muted-foreground">General Materials</h3>
-              <div className="grid grid-cols-1 gap-4">
-                {materials.filter(m => !m.module_id).map((material) => (
-                  <Card key={material.id} className="hover:shadow-lg transition-all duration-300">
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        {getMaterialIcon(material.material_type)}
-                        <div className="flex-1">
-                          <CardTitle className="text-lg">{material.title}</CardTitle>
-                          <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
-                        </div>
-                        {material.file_url && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={material.file_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4 mr-2" />
-                              Open
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </CardHeader>
-                    {material.description && (
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">{material.description}</p>
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Materials grouped by module */}
           {modules.map((module) => {
             const moduleMaterials = materials.filter(m => m.module_id === module.id);
@@ -223,9 +188,8 @@ const CourseMaterials = () => {
                   </div>
                   <div className="flex-1">
                     {module.heading && (
-                      <p className="text-sm font-semibold text-primary uppercase tracking-wide">{module.heading}</p>
+                      <h3 className="text-lg font-semibold">{module.heading}</h3>
                     )}
-                    <h3 className="text-lg font-semibold">{module.topic}</h3>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4">

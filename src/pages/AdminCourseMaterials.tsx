@@ -60,7 +60,7 @@ const AdminCourseMaterials = () => {
     description: '',
     file_url: '',
     material_type: 'document',
-    module_id: '',
+    module_id: 'none',
   });
 
   const [moduleFormData, setModuleFormData] = useState({
@@ -138,7 +138,7 @@ const AdminCourseMaterials = () => {
 
       setShowDialog(false);
       setEditingMaterial(null);
-      setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: '' });
+      setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: 'none' });
       fetchMaterials();
     } catch (error: any) {
       toast({
@@ -158,7 +158,7 @@ const AdminCourseMaterials = () => {
       description: material.description || '',
       file_url: material.file_url || '',
       material_type: material.material_type,
-      module_id: material.module_id || '',
+      module_id: material.module_id || 'none',
     });
     setShowDialog(true);
   };
@@ -266,7 +266,7 @@ const AdminCourseMaterials = () => {
               className="bg-gradient-accent hover:opacity-90"
               onClick={() => {
                 setEditingMaterial(null);
-                setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: '' });
+                setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: 'none' });
               }}
             >
               <Plus className="mr-2 h-5 w-5" />
@@ -333,13 +333,13 @@ const AdminCourseMaterials = () => {
                 <Label htmlFor="module">Module (Optional)</Label>
                 <Select
                   value={formData.module_id}
-                  onValueChange={(value) => setFormData({ ...formData, module_id: value })}
+                  onValueChange={(value) => setFormData({ ...formData, module_id: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a module" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Module</SelectItem>
+                    <SelectItem value="none">No Module</SelectItem>
                     {modules.map((module) => (
                       <SelectItem key={module.id} value={module.id}>
                         {module.serial_no} - {module.topic}

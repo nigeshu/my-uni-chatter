@@ -235,6 +235,7 @@ const Assignments = () => {
 
   const handleToggleCompletion = async (assignmentId: string, isCompleted: boolean) => {
     if (isCompleted) {
+      // Revert completion - delete the submission
       const { error } = await supabase
         .from('submissions')
         .delete()
@@ -242,19 +243,31 @@ const Assignments = () => {
         .eq('student_id', userId);
 
       if (error) {
+        console.error('Delete error:', error);
         toast({
           title: 'Error',
           description: 'Failed to revert completion',
           variant: 'destructive',
         });
       } else {
+        // Update local state immediately for better UX
+        setAssignments(prev => prev.map(a => {
+          if (a.id === assignmentId) {
+            return {
+              ...a,
+              submissions: a.submissions?.filter(s => s.student_id !== userId) || []
+            };
+          }
+          return a;
+        }));
+        
         toast({
           title: 'Success',
           description: 'Assignment marked as incomplete',
         });
-        fetchAssignments();
       }
     } else {
+      // Mark as completed - insert submission
       const { error } = await supabase
         .from('submissions')
         .insert({
@@ -264,17 +277,28 @@ const Assignments = () => {
         });
 
       if (error) {
+        console.error('Insert error:', error);
         toast({
           title: 'Error',
           description: 'Failed to mark as completed',
           variant: 'destructive',
         });
       } else {
+        // Update local state immediately for better UX
+        setAssignments(prev => prev.map(a => {
+          if (a.id === assignmentId) {
+            return {
+              ...a,
+              submissions: [...(a.submissions || []), { id: crypto.randomUUID(), student_id: userId }]
+            };
+          }
+          return a;
+        }));
+        
         toast({
           title: 'Success',
           description: 'Assignment marked as completed',
         });
-        fetchAssignments();
       }
     }
   };

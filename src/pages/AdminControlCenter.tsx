@@ -60,20 +60,53 @@ const AdminControlCenter = () => {
   }, []);
 
   const fetchRequests = async () => {
-    const { data: assignments } = await supabase
+    // Fetch assignment requests
+    const { data: assignmentData } = await supabase
       .from('assignment_requests')
-      .select('*, student:profiles!assignment_requests_student_id_fkey(full_name, email)')
+      .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    const { data: materials } = await supabase
+    if (assignmentData) {
+      // Fetch student profiles for assignments
+      const studentIds = assignmentData.map(a => a.student_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', studentIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const assignmentsWithProfiles = assignmentData.map(a => ({
+        ...a,
+        student: profileMap.get(a.student_id) || { full_name: 'Unknown', email: 'Unknown' }
+      }));
+
+      setAssignmentRequests(assignmentsWithProfiles);
+    }
+
+    // Fetch material contributions
+    const { data: materialData } = await supabase
       .from('material_contributions')
-      .select('*, student:profiles!material_contributions_student_id_fkey(full_name, email)')
+      .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    if (assignments) setAssignmentRequests(assignments);
-    if (materials) setMaterialContributions(materials);
+    if (materialData) {
+      // Fetch student profiles for materials
+      const studentIds = materialData.map(m => m.student_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', studentIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const materialsWithProfiles = materialData.map(m => ({
+        ...m,
+        student: profileMap.get(m.student_id) || { full_name: 'Unknown', email: 'Unknown' }
+      }));
+
+      setMaterialContributions(materialsWithProfiles);
+    }
   };
 
   const handleApproveAssignment = async (id: string) => {

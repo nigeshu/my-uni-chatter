@@ -8,8 +8,11 @@ interface Assignment {
   title: string;
   description: string | null;
   due_date: string | null;
-  max_points: number | null;
-  course: {
+  max_points?: number | null;
+  course?: {
+    title: string;
+  };
+  courses?: {
     title: string;
   };
 }
@@ -43,10 +46,14 @@ const AssignmentDetailDialog = ({ assignment, open, onOpenChange }: AssignmentDe
         
         <div className="space-y-6">
           {/* Course Info */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <BookOpen className="h-4 w-4" />
-            <span className="font-semibold">{assignment.course.title}</span>
-          </div>
+          {(assignment.course || assignment.courses) && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <BookOpen className="h-4 w-4" />
+              <span className="font-semibold">
+                {assignment.course?.title || assignment.courses?.title}
+              </span>
+            </div>
+          )}
 
           {/* Due Date */}
           {assignment.due_date && (

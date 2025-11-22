@@ -207,11 +207,17 @@ const CourseMaterials = () => {
                             <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
                           </div>
                           {material.file_url && (
-                            <Button size="sm" variant="outline" asChild>
-                              <a href={material.file_url} target="_blank" rel="noopener noreferrer">
-                                <Download className="h-4 w-4 mr-2" />
-                                Open
-                              </a>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setPreviewUrl(material.file_url);
+                                setPreviewTitle(material.title);
+                                setPreviewOpen(true);
+                              }}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Open
                             </Button>
                           )}
                         </div>
@@ -239,6 +245,40 @@ const CourseMaterials = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>{previewTitle || 'Resource preview'}</DialogTitle>
+          </DialogHeader>
+          {previewUrl ? (
+            <div className="mt-4 h-[70vh]">
+              <iframe
+                src={previewUrl}
+                className="w-full h-full rounded-md border"
+                title={previewTitle || 'Course resource preview'}
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-4">
+              Preview not available for this resource.
+            </p>
+          )}
+          <div className="mt-4 flex justify-between gap-3">
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Close
+            </Button>
+            {previewUrl && (
+              <Button asChild>
+                <a href={previewUrl} download target="_blank" rel="noopener noreferrer">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </a>
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <CourseDetailDialog
         course={selectedCourse}

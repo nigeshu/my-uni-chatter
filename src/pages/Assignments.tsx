@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -52,6 +52,8 @@ const Assignments = () => {
     what_to_do: '',
     deadline: '',
   });
+  const [requestFile, setRequestFile] = useState<File | null>(null);
+  const [uploadingRequest, setUploadingRequest] = useState(false);
 
   useEffect(() => {
     fetchUserRole();
@@ -173,23 +175,41 @@ const Assignments = () => {
       return;
     }
 
-    const { error } = await supabase
-      .from('assignment_requests')
-      .insert({
-        student_id: userId,
-        course_name: requestForm.course_name,
-        assignment_title: requestForm.assignment_title,
-        what_to_do: requestForm.what_to_do,
-        deadline: requestForm.deadline,
-      });
+    setUploadingRequest(true);
 
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to submit request.',
-        variant: 'destructive',
-      });
-    } else {
+    try {
+      let fileUrl = null;
+
+      // Upload file if provided (optional)
+      if (requestFile) {
+        const fileExt = requestFile.name.split('.').pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('course_materials')
+          .upload(fileName, requestFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('course_materials')
+          .getPublicUrl(fileName);
+
+        fileUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('assignment_requests')
+        .insert({
+          student_id: userId,
+          course_name: requestForm.course_name,
+          assignment_title: requestForm.assignment_title,
+          what_to_do: requestForm.what_to_do,
+          deadline: requestForm.deadline,
+          file_url: fileUrl,
+        });
+
+      if (error) throw error;
+
       toast({
         title: 'Success',
         description: 'Thanks for the information, Admin will respond back to you',
@@ -201,6 +221,15 @@ const Assignments = () => {
         what_to_do: '',
         deadline: '',
       });
+      setRequestFile(null);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingRequest(false);
     }
   };
 
@@ -524,13 +553,32 @@ const Assignments = () => {
                 onChange={(e) => setRequestForm({ ...requestForm, deadline: e.target.value })}
               />
             </div>
+            <div>
+              <Label>Upload Document (Optional)</Label>
+              <div className="mt-2">
+                <Input
+                  type="file"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setRequestFile(e.target.files[0]);
+                    }
+                  }}
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+                />
+                {requestFile && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Selected: {requestFile.name}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRequestDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmitRequest}>
-              Submit Request
+            <Button onClick={handleSubmitRequest} disabled={uploadingRequest}>
+              {uploadingRequest ? 'Submitting...' : 'Submit Request'}
             </Button>
           </DialogFooter>
         </DialogContent>

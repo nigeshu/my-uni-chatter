@@ -24,6 +24,7 @@ interface AssignmentRequest {
   status: string;
   admin_response: string | null;
   created_at: string;
+  file_url: string | null;
   student: {
     full_name: string;
     email: string;
@@ -246,6 +247,31 @@ const AdminControlCenter = () => {
                   <p className="text-sm font-semibold mb-2">What to do:</p>
                   <p className="text-sm text-muted-foreground">{request.what_to_do}</p>
                 </div>
+                {request.file_url && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Attached Document:</p>
+                    <div className="flex gap-2">
+                      <a
+                        href={request.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Preview Document
+                      </a>
+                      <span className="text-muted-foreground">•</span>
+                      <a
+                        href={request.file_url}
+                        download
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Download
+                      </a>
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleApproveAssignment(request.id)}
@@ -309,14 +335,26 @@ const AdminControlCenter = () => {
                 </div>
                 <div>
                   <p className="text-sm font-semibold mb-2">Document:</p>
-                  <a
-                    href={material.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    View Uploaded File
-                  </a>
+                  <div className="flex gap-2">
+                    <a
+                      href={material.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Preview Document
+                    </a>
+                    <span className="text-muted-foreground">•</span>
+                    <a
+                      href={material.file_url}
+                      download
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Download
+                    </a>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button

@@ -20,6 +20,7 @@ interface Material {
   file_url: string | null;
   material_type: string;
   order_index: number;
+  module_id: string | null;
 }
 
 interface Module {
@@ -59,6 +60,7 @@ const AdminCourseMaterials = () => {
     description: '',
     file_url: '',
     material_type: 'document',
+    module_id: '',
   });
 
   const [moduleFormData, setModuleFormData] = useState({
@@ -109,16 +111,24 @@ const AdminCourseMaterials = () => {
     setLoading(true);
 
     try {
+      const materialData = {
+        title: formData.title,
+        description: formData.description,
+        file_url: formData.file_url,
+        material_type: formData.material_type,
+        module_id: formData.module_id || null,
+      };
+
       if (editingMaterial) {
         const { error } = await supabase
           .from('course_materials')
-          .update(formData)
+          .update(materialData)
           .eq('id', editingMaterial.id);
         if (error) throw error;
         toast({ title: 'Success!', description: 'Material updated successfully.' });
       } else {
         const { error } = await supabase.from('course_materials').insert({
-          ...formData,
+          ...materialData,
           course_id: courseId,
           order_index: materials.length,
         });
@@ -128,7 +138,7 @@ const AdminCourseMaterials = () => {
 
       setShowDialog(false);
       setEditingMaterial(null);
-      setFormData({ title: '', description: '', file_url: '', material_type: 'document' });
+      setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: '' });
       fetchMaterials();
     } catch (error: any) {
       toast({
@@ -148,6 +158,7 @@ const AdminCourseMaterials = () => {
       description: material.description || '',
       file_url: material.file_url || '',
       material_type: material.material_type,
+      module_id: material.module_id || '',
     });
     setShowDialog(true);
   };
@@ -255,7 +266,7 @@ const AdminCourseMaterials = () => {
               className="bg-gradient-accent hover:opacity-90"
               onClick={() => {
                 setEditingMaterial(null);
-                setFormData({ title: '', description: '', file_url: '', material_type: 'document' });
+                setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: '' });
               }}
             >
               <Plus className="mr-2 h-5 w-5" />
@@ -316,6 +327,26 @@ const AdminCourseMaterials = () => {
                   value={formData.file_url}
                   onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="module">Module (Optional)</Label>
+                <Select
+                  value={formData.module_id}
+                  onValueChange={(value) => setFormData({ ...formData, module_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a module" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Module</SelectItem>
+                    {modules.map((module) => (
+                      <SelectItem key={module.id} value={module.id}>
+                        {module.serial_no} - {module.topic}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -457,54 +488,125 @@ const AdminCourseMaterials = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 gap-4">
-            {materials.map((material) => (
-              <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {getMaterialIcon(material.material_type)}
-                      <div>
-                        <CardTitle className="text-lg">{material.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+          {/* Materials without module */}
+          {materials.filter(m => !m.module_id).length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-muted-foreground">General Materials</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {materials.filter(m => !m.module_id).map((material) => (
+                  <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {getMaterialIcon(material.material_type)}
+                          <div>
+                            <CardTitle className="text-lg">{material.title}</CardTitle>
+                            <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(material.id)}
+                            className="text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(material.id)}
-                        className="text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    </CardHeader>
+                    {(material.description || material.file_url) && (
+                      <CardContent>
+                        {material.description && (
+                          <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
+                        )}
+                        {material.file_url && (
+                          <a
+                            href={material.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-accent hover:underline inline-flex items-center gap-1"
+                          >
+                            <FileText className="h-3 w-3" />
+                            Open Resource
+                          </a>
+                        )}
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Materials grouped by module */}
+          {modules.map((module) => {
+            const moduleMaterials = materials.filter(m => m.module_id === module.id);
+            if (moduleMaterials.length === 0) return null;
+            
+            return (
+              <div key={module.id} className="mb-8 last:mb-0">
+                <div className="flex items-center gap-3 mb-4 pb-2 border-b">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0">
+                    <span className="font-bold text-white">{module.serial_no}</span>
                   </div>
-                </CardHeader>
-                {(material.description || material.file_url) && (
-                  <CardContent>
-                    {material.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
-                    )}
-                    {material.file_url && (
-                      <a
-                        href={material.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-accent hover:underline inline-flex items-center gap-1"
-                      >
-                        <FileText className="h-3 w-3" />
-                        Open Resource
-                      </a>
-                    )}
-                  </CardContent>
-                )}
-              </Card>
-            ))}
-          </div>
+                  <h3 className="text-lg font-semibold">{module.topic}</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {moduleMaterials.map((material) => (
+                    <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {getMaterialIcon(material.material_type)}
+                            <div>
+                              <CardTitle className="text-lg">{material.title}</CardTitle>
+                              <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(material.id)}
+                              className="text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      {(material.description || material.file_url) && (
+                        <CardContent>
+                          {material.description && (
+                            <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
+                          )}
+                          {material.file_url && (
+                            <a
+                              href={material.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-accent hover:underline inline-flex items-center gap-1"
+                            >
+                              <FileText className="h-3 w-3" />
+                              Open Resource
+                            </a>
+                          )}
+                        </CardContent>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
 
           {materials.length === 0 && (
             <div className="text-center py-16">

@@ -15,6 +15,14 @@ interface Material {
   file_url: string | null;
   material_type: string;
   order_index: number;
+  module_id: string | null;
+}
+
+interface Module {
+  id: string;
+  serial_no: string;
+  topic: string;
+  order_index: number;
 }
 
 interface Course {
@@ -33,6 +41,7 @@ const CourseMaterials = () => {
   const { toast } = useToast();
   const [course, setCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -70,7 +79,17 @@ const CourseMaterials = () => {
     if (data) {
       setIsEnrolled(true);
       fetchMaterials();
+      fetchModules();
     }
+  };
+
+  const fetchModules = async () => {
+    const { data } = await supabase
+      .from('course_modules')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('order_index');
+    if (data) setModules(data);
   };
 
   const fetchMaterials = async () => {
@@ -153,44 +172,99 @@ const CourseMaterials = () => {
         </TabsList>
       </Tabs>
 
-      <div className="grid grid-cols-1 gap-4">
-        {materials.map((material) => (
-          <Card key={material.id} className="hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                {getMaterialIcon(material.material_type)}
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{material.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
-                </div>
-                {material.file_url && (
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={material.file_url} target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4 mr-2" />
-                      Open
-                    </a>
-                  </Button>
-                )}
+      <Card>
+        <CardContent className="pt-6">
+          {/* Materials without module */}
+          {materials.filter(m => !m.module_id).length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-muted-foreground">General Materials</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {materials.filter(m => !m.module_id).map((material) => (
+                  <Card key={material.id} className="hover:shadow-lg transition-all duration-300">
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        {getMaterialIcon(material.material_type)}
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{material.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+                        </div>
+                        {material.file_url && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={material.file_url} target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4 mr-2" />
+                              Open
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    {material.description && (
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{material.description}</p>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
               </div>
-            </CardHeader>
-            {material.description && (
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{material.description}</p>
-              </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
+            </div>
+          )}
 
-      {materials.length === 0 && (
-        <div className="text-center py-16">
-          <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
-            <FileText className="h-20 w-20 text-white" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">No materials available yet</h3>
-          <p className="text-muted-foreground">Check back later for course materials</p>
-        </div>
-      )}
+          {/* Materials grouped by module */}
+          {modules.map((module) => {
+            const moduleMaterials = materials.filter(m => m.module_id === module.id);
+            if (moduleMaterials.length === 0) return null;
+            
+            return (
+              <div key={module.id} className="mb-8 last:mb-0">
+                <div className="flex items-center gap-3 mb-4 pb-2 border-b">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0">
+                    <span className="font-bold text-white">{module.serial_no}</span>
+                  </div>
+                  <h3 className="text-lg font-semibold">{module.topic}</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {moduleMaterials.map((material) => (
+                    <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40">
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          {getMaterialIcon(material.material_type)}
+                          <div className="flex-1">
+                            <CardTitle className="text-lg">{material.title}</CardTitle>
+                            <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
+                          </div>
+                          {material.file_url && (
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={material.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-2" />
+                                Open
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                      {material.description && (
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{material.description}</p>
+                        </CardContent>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {materials.length === 0 && (
+            <div className="text-center py-16">
+              <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
+                <FileText className="h-20 w-20 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No materials available yet</h3>
+              <p className="text-muted-foreground">Check back later for course materials</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <CourseDetailDialog
         course={selectedCourse}

@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
   id: string;
@@ -48,6 +50,8 @@ const AdminCourseMaterials = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [showModuleDialog, setShowModuleDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,6 +86,7 @@ const AdminCourseMaterials = () => {
       .single();
     if (data) {
       setCourse(data);
+      setSelectedCourse(data);
     }
   };
 
@@ -360,6 +365,21 @@ const AdminCourseMaterials = () => {
         </Dialog>
       </div>
 
+      <Tabs defaultValue="course" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger 
+            value="course" 
+            onClick={() => {
+              setSelectedCourse(course);
+              setShowDetailDialog(true);
+            }}
+          >
+            Course Page
+          </TabsTrigger>
+          <TabsTrigger value="content">Course Content</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Modules Section */}
       <Card className="mb-8">
         <CardHeader className="border-b">
@@ -472,12 +492,12 @@ const AdminCourseMaterials = () => {
         </CardContent>
       </Card>
 
-      {/* Materials Section */}
+      {/* Materials/Content Section */}
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="text-2xl flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            Course Materials
+            Course Content
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -617,6 +637,12 @@ const AdminCourseMaterials = () => {
           )}
         </CardContent>
       </Card>
+
+      <CourseDetailDialog
+        course={selectedCourse}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };

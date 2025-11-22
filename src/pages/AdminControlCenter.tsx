@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, FileText, BookOpen, HelpCircle } from 'lucide-react';
+import { CheckCircle, XCircle, FileText, BookOpen, HelpCircle, MessageSquare, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import {
@@ -71,6 +71,8 @@ const AdminControlCenter = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectType, setRejectType] = useState<'assignment' | 'material' | 'query'>('assignment');
+  const [showReplyDialog, setShowReplyDialog] = useState(false);
+  const [replyMessage, setReplyMessage] = useState('');
 
   useEffect(() => {
     fetchRequests();
@@ -271,26 +273,44 @@ const AdminControlCenter = () => {
     setShowRejectDialog(true);
   };
 
-  const handleApproveQuery = async (id: string) => {
+  const openReplyDialog = (query: Query) => {
+    setSelectedQuery(query);
+    setReplyMessage('');
+    setShowReplyDialog(true);
+  };
+
+  const handleSendReply = async () => {
+    if (!replyMessage.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please provide a reply message.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('queries')
       .update({
         status: 'resolved',
-        admin_response: 'Thank you for your query! We have addressed your concern.',
+        admin_response: replyMessage,
       })
-      .eq('id', id);
+      .eq('id', selectedQuery?.id);
 
     if (error) {
       toast({
         title: 'Error',
-        description: 'Failed to resolve query.',
+        description: 'Failed to send reply.',
         variant: 'destructive',
       });
     } else {
       toast({
         title: 'Success',
-        description: 'Query resolved and student notified.',
+        description: 'Reply sent to student.',
       });
+      setShowReplyDialog(false);
+      setReplyMessage('');
+      setSelectedQuery(null);
       fetchRequests();
     }
   };
@@ -503,6 +523,45 @@ const AdminControlCenter = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Reply Dialog for Queries */}
+      <Dialog open={showReplyDialog} onOpenChange={setShowReplyDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Reply to Query</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedQuery && (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm font-semibold mb-1">Subject:</p>
+                <p className="text-sm mb-3">{selectedQuery.subject}</p>
+                <p className="text-sm font-semibold mb-1">Student's Message:</p>
+                <p className="text-sm text-muted-foreground">{selectedQuery.message}</p>
+              </div>
+            )}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">
+                Your Reply:
+              </label>
+              <Textarea
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                placeholder="Write your reply to the student..."
+                rows={6}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReplyDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSendReply} className="gap-2">
+              <Send className="h-4 w-4" />
+              Send Reply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Student Queries */}
       <div>
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
@@ -533,19 +592,11 @@ const AdminControlCenter = () => {
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleApproveQuery(query.id)}
+                    onClick={() => openReplyDialog(query)}
                     className="flex items-center gap-2"
                   >
-                    <CheckCircle className="h-4 w-4" />
-                    Resolve & Notify
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => openRejectDialog('query', query)}
-                    className="flex items-center gap-2"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    Reject
+                    <MessageSquare className="h-4 w-4" />
+                    Reply
                   </Button>
                 </div>
               </CardContent>

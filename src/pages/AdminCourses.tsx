@@ -31,6 +31,8 @@ interface Course {
   description: string;
   difficulty: string;
   duration_hours: number;
+  credits?: number;
+  class_days?: string[];
   is_published: boolean;
   instructor_id: string;
 }
@@ -48,7 +50,10 @@ const AdminCourses = () => {
     description: '',
     difficulty: 'beginner',
     duration_hours: 10,
+    credits: 3,
+    class_days: [] as string[],
   });
+  const [classDayInput, setClassDayInput] = useState('');
 
   useEffect(() => {
     fetchCourses();
@@ -101,7 +106,10 @@ const AdminCourses = () => {
         description: '',
         difficulty: 'beginner',
         duration_hours: 10,
+        credits: 3,
+        class_days: [],
       });
+      setClassDayInput('');
       fetchCourses();
     } catch (error: any) {
       toast({
@@ -121,8 +129,22 @@ const AdminCourses = () => {
       description: course.description || '',
       difficulty: course.difficulty || 'beginner',
       duration_hours: course.duration_hours || 10,
+      credits: course.credits || 3,
+      class_days: course.class_days || [],
     });
+    setClassDayInput('');
     setShowDialog(true);
+  };
+
+  const addClassDay = () => {
+    if (classDayInput.trim() && !formData.class_days.includes(classDayInput.trim())) {
+      setFormData({ ...formData, class_days: [...formData.class_days, classDayInput.trim()] });
+      setClassDayInput('');
+    }
+  };
+
+  const removeClassDay = (day: string) => {
+    setFormData({ ...formData, class_days: formData.class_days.filter(d => d !== day) });
   };
 
   const handleDelete = async (courseId: string) => {
@@ -201,7 +223,10 @@ const AdminCourses = () => {
                   description: '',
                   difficulty: 'beginner',
                   duration_hours: 10,
+                  credits: 3,
+                  class_days: [],
                 });
+                setClassDayInput('');
               }}
             >
               <Plus className="mr-2 h-5 w-5" />
@@ -272,6 +297,57 @@ const AdminCourses = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="credits">Course Credits</Label>
+                <Input
+                  id="credits"
+                  type="number"
+                  min="1"
+                  value={formData.credits}
+                  onChange={(e) =>
+                    setFormData({ ...formData, credits: parseInt(e.target.value) })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="class_days">Class Days</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="class_days"
+                    placeholder="e.g., Monday, Wednesday, Friday"
+                    value={classDayInput}
+                    onChange={(e) => setClassDayInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addClassDay();
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" onClick={addClassDay}>
+                    Add
+                  </Button>
+                </div>
+                {formData.class_days.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.class_days.map((day, index) => (
+                      <Badge key={index} variant="secondary" className="px-3 py-1">
+                        {day}
+                        <button
+                          type="button"
+                          onClick={() => removeClassDay(day)}
+                          className="ml-2 text-xs hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">

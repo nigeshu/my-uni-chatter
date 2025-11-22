@@ -57,7 +57,9 @@ export type Database = {
       }
       courses: {
         Row: {
+          class_days: string[] | null
           created_at: string
+          credits: number | null
           description: string | null
           difficulty: string | null
           duration_hours: number | null
@@ -69,7 +71,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          class_days?: string[] | null
           created_at?: string
+          credits?: number | null
           description?: string | null
           difficulty?: string | null
           duration_hours?: number | null
@@ -81,7 +85,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          class_days?: string[] | null
           created_at?: string
+          credits?: number | null
           description?: string | null
           difficulty?: string | null
           duration_hours?: number | null

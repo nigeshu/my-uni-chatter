@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, FileText, Link, Video, File, Download } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
   id: string;
@@ -42,6 +44,8 @@ const CourseMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -58,6 +62,7 @@ const CourseMaterials = () => {
       .single();
     if (data) {
       setCourse(data);
+      setSelectedCourse(data);
     }
   };
 
@@ -152,6 +157,21 @@ const CourseMaterials = () => {
           <p className="text-muted-foreground text-lg">Course Content</p>
         </div>
       </div>
+
+      <Tabs defaultValue="course" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger 
+            value="course" 
+            onClick={() => {
+              setSelectedCourse(course);
+              setShowDetailDialog(true);
+            }}
+          >
+            Course Page
+          </TabsTrigger>
+          <TabsTrigger value="content">Course Content</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <Card>
         <CardContent className="pt-6">
@@ -251,6 +271,12 @@ const CourseMaterials = () => {
           )}
         </CardContent>
       </Card>
+
+      <CourseDetailDialog
+        course={selectedCourse}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };

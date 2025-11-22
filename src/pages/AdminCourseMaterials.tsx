@@ -55,6 +55,9 @@ const AdminCourseMaterials = () => {
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>('');
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',

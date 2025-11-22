@@ -639,6 +639,39 @@ export type Database = {
         }
         Relationships: []
       }
+      queries: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          id: string
+          message: string
+          status: string
+          student_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          status?: string
+          student_id: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          status?: string
+          student_id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       semester_info: {
         Row: {
           created_at: string

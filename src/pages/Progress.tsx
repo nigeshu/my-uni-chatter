@@ -259,8 +259,22 @@ const Progress = () => {
     if (total >= 80) return 'A';
     if (total >= 70) return 'B';
     if (total >= 60) return 'C';
-    if (total >= 50) return 'E';
+    if (total >= 50) return 'D';
+    if (total >= 40) return 'E';
     return 'F';
+  };
+
+  const getLabGradeColor = (grade: string) => {
+    if (grade === 'S' || grade === 'A') return 'bg-blue-500 text-white';
+    if (grade === 'B' || grade === 'C') return 'bg-yellow-500 text-white';
+    if (grade === 'D' || grade === 'E') return 'bg-green-500 text-white';
+    return 'bg-red-500 text-white';
+  };
+
+  const getMarksNeededToPass = (currentTotal: number, isLab: boolean) => {
+    const passingMark = 50;
+    if (currentTotal >= passingMark) return null;
+    return (passingMark - currentTotal).toFixed(2);
   };
 
   const calculateTheoryTotal = (mark: Partial<CourseMark>) => {
@@ -426,17 +440,28 @@ const Progress = () => {
                         onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
                       />
                     </div>
-                    <div className="col-span-2 p-3 bg-success/10 rounded-lg border border-success/20">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Total (out of 100):</span>
-                        <span className="text-xl font-bold">{calculateLabTotal(mark || {}).toFixed(2)}</span>
+                    <div className="col-span-2 space-y-3">
+                      <div className="p-3 bg-muted/50 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Total (out of 100):</span>
+                          <span className="text-xl font-bold">{calculateLabTotal(mark || {}).toFixed(2)}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="font-medium">Grade:</span>
-                        <span className="text-2xl font-bold text-success">
-                          {getLabGrade(calculateLabTotal(mark || {}))}
-                        </span>
+                      <div className="p-3 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Grade:</span>
+                          <span className={`text-2xl font-bold px-4 py-2 rounded ${getLabGradeColor(getLabGrade(calculateLabTotal(mark || {})))}`}>
+                            {getLabGrade(calculateLabTotal(mark || {}))}
+                          </span>
+                        </div>
                       </div>
+                      {calculateLabTotal(mark || {}) < 50 && (
+                        <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                            ⚠️ Failed! You need {getMarksNeededToPass(calculateLabTotal(mark || {}), true)} more marks to pass (minimum 50/100 required)
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -495,11 +520,26 @@ const Progress = () => {
                         onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}
                       />
                     </div>
-                    <div className="col-span-2 p-3 bg-accent/10 rounded-lg border border-accent/20">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Total (out of 100):</span>
-                        <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
+                    <div className="col-span-2 space-y-3">
+                      <div className="p-3 bg-muted/50 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Total (out of 100):</span>
+                          <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
+                        </div>
                       </div>
+                      {calculateTheoryTotal(mark || {}) < 50 ? (
+                        <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                            ⚠️ Failed! You need {getMarksNeededToPass(calculateTheoryTotal(mark || {}), false)} more marks to pass (minimum 50/100 required)
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                          <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                            ✓ Passed! You needed 40 out of 100 to pass, and you scored {calculateTheoryTotal(mark || {}).toFixed(2)}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

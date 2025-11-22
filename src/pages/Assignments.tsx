@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText, Upload } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -315,6 +315,31 @@ const Assignments = () => {
     return diffDays;
   };
 
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!confirm('Are you sure you want to delete this assignment? This action cannot be undone.')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('assignments')
+      .delete()
+      .eq('id', assignmentId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete assignment',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Assignment deleted successfully',
+      });
+      fetchAssignments();
+    }
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -503,7 +528,19 @@ const Assignments = () => {
                     </span>
                   </div>
 
-                  {!isAdmin && (
+                  {isAdmin ? (
+                    <Button
+                      className="w-full gap-2"
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteAssignment(assignment.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Assignment
+                    </Button>
+                  ) : (
                     <Button
                       className="w-full gap-2"
                       variant={isCompleted ? "secondary" : "default"}

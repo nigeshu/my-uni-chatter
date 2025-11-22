@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, Search, TrendingUp } from 'lucide-react';
+import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Course {
   id: string;
@@ -15,6 +16,8 @@ interface Course {
   description: string;
   difficulty: string;
   duration_hours: number;
+  credits?: number;
+  class_days?: string[];
   thumbnail_url: string | null;
   instructor: {
     full_name: string;
@@ -29,6 +32,8 @@ const Courses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -133,7 +138,11 @@ const Courses = () => {
         {filteredCourses.map((course) => (
           <Card 
             key={course.id}
-            className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden"
+            className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden cursor-pointer"
+            onClick={() => {
+              setSelectedCourse(course);
+              setShowDetailDialog(true);
+            }}
           >
             <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
@@ -168,7 +177,10 @@ const Courses = () => {
               {course.isEnrolled ? (
                 <Button
                   className="w-full bg-gradient-primary hover:opacity-90"
-                  onClick={() => navigate(`/dashboard/courses/${course.id}`)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/dashboard/courses/${course.id}`);
+                  }}
                 >
                   <BookOpen className="mr-2 h-4 w-4" />
                   Continue Learning
@@ -177,7 +189,10 @@ const Courses = () => {
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => handleEnroll(course.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEnroll(course.id);
+                  }}
                   disabled={loading}
                 >
                   Enroll Now
@@ -197,6 +212,13 @@ const Courses = () => {
           </p>
         </div>
       )}
+
+      {/* Course Detail Dialog */}
+      <CourseDetailDialog 
+        course={selectedCourse}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };

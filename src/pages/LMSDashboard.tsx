@@ -36,7 +36,7 @@ const LMSDashboard = () => {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate('/');
       return;
     }
 
@@ -107,7 +107,7 @@ const LMSDashboard = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/auth');
+    navigate('/');
     toast({
       title: 'Signed out',
       description: 'You have been successfully signed out.',

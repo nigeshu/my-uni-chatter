@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
   id: string;
@@ -23,6 +25,11 @@ interface Material {
 interface Course {
   id: string;
   title: string;
+  description: string | null;
+  difficulty: string;
+  duration_hours: number;
+  credits?: number;
+  class_days?: string[];
 }
 
 const AdminCourseMaterials = () => {
@@ -32,6 +39,8 @@ const AdminCourseMaterials = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [showDialog, setShowDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -52,10 +61,13 @@ const AdminCourseMaterials = () => {
   const fetchCourse = async () => {
     const { data } = await supabase
       .from('courses')
-      .select('id, title')
+      .select('*')
       .eq('id', courseId)
       .single();
-    if (data) setCourse(data);
+    if (data) {
+      setCourse(data);
+      setSelectedCourse(data);
+    }
   };
 
   const fetchMaterials = async () => {
@@ -146,9 +158,9 @@ const AdminCourseMaterials = () => {
           </Button>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-              Course Materials
+              {course?.title}
             </h1>
-            <p className="text-muted-foreground text-lg">{course?.title}</p>
+            <p className="text-muted-foreground text-lg">Course Management</p>
           </div>
         </div>
 
@@ -235,6 +247,21 @@ const AdminCourseMaterials = () => {
         </Dialog>
       </div>
 
+      <Tabs value="materials" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger 
+            value="course" 
+            onClick={() => {
+              setSelectedCourse(course);
+              setShowDetailDialog(true);
+            }}
+          >
+            Course Page
+          </TabsTrigger>
+          <TabsTrigger value="materials">Course Materials</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="grid grid-cols-1 gap-4">
         {materials.map((material) => (
           <Card key={material.id} className="hover:shadow-lg transition-all duration-300">
@@ -292,6 +319,12 @@ const AdminCourseMaterials = () => {
           <p className="text-muted-foreground mb-6">Add your first course material to get started</p>
         </div>
       )}
+
+      <CourseDetailDialog
+        course={selectedCourse}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
     </div>
   );
 };

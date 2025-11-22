@@ -375,7 +375,8 @@ const AdminCourses = () => {
         {courses.map((course) => (
           <Card 
             key={course.id} 
-            className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
+            className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer"
+            onClick={() => navigate(`/admin/courses/${course.id}/materials`)}
           >
             <CardHeader>
               <div className="flex items-start justify-between mb-2">
@@ -401,18 +402,11 @@ const AdminCourses = () => {
               <div className="flex gap-2 pt-2">
                 <Button
                   size="sm"
-                  variant="default"
-                  onClick={() => navigate(`/admin/courses/${course.id}/materials`)}
-                  className="flex-1 bg-gradient-accent hover:opacity-90"
-                >
-                  Manage Materials
-                </Button>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button
-                  size="sm"
                   variant="outline"
-                  onClick={() => togglePublish(course)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePublish(course);
+                  }}
                   className="flex-1"
                 >
                   {course.is_published ? (
@@ -430,14 +424,20 @@ const AdminCourses = () => {
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => handleEdit(course)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(course);
+                  }}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleDelete(course.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(course.id);
+                  }}
                   className="text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />

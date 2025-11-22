@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Clock, Search, TrendingUp } from 'lucide-react';
+import { BookOpen, TrendingUp, Search } from 'lucide-react';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Course {
@@ -169,8 +169,8 @@ const Courses = () => {
 
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>{course.duration_hours}h</span>
+                  <BookOpen className="h-4 w-4" />
+                  <span>{course.credits || 0} Credits</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <TrendingUp className="h-4 w-4" />

@@ -99,7 +99,6 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
     const channelName = `chat-${[userId, friendId].sort().join('-')}`;
     const channel = supabase.channel(channelName);
 
-    // Subscribe to new messages
     channel
       .on(
         'postgres_changes',
@@ -107,11 +106,26 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `sender_id=eq.${friendId},receiver_id=eq.${userId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-          markMessagesAsRead();
+          const msg = payload.new as Message;
+
+          // Only handle messages for this conversation
+          if (
+            (msg.sender_id === userId && msg.receiver_id === friendId) ||
+            (msg.sender_id === friendId && msg.receiver_id === userId)
+          ) {
+            // Avoid duplicates (we already add our own sent messages locally)
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === msg.id)) return prev;
+              return [...prev, msg];
+            });
+
+            // Mark as read when current user is receiver
+            if (msg.receiver_id === userId && msg.sender_id === friendId) {
+              markMessagesAsRead();
+            }
+          }
         }
       )
       .on('broadcast', { event: 'typing' }, (payload) => {
@@ -127,7 +141,6 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
       supabase.removeChannel(channel);
     };
   };
-
   const fetchFriend = async () => {
     const { data } = await supabase.from('profiles').select('*').eq('id', friendId).single();
 

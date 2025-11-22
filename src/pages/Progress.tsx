@@ -27,6 +27,7 @@ interface Semester {
   id: string;
   semester_name: string;
   credits: number;
+  graded_credits: number;
   gpa: number;
   order_index: number;
 }
@@ -61,7 +62,7 @@ const Progress = () => {
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [cgpa, setCgpa] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newSemester, setNewSemester] = useState({ name: '', credits: '', gpa: '' });
+  const [newSemester, setNewSemester] = useState({ name: '', credits: '', gradedCredits: '', gpa: '' });
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [courseMarks, setCourseMarks] = useState<Record<string, CourseMark>>({});
   const [isAdmin, setIsAdmin] = useState(false);
@@ -149,13 +150,13 @@ const Progress = () => {
       return;
     }
 
-    const totalCredits = semesterData.reduce((sum, sem) => sum + sem.credits, 0);
-    const weightedSum = semesterData.reduce((sum, sem) => sum + sem.credits * sem.gpa, 0);
-    setCgpa(totalCredits > 0 ? weightedSum / totalCredits : 0);
+    const totalGradedCredits = semesterData.reduce((sum, sem) => sum + sem.graded_credits, 0);
+    const weightedSum = semesterData.reduce((sum, sem) => sum + sem.graded_credits * sem.gpa, 0);
+    setCgpa(totalGradedCredits > 0 ? weightedSum / totalGradedCredits : 0);
   };
 
   const handleAddSemester = async () => {
-    if (!newSemester.name || !newSemester.credits || !newSemester.gpa) {
+    if (!newSemester.name || !newSemester.credits || !newSemester.gradedCredits || !newSemester.gpa) {
       toast({
         title: 'Error',
         description: 'Please fill all fields',
@@ -168,6 +169,7 @@ const Progress = () => {
       student_id: user?.id,
       semester_name: newSemester.name,
       credits: parseFloat(newSemester.credits),
+      graded_credits: parseFloat(newSemester.gradedCredits),
       gpa: parseFloat(newSemester.gpa),
       order_index: semesters.length,
     });
@@ -179,7 +181,7 @@ const Progress = () => {
         variant: 'destructive',
       });
     } else {
-      setNewSemester({ name: '', credits: '', gpa: '' });
+      setNewSemester({ name: '', credits: '', gradedCredits: '', gpa: '' });
       setDialogOpen(false);
       fetchSemesters();
       toast({
@@ -403,6 +405,16 @@ const Progress = () => {
                       value={newSemester.credits}
                       onChange={(e) => setNewSemester({ ...newSemester, credits: e.target.value })}
                       placeholder="e.g., 20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Graded Credits</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={newSemester.gradedCredits}
+                      onChange={(e) => setNewSemester({ ...newSemester, gradedCredits: e.target.value })}
+                      placeholder="e.g., 18"
                     />
                   </div>
                   <div className="space-y-2">

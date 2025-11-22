@@ -126,6 +126,7 @@ export type Database = {
           created_at: string
           credits: number
           gpa: number
+          graded_credits: number
           id: string
           order_index: number
           semester_name: string
@@ -136,6 +137,7 @@ export type Database = {
           created_at?: string
           credits: number
           gpa: number
+          graded_credits?: number
           id?: string
           order_index?: number
           semester_name: string
@@ -146,6 +148,7 @@ export type Database = {
           created_at?: string
           credits?: number
           gpa?: number
+          graded_credits?: number
           id?: string
           order_index?: number
           semester_name?: string

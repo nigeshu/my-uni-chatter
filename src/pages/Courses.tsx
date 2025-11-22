@@ -179,11 +179,11 @@ const Courses = () => {
                   className="w-full bg-gradient-primary hover:opacity-90"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/dashboard/courses/${course.id}`);
+                    navigate(`/dashboard/courses/${course.id}/materials`);
                   }}
                 >
                   <BookOpen className="mr-2 h-4 w-4" />
-                  Continue Learning
+                  View Materials
                 </Button>
               ) : (
                 <Button

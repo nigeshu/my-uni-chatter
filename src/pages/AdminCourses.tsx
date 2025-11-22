@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Course {
   id: string;
@@ -40,13 +40,12 @@ interface Course {
 
 const AdminCourses = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -376,11 +375,7 @@ const AdminCourses = () => {
         {courses.map((course) => (
           <Card 
             key={course.id} 
-            className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer"
-            onClick={() => {
-              setSelectedCourse(course);
-              setShowDetailDialog(true);
-            }}
+            className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
           >
             <CardHeader>
               <div className="flex items-start justify-between mb-2">
@@ -406,11 +401,18 @@ const AdminCourses = () => {
               <div className="flex gap-2 pt-2">
                 <Button
                   size="sm"
+                  variant="default"
+                  onClick={() => navigate(`/admin/courses/${course.id}/materials`)}
+                  className="flex-1 bg-gradient-accent hover:opacity-90"
+                >
+                  Manage Materials
+                </Button>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  size="sm"
                   variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePublish(course);
-                  }}
+                  onClick={() => togglePublish(course)}
                   className="flex-1"
                 >
                   {course.is_published ? (
@@ -428,20 +430,14 @@ const AdminCourses = () => {
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(course);
-                  }}
+                  onClick={() => handleEdit(course)}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(course.id);
-                  }}
+                  onClick={() => handleDelete(course.id)}
                   className="text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -451,12 +447,6 @@ const AdminCourses = () => {
           </Card>
         ))}
       </div>
-
-      <CourseDetailDialog
-        course={selectedCourse}
-        open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
-      />
 
       {courses.length === 0 && (
         <div className="text-center py-16">

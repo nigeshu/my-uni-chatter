@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   BookOpen, 
-  MessageSquare, 
   LogOut, 
   GraduationCap,
-  FileText,
+  Users,
   BarChart,
-  Home
+  Home,
+  Settings
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -23,7 +23,7 @@ interface Profile {
   role: string;
 }
 
-const LMSDashboard = () => {
+const AdminDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,7 +48,18 @@ const LMSDashboard = () => {
       .eq('id', user?.id)
       .single();
 
-    if (data) setProfile(data);
+    if (data) {
+      if (data.role !== 'admin') {
+        toast({
+          title: 'Access Denied',
+          description: 'You do not have admin privileges.',
+          variant: 'destructive',
+        });
+        navigate('/dashboard');
+        return;
+      }
+      setProfile(data);
+    }
   };
 
   const handleSignOut = async () => {
@@ -72,40 +83,39 @@ const LMSDashboard = () => {
   }
 
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/dashboard/courses', icon: BookOpen, label: 'My Courses' },
-    { path: '/dashboard/assignments', icon: FileText, label: 'Assignments' },
-    { path: '/dashboard/progress', icon: BarChart, label: 'Progress' },
-    { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
+    { path: '/admin', icon: Home, label: 'Dashboard' },
+    { path: '/admin/courses', icon: BookOpen, label: 'Manage Courses' },
+    { path: '/admin/students', icon: Users, label: 'Students' },
+    { path: '/admin/analytics', icon: BarChart, label: 'Analytics' },
   ];
 
   return (
     <div className="h-screen flex bg-background">
       {/* Sidebar */}
-      <div className="w-64 border-r border-border flex flex-col bg-gradient-to-b from-card via-card to-primary/5">
+      <div className="w-64 border-r border-border flex flex-col bg-gradient-to-b from-card via-card to-accent/5">
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-primary rounded-lg">
+            <div className="p-2 bg-gradient-accent rounded-lg">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                EduHub
+              <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+                Admin Panel
               </h1>
-              <p className="text-xs text-muted-foreground">Learning Platform</p>
+              <p className="text-xs text-muted-foreground">EduHub LMS</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-                {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
+          <div className="flex items-center gap-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
+            <Avatar className="h-10 w-10 border-2 border-accent/20">
+              <AvatarFallback className="bg-gradient-accent text-white font-semibold">
+                {profile?.full_name?.[0] || profile?.email?.[0] || 'A'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
+              <p className="font-semibold truncate text-sm">{profile?.full_name || 'Admin'}</p>
+              <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Administrator'}</p>
             </div>
           </div>
         </div>
@@ -118,9 +128,9 @@ const LMSDashboard = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path === '/dashboard'}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
-                activeClassName="bg-gradient-primary text-white hover:text-white shadow-md"
+                end={item.path === '/admin'}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/5 hover:text-accent transition-all duration-200"
+                activeClassName="bg-gradient-accent text-white hover:text-white shadow-md"
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">{item.label}</span>
@@ -128,17 +138,15 @@ const LMSDashboard = () => {
             );
           })}
           
-          {profile?.role === 'admin' && (
-            <div className="pt-4 border-t border-border mt-4">
-              <NavLink
-                to="/admin"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-200"
-              >
-                <GraduationCap className="h-5 w-5" />
-                <span className="font-medium">Admin Panel</span>
-              </NavLink>
-            </div>
-          )}
+          <div className="pt-4 border-t border-border mt-4">
+            <NavLink
+              to="/dashboard"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
+            >
+              <Users className="h-5 w-5" />
+              <span className="font-medium">Student View</span>
+            </NavLink>
+          </div>
         </nav>
 
         {/* Sign Out */}
@@ -162,4 +170,4 @@ const LMSDashboard = () => {
   );
 };
 
-export default LMSDashboard;
+export default AdminDashboard;

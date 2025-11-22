@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/supabase";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -12,6 +12,11 @@ import Courses from "./pages/Courses";
 import Assignments from "./pages/Assignments";
 import Progress from "./pages/Progress";
 import ChatPage from "./pages/ChatPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminHome from "./pages/AdminHome";
+import AdminCourses from "./pages/AdminCourses";
+import AdminStudents from "./pages/AdminStudents";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +37,12 @@ const App = () => (
               <Route path="assignments" element={<Assignments />} />
               <Route path="progress" element={<Progress />} />
               <Route path="chat" element={<ChatPage />} />
+            </Route>
+            <Route path="/admin" element={<AdminDashboard />}>
+              <Route index element={<AdminHome />} />
+              <Route path="courses" element={<AdminCourses />} />
+              <Route path="students" element={<AdminStudents />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

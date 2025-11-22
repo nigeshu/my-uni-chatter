@@ -1,0 +1,100 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { BookOpen, Users, FileText, TrendingUp } from 'lucide-react';
+
+const AdminHome = () => {
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    totalStudents: 0,
+    totalAssignments: 0,
+    activeEnrollments: 0,
+  });
+
+  useEffect(() => {
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
+
+  const fetchStats = async () => {
+    const [courses, students, assignments, enrollments] = await Promise.all([
+      supabase.from('courses').select('id', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+      supabase.from('assignments').select('id', { count: 'exact', head: true }),
+      supabase.from('enrollments').select('id', { count: 'exact', head: true }),
+    ]);
+
+    setStats({
+      totalCourses: courses.count || 0,
+      totalStudents: students.count || 0,
+      totalAssignments: assignments.count || 0,
+      activeEnrollments: enrollments.count || 0,
+    });
+  };
+
+  const statCards = [
+    {
+      title: 'Total Courses',
+      value: stats.totalCourses,
+      icon: BookOpen,
+      gradient: 'from-primary to-purple-600',
+    },
+    {
+      title: 'Students',
+      value: stats.totalStudents,
+      icon: Users,
+      gradient: 'from-accent to-rose-600',
+    },
+    {
+      title: 'Assignments',
+      value: stats.totalAssignments,
+      icon: FileText,
+      gradient: 'from-warning to-orange-600',
+    },
+    {
+      title: 'Active Enrollments',
+      value: stats.activeEnrollments,
+      icon: TrendingUp,
+      gradient: 'from-success to-emerald-600',
+    },
+  ];
+
+  return (
+    <div className="p-8 space-y-8 animate-fade-in">
+      <div>
+        <h1 className="text-4xl font-bold mb-2 bg-gradient-accent bg-clip-text text-transparent">
+          Admin Dashboard
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Manage your learning platform
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold">{stat.value}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default AdminHome;

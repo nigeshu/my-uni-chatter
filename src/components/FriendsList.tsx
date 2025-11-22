@@ -130,6 +130,7 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
       .eq('id', requestId);
 
     if (updateError) {
+      console.error('Error updating friend request:', updateError);
       toast({
         title: 'Error',
         description: 'Failed to accept friend request.',
@@ -138,10 +139,21 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
       return;
     }
 
-    await supabase.from('friendships').insert([
-      { user_id: userId, friend_id: senderId },
-      { user_id: senderId, friend_id: userId },
-    ]);
+    // Only insert one friendship - the trigger will create the reciprocal one
+    const { error: friendshipError } = await supabase.from('friendships').insert({
+      user_id: userId,
+      friend_id: senderId,
+    });
+
+    if (friendshipError) {
+      console.error('Error creating friendship:', friendshipError);
+      toast({
+        title: 'Error',
+        description: 'Failed to create friendship. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     toast({
       title: 'Success',

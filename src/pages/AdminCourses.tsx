@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Course {
   id: string;
@@ -44,6 +45,8 @@ const AdminCourses = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -371,7 +374,14 @@ const AdminCourses = () => {
       {/* Courses List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => (
-          <Card key={course.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
+          <Card 
+            key={course.id} 
+            className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer"
+            onClick={() => {
+              setSelectedCourse(course);
+              setShowDetailDialog(true);
+            }}
+          >
             <CardHeader>
               <div className="flex items-start justify-between mb-2">
                 <Badge className={getDifficultyColor(course.difficulty)}>
@@ -397,7 +407,10 @@ const AdminCourses = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => togglePublish(course)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePublish(course);
+                  }}
                   className="flex-1"
                 >
                   {course.is_published ? (
@@ -412,13 +425,23 @@ const AdminCourses = () => {
                     </>
                   )}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleEdit(course)}>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(course);
+                  }}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleDelete(course.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(course.id);
+                  }}
                   className="text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -428,6 +451,12 @@ const AdminCourses = () => {
           </Card>
         ))}
       </div>
+
+      <CourseDetailDialog
+        course={selectedCourse}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
 
       {courses.length === 0 && (
         <div className="text-center py-16">

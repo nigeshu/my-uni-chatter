@@ -59,15 +59,19 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [friend, setFriend] = useState<Profile | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     if (userId && friendId) {
       fetchFriend();
       fetchMessages();
       markMessagesAsRead();
-      subscribeToMessages();
+      const cleanup = subscribeToMessages();
+      return cleanup;
     }
   }, [userId, friendId]);
 
@@ -82,8 +86,11 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
   };
 
   const subscribeToMessages = () => {
-    const channel = supabase
-      .channel('messages-changes')
+    const channelName = `chat-${[userId, friendId].sort().join('-')}`;
+    const channel = supabase.channel(channelName);
+
+    // Subscribe to new messages
+    channel
       .on(
         'postgres_changes',
         {
@@ -97,7 +104,14 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
           markMessagesAsRead();
         }
       )
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload.userId === friendId) {
+          setIsTyping(payload.payload.isTyping);
+        }
+      })
       .subscribe();
+
+    channelRef.current = channel;
 
     return () => {
       supabase.removeChannel(channel);
@@ -131,15 +145,58 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
       .eq('is_read', false);
   };
 
+  const handleTyping = (value: string) => {
+    setNewMessage(value);
+
+    // Broadcast typing status
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { userId, isTyping: value.length > 0 },
+      });
+    }
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout to stop typing indicator
+    if (value.length > 0) {
+      typingTimeoutRef.current = setTimeout(() => {
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { userId, isTyping: false },
+          });
+        }
+      }, 2000);
+    }
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!newMessage.trim()) return;
 
+    // Stop typing indicator
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { userId, isTyping: false },
+      });
+    }
+
+    const message = newMessage.trim();
+    setNewMessage('');
+
     const { error } = await supabase.from('messages').insert({
       sender_id: userId,
       receiver_id: friendId,
-      content: newMessage.trim(),
+      content: message,
     });
 
     if (error) {
@@ -148,11 +205,8 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
         description: 'Failed to send message.',
         variant: 'destructive',
       });
-      return;
+      setNewMessage(message);
     }
-
-    setNewMessage('');
-    fetchMessages();
   };
 
   return (
@@ -199,6 +253,19 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
               </div>
             );
           })}
+          
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-chat-received rounded-2xl px-4 py-3">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
@@ -207,7 +274,7 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
         <form onSubmit={sendMessage} className="flex gap-2">
           <Input
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => handleTyping(e.target.value)}
             placeholder="Type a message..."
             className="flex-1"
           />

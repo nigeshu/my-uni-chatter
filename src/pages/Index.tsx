@@ -87,20 +87,13 @@ const Index = () => {
               interactive courses, real-time collaboration, and powerful progress tracking.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+            <div className="flex justify-center pt-8">
               <Button
                 size="lg"
                 onClick={() => navigate('/auth')}
                 className="min-w-[200px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300"
               >
                 Get Started Free
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="min-w-[200px] text-lg h-14 border-2"
-              >
-                Learn More
               </Button>
             </div>
           </div>

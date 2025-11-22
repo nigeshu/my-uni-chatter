@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, FileText, Link, Video, File, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Link, Video, File, Download, Play } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
+import ModuleVideosDialog from '@/components/ModuleVideosDialog';
 
 interface Material {
   id: string;
@@ -50,6 +51,8 @@ const CourseMaterials = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [videosDialogOpen, setVideosDialogOpen] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -195,6 +198,17 @@ const CourseMaterials = () => {
                       <h3 className="text-lg font-semibold">{module.heading}</h3>
                     )}
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedModule(module);
+                      setVideosDialogOpen(true);
+                    }}
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Videos
+                  </Button>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   {moduleMaterials.map((material) => (
@@ -288,6 +302,12 @@ const CourseMaterials = () => {
         course={selectedCourse}
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
+      />
+
+      <ModuleVideosDialog
+        open={videosDialogOpen}
+        onOpenChange={setVideosDialogOpen}
+        module={selectedModule}
       />
     </div>
   );

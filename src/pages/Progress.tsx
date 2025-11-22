@@ -388,8 +388,9 @@ const Progress = () => {
         <CardHeader>
           <CardTitle>Course Marks</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {enrolledCourses.map((enrollment) => {
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {enrolledCourses.map((enrollment) => {
             const course = enrollment.course;
             const mark = courseMarks[course.id];
             const isLab = course.course_type === 'lab';
@@ -505,6 +506,7 @@ const Progress = () => {
               </div>
             );
           })}
+          </div>
           {enrolledCourses.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-50" />

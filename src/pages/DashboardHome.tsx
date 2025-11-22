@@ -240,9 +240,17 @@ const DashboardHome = () => {
       .in('status', ['approved', 'rejected'])
       .order('updated_at', { ascending: false });
 
+    const { data: queryResponses } = await supabase
+      .from('queries')
+      .select('*')
+      .eq('student_id', user.id)
+      .in('status', ['resolved', 'rejected'])
+      .order('updated_at', { ascending: false });
+
     const allNotifications = [
       ...(assignmentResponses || []).map(r => ({ ...r, type: 'assignment' })),
       ...(materialResponses || []).map(r => ({ ...r, type: 'material' })),
+      ...(queryResponses || []).map(r => ({ ...r, type: 'query' })),
     ].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
     setNotifications(allNotifications);
@@ -560,30 +568,40 @@ const DashboardHome = () => {
                     No urgent assignments
                   </p>
                 ) : (
-                  alerts.urgentAssignments.map((assignment) => (
-                    <div 
-                      key={assignment.id} 
-                      className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/20 hover:border-orange-500/40 hover:shadow-lg transition-all cursor-pointer"
-                      onClick={() => navigate('/dashboard/assignments')}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm mb-1 truncate">
-                            {assignment.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {assignment.course_title}
-                          </p>
-                          <div className="flex items-center gap-1 text-xs">
-                            <Clock className="h-3 w-3 text-orange-600" />
-                            <span className="font-medium text-orange-600">
-                              Due: {format(new Date(assignment.due_date), 'MMM dd, HH:mm')}
-                            </span>
+                  alerts.urgentAssignments.map((assignment) => {
+                    const dueDate = new Date(assignment.due_date);
+                    const isOverdue = dueDate < new Date();
+                    
+                    return (
+                      <div 
+                        key={assignment.id} 
+                        className={`p-4 rounded-lg border hover:shadow-lg transition-all cursor-pointer ${
+                          isOverdue 
+                            ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/40 hover:border-red-500/60' 
+                            : 'bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 hover:border-orange-500/40'
+                        }`}
+                        onClick={() => navigate('/dashboard/assignments')}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm mb-1 truncate">
+                              {assignment.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              {assignment.course_title}
+                            </p>
+                            <div className="flex items-center gap-1 text-xs">
+                              <Clock className={`h-3 w-3 ${isOverdue ? 'text-red-600' : 'text-orange-600'}`} />
+                              <span className={`font-medium ${isOverdue ? 'text-red-600' : 'text-orange-600'}`}>
+                                {isOverdue ? 'OVERDUE: ' : 'Due: '}
+                                {format(dueDate, 'MMM dd, HH:mm')}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </CardContent>

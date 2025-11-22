@@ -404,15 +404,15 @@ const Progress = () => {
           <CardTitle>Course Marks</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="lab" className="w-full">
+          <Tabs defaultValue="theory" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="lab" className="gap-2">
-                <FlaskConical className="h-4 w-4" />
-                Lab Courses
-              </TabsTrigger>
               <TabsTrigger value="theory" className="gap-2">
                 <BookOpen className="h-4 w-4" />
                 Theory Courses
+              </TabsTrigger>
+              <TabsTrigger value="lab" className="gap-2">
+                <FlaskConical className="h-4 w-4" />
+                Lab Courses
               </TabsTrigger>
             </TabsList>
 

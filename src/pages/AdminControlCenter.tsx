@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, FileText, BookOpen } from 'lucide-react';
+import { CheckCircle, XCircle, FileText, BookOpen, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import {
@@ -46,15 +46,31 @@ interface MaterialContribution {
   };
 }
 
+interface Query {
+  id: string;
+  subject: string;
+  message: string;
+  status: string;
+  admin_response: string | null;
+  created_at: string;
+  student_id: string;
+  student: {
+    full_name: string;
+    email: string;
+  };
+}
+
 const AdminControlCenter = () => {
   const { toast } = useToast();
   const [assignmentRequests, setAssignmentRequests] = useState<AssignmentRequest[]>([]);
   const [materialContributions, setMaterialContributions] = useState<MaterialContribution[]>([]);
+  const [queries, setQueries] = useState<Query[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<AssignmentRequest | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialContribution | null>(null);
+  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [rejectType, setRejectType] = useState<'assignment' | 'material'>('assignment');
+  const [rejectType, setRejectType] = useState<'assignment' | 'material' | 'query'>('assignment');
 
   useEffect(() => {
     fetchRequests();
@@ -107,6 +123,30 @@ const AdminControlCenter = () => {
       }));
 
       setMaterialContributions(materialsWithProfiles);
+    }
+
+    // Fetch queries
+    const { data: queryData } = await supabase
+      .from('queries')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (queryData) {
+      // Fetch student profiles for queries
+      const studentIds = queryData.map(q => q.student_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', studentIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const queriesWithProfiles: Query[] = queryData.map(q => ({
+        ...q,
+        student: profileMap.get(q.student_id) || { full_name: 'Unknown', email: 'Unknown' }
+      }));
+
+      setQueries(queriesWithProfiles);
     }
   };
 
@@ -168,16 +208,36 @@ const AdminControlCenter = () => {
       return;
     }
 
-    const table = rejectType === 'assignment' ? 'assignment_requests' : 'material_contributions';
-    const id = rejectType === 'assignment' ? selectedRequest?.id : selectedMaterial?.id;
+    let error: any;
 
-    const { error } = await supabase
-      .from(table)
-      .update({
-        status: 'rejected',
-        admin_response: rejectReason,
-      })
-      .eq('id', id);
+    if (rejectType === 'assignment') {
+      const result = await supabase
+        .from('assignment_requests')
+        .update({
+          status: 'rejected',
+          admin_response: rejectReason,
+        })
+        .eq('id', selectedRequest?.id || '');
+      error = result.error;
+    } else if (rejectType === 'material') {
+      const result = await supabase
+        .from('material_contributions')
+        .update({
+          status: 'rejected',
+          admin_response: rejectReason,
+        })
+        .eq('id', selectedMaterial?.id || '');
+      error = result.error;
+    } else {
+      const result = await supabase
+        .from('queries')
+        .update({
+          status: 'rejected',
+          admin_response: rejectReason,
+        })
+        .eq('id', selectedQuery?.id || '');
+      error = result.error;
+    }
 
     if (error) {
       toast({
@@ -194,18 +254,45 @@ const AdminControlCenter = () => {
       setRejectReason('');
       setSelectedRequest(null);
       setSelectedMaterial(null);
+      setSelectedQuery(null);
       fetchRequests();
     }
   };
 
-  const openRejectDialog = (type: 'assignment' | 'material', item: any) => {
+  const openRejectDialog = (type: 'assignment' | 'material' | 'query', item: any) => {
     setRejectType(type);
     if (type === 'assignment') {
       setSelectedRequest(item);
-    } else {
+    } else if (type === 'material') {
       setSelectedMaterial(item);
+    } else {
+      setSelectedQuery(item);
     }
     setShowRejectDialog(true);
+  };
+
+  const handleApproveQuery = async (id: string) => {
+    const { error } = await supabase
+      .from('queries')
+      .update({
+        status: 'resolved',
+        admin_response: 'Thank you for your query! We have addressed your concern.',
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to resolve query.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Query resolved and student notified.',
+      });
+      fetchRequests();
+    }
   };
 
   return (
@@ -415,6 +502,64 @@ const AdminControlCenter = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Student Queries */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <HelpCircle className="h-6 w-6" />
+          Student Queries
+          <Badge variant="secondary">{queries.length}</Badge>
+        </h2>
+        <div className="grid gap-4">
+          {queries.map((query) => (
+            <Card key={query.id} className="border-l-4 border-l-blue-500">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-xl">{query.subject}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      By: {query.student.full_name} ({query.student.email})
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(query.created_at), 'PPp')}
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold mb-2">Message:</p>
+                  <p className="text-sm text-muted-foreground">{query.message}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleApproveQuery(query.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Resolve & Notify
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => openRejectDialog('query', query)}
+                    className="flex items-center gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Reject
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {queries.length === 0 && (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No pending queries
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

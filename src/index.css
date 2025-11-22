@@ -8,77 +8,99 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 15% 20%;
+    --background: 240 10% 98%;
+    --foreground: 240 10% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 15% 20%;
+    --card-foreground: 240 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 15% 20%;
+    --popover-foreground: 240 10% 10%;
 
-    --primary: 210 80% 50%;
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 95%;
-    --secondary-foreground: 210 15% 20%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 240 10% 10%;
 
-    --muted: 210 15% 96%;
-    --muted-foreground: 210 10% 45%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 240 5% 45%;
 
-    --accent: 190 80% 50%;
+    --accent: 340 82% 52%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 55%;
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 15% 90%;
-    --input: 210 15% 88%;
-    --ring: 210 80% 50%;
+    --border: 220 13% 91%;
+    --input: 220 13% 88%;
+    --ring: 262 83% 58%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --chat-bubble-sent: 210 80% 50%;
-    --chat-bubble-received: 210 15% 95%;
-    --chat-hover: 210 15% 97%;
-    --online-indicator: 142 76% 36%;
+    --chat-bubble-sent: 262 83% 58%;
+    --chat-bubble-received: 220 14% 95%;
+    --chat-hover: 220 14% 97%;
+    --online-indicator: 142 76% 45%;
     
-    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(290 80% 65%));
+    --gradient-accent: linear-gradient(135deg, hsl(340 82% 52%), hsl(10 85% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(170 75% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%), hsl(340 82% 52%));
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 210 20% 8%;
-    --foreground: 210 15% 95%;
+    --background: 240 10% 5%;
+    --foreground: 240 10% 95%;
 
-    --card: 210 20% 10%;
-    --card-foreground: 210 15% 95%;
+    --card: 240 10% 8%;
+    --card-foreground: 240 10% 95%;
 
-    --popover: 210 20% 10%;
-    --popover-foreground: 210 15% 95%;
+    --popover: 240 10% 8%;
+    --popover-foreground: 240 10% 95%;
 
-    --primary: 210 80% 55%;
+    --primary: 262 83% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 15%;
-    --secondary-foreground: 210 15% 95%;
+    --secondary: 240 8% 15%;
+    --secondary-foreground: 240 10% 95%;
 
-    --muted: 210 15% 12%;
-    --muted-foreground: 210 10% 60%;
+    --muted: 240 8% 12%;
+    --muted-foreground: 240 5% 60%;
 
-    --accent: 190 80% 55%;
+    --accent: 340 82% 58%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 60%;
+    --success: 142 76% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 15% 20%;
-    --input: 210 15% 18%;
-    --ring: 210 80% 55%;
+    --border: 240 8% 18%;
+    --input: 240 8% 15%;
+    --ring: 262 83% 62%;
     
-    --chat-bubble-sent: 210 80% 45%;
-    --chat-bubble-received: 210 15% 15%;
-    --chat-hover: 210 15% 18%;
-    --online-indicator: 142 76% 40%;
+    --chat-bubble-sent: 262 83% 55%;
+    --chat-bubble-received: 240 8% 15%;
+    --chat-hover: 240 8% 18%;
+    --online-indicator: 142 76% 50%;
   }
 }
 

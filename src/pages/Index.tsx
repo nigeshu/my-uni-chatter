@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase';
-import { MessageSquare, Users, Shield } from 'lucide-react';
+import { MessageSquare, Users, Shield, BookOpen, Award, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -22,64 +22,138 @@ const Index = () => {
     );
   }
 
+  const features = [
+    {
+      icon: BookOpen,
+      title: 'Interactive Courses',
+      description: 'Learn with engaging video lessons and hands-on exercises',
+      gradient: 'from-primary to-purple-600',
+    },
+    {
+      icon: Award,
+      title: 'Track Progress',
+      description: 'Monitor your learning journey with detailed analytics',
+      gradient: 'from-success to-emerald-600',
+    },
+    {
+      icon: MessageSquare,
+      title: "Let's Talk",
+      description: 'Connect with classmates through real-time messaging',
+      gradient: 'from-accent to-rose-600',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Assignments & Quizzes',
+      description: 'Test your knowledge with interactive assessments',
+      gradient: 'from-warning to-orange-600',
+    },
+    {
+      icon: Users,
+      title: 'Collaborative Learning',
+      description: 'Study together with friends and build your network',
+      gradient: 'from-blue-500 to-cyan-600',
+    },
+    {
+      icon: Shield,
+      title: 'Secure & Private',
+      description: 'Your data is protected with enterprise-grade security',
+      gradient: 'from-indigo-500 to-violet-600',
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <div className="max-w-4xl w-full text-center space-y-8">
-        <div className="space-y-4">
-          <div className="flex justify-center">
-            <div className="p-6 bg-primary rounded-full shadow-lg">
-              <MessageSquare className="h-16 w-16 text-primary-foreground" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="container mx-auto px-4 py-20 relative">
+          <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+            <div className="inline-block p-4 bg-gradient-primary rounded-2xl shadow-2xl mb-6 animate-scale-in">
+              <BookOpen className="h-16 w-16 text-white" />
+            </div>
+            
+            <h1 className="text-6xl md:text-7xl font-bold leading-tight">
+              <span className="bg-gradient-hero bg-clip-text text-transparent">
+                EduHub
+              </span>
+              <br />
+              <span className="text-4xl md:text-5xl text-foreground/80">
+                Learning Management System
+              </span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+              Transform your learning experience with our comprehensive platform featuring
+              interactive courses, real-time collaboration, and powerful progress tracking.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+              <Button
+                size="lg"
+                onClick={() => navigate('/auth')}
+                className="min-w-[200px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300"
+              >
+                Get Started Free
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="min-w-[200px] text-lg h-14 border-2"
+              >
+                Learn More
+              </Button>
             </div>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Let's Talk
-          </h1>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="container mx-auto px-4 py-24">
+        <div className="text-center mb-16 animate-fade-in">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
+            Powerful Features
+          </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Connect and chat with your friends in a professional, secure environment. 
-            Real-time messaging made simple and beautiful.
+            Everything you need for an exceptional learning experience
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={index}
+                className="group p-8 bg-card border border-border rounded-2xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className={`p-4 bg-gradient-to-br ${feature.gradient} rounded-xl w-fit mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="font-bold text-xl mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="container mx-auto px-4 py-24">
+        <div className="max-w-4xl mx-auto text-center space-y-8 p-12 bg-gradient-to-br from-primary/10 via-purple-500/10 to-accent/10 rounded-3xl border border-primary/20 animate-fade-in">
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+            Ready to Start Learning?
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Join thousands of students already learning on EduHub
+          </p>
           <Button
             size="lg"
             onClick={() => navigate('/auth')}
-            className="min-w-[200px] text-lg"
+            className="min-w-[250px] text-lg h-14 bg-gradient-primary hover:opacity-90 shadow-xl hover:shadow-2xl transition-all duration-300"
           >
-            Get Started
+            Start Your Journey
           </Button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mt-16">
-          <div className="p-6 bg-card border border-border rounded-lg">
-            <div className="p-3 bg-primary/10 rounded-full w-fit mx-auto mb-4">
-              <MessageSquare className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Real-time Chat</h3>
-            <p className="text-muted-foreground text-sm">
-              Instant messaging with your friends. Messages delivered in real-time.
-            </p>
-          </div>
-
-          <div className="p-6 bg-card border border-border rounded-lg">
-            <div className="p-3 bg-accent/10 rounded-full w-fit mx-auto mb-4">
-              <Users className="h-8 w-8 text-accent" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Friend Management</h3>
-            <p className="text-muted-foreground text-sm">
-              Send friend requests, accept invites, and build your network.
-            </p>
-          </div>
-
-          <div className="p-6 bg-card border border-border rounded-lg">
-            <div className="p-3 bg-primary/10 rounded-full w-fit mx-auto mb-4">
-              <Shield className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Secure & Private</h3>
-            <p className="text-muted-foreground text-sm">
-              Your conversations are secure with authentication and privacy controls.
-            </p>
-          </div>
         </div>
       </div>
     </div>

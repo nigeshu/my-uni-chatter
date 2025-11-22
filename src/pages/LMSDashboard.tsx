@@ -78,8 +78,8 @@ const LMSDashboard = () => {
     { path: '/dashboard/courses', icon: BookOpen, label: 'My Courses' },
     { path: '/dashboard/assignments', icon: FileText, label: 'Assignments' },
     { path: '/dashboard/progress', icon: BarChart, label: 'Progress' },
-    { path: '/dashboard/query', icon: HelpCircle, label: 'Query' },
     { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
+    { path: '/dashboard/query', icon: HelpCircle, label: 'Query' },
   ];
 
   return (

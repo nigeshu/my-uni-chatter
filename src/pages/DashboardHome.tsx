@@ -51,6 +51,7 @@ const DashboardHome = () => {
   const [newMessage, setNewMessage] = useState('');
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [viewedNotifications, setViewedNotifications] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -60,6 +61,7 @@ const DashboardHome = () => {
       checkAdminRole();
       fetchAlerts();
       fetchNotifications();
+      loadViewedNotifications();
     }
   }, [user]);
 
@@ -256,6 +258,29 @@ const DashboardHome = () => {
     setNotifications(allNotifications);
   };
 
+  const loadViewedNotifications = () => {
+    const stored = localStorage.getItem(`viewed_notifications_${user?.id}`);
+    if (stored) {
+      setViewedNotifications(JSON.parse(stored));
+    }
+  };
+
+  const markNotificationsAsViewed = () => {
+    const notificationIds = notifications.map(n => n.id);
+    const updatedViewed = [...new Set([...viewedNotifications, ...notificationIds])];
+    setViewedNotifications(updatedViewed);
+    localStorage.setItem(`viewed_notifications_${user?.id}`, JSON.stringify(updatedViewed));
+  };
+
+  const handleNotificationClick = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
+      markNotificationsAsViewed();
+    }
+  };
+
+  const unviewedCount = notifications.filter(n => !viewedNotifications.includes(n.id)).length;
+
   const handleAddMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -382,13 +407,13 @@ const DashboardHome = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={handleNotificationClick}
                 className="relative"
               >
                 <Bell className="h-5 w-5" />
-                {notifications.length > 0 && (
+                {unviewedCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {notifications.length}
+                    {unviewedCount}
                   </span>
                 )}
               </Button>
@@ -407,7 +432,7 @@ const DashboardHome = () => {
                         <div
                           key={notif.id}
                           className={`p-3 rounded-lg border ${
-                            notif.status === 'approved'
+                            notif.status === 'approved' || notif.status === 'resolved'
                               ? 'bg-success/10 border-success/20'
                               : 'bg-destructive/10 border-destructive/20'
                           }`}
@@ -416,9 +441,11 @@ const DashboardHome = () => {
                             <p className="font-semibold text-sm">
                               {notif.type === 'assignment'
                                 ? `Assignment Request: ${notif.assignment_title}`
+                                : notif.type === 'query'
+                                ? `Query: ${notif.subject}`
                                 : `Material Contribution: ${notif.course_title}`}
                             </p>
-                            <Badge variant={notif.status === 'approved' ? 'default' : 'destructive'}>
+                            <Badge variant={notif.status === 'approved' || notif.status === 'resolved' ? 'default' : 'destructive'}>
                               {notif.status}
                             </Badge>
                           </div>

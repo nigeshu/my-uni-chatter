@@ -4,8 +4,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { BookOpen, Clock, Calendar, Award, List } from 'lucide-react';
+import { List } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -56,107 +56,39 @@ const CourseDetailDialog = ({ course, open, onOpenChange }: CourseDetailDialogPr
 
   if (!course) return null;
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner':
-        return 'bg-success/10 text-success border-success/20';
-      case 'intermediate':
-        return 'bg-warning/10 text-warning border-warning/20';
-      case 'advanced':
-        return 'bg-accent/10 text-accent border-accent/20';
-      default:
-        return 'bg-secondary text-secondary-foreground';
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <DialogTitle className="text-2xl flex-1">{course.title}</DialogTitle>
-            <Badge className={getDifficultyColor(course.difficulty)}>
-              {course.difficulty}
-            </Badge>
-          </div>
+          <DialogTitle className="text-2xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+            {course.title} - Course Modules
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 pt-4">
-          {/* Description */}
-          <div>
-            <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              Description
-            </h3>
-            <p className="text-muted-foreground">
-              {course.description || 'No description available'}
-            </p>
-          </div>
-
-          {/* Course Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Duration */}
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <h4 className="font-semibold">Duration</h4>
-              </div>
-              <p className="text-2xl font-bold">{course.duration_hours} hours</p>
+        <div className="py-4">
+          {modules.length > 0 ? (
+            <div className="space-y-3">
+              {modules.map((module) => (
+                <Card key={module.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 rounded-lg bg-gradient-accent flex items-center justify-center">
+                          <span className="font-bold text-white text-lg">{module.serial_no}</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-foreground leading-relaxed">{module.topic}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-
-            {/* Credits */}
-            {course.credits !== undefined && course.credits !== null && (
-              <div className="p-4 rounded-lg border bg-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <Award className="h-5 w-5 text-primary" />
-                  <h4 className="font-semibold">Credits</h4>
-                </div>
-                <p className="text-2xl font-bold">{course.credits}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Class Days */}
-          {course.class_days && course.class_days.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                Class Days
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {course.class_days.map((day, index) => (
-                  <Badge key={index} variant="outline" className="px-4 py-2 text-sm">
-                    {day}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Modules */}
-          {modules.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                <List className="h-5 w-5 text-primary" />
-                Course Modules
-              </h3>
-              <div className="space-y-2">
-                {modules.map((module) => (
-                  <div key={module.id} className="p-3 rounded-lg border bg-card flex gap-3">
-                    <span className="font-semibold text-primary min-w-[3rem]">{module.serial_no}</span>
-                    <span className="text-foreground">{module.topic}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Instructor */}
-          {course.instructor?.full_name && (
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                Instructor: <span className="font-semibold text-foreground">{course.instructor.full_name}</span>
-              </p>
+          ) : (
+            <div className="text-center py-12">
+              <List className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground text-lg">No modules added yet</p>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import AssignmentDetailDialog from '@/components/AssignmentDetailDialog';
 
 interface Course {
   id: string;
@@ -33,6 +34,9 @@ const Assignments = () => {
   const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -40,6 +44,13 @@ const Assignments = () => {
     title: '',
     description: '',
     due_date: '',
+  });
+
+  const [requestForm, setRequestForm] = useState({
+    course_name: '',
+    assignment_title: '',
+    what_to_do: '',
+    deadline: '',
   });
 
   useEffect(() => {
@@ -93,7 +104,6 @@ const Assignments = () => {
       .order('due_date', { ascending: true });
 
     if (profile?.role !== 'admin') {
-      // For students, only show assignments from enrolled courses
       const { data: enrollments } = await supabase
         .from('enrollments')
         .select('course_id')
@@ -153,9 +163,49 @@ const Assignments = () => {
     }
   };
 
+  const handleSubmitRequest = async () => {
+    if (!requestForm.course_name || !requestForm.assignment_title || !requestForm.what_to_do || !requestForm.deadline) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('assignment_requests')
+      .insert({
+        student_id: userId,
+        course_name: requestForm.course_name,
+        assignment_title: requestForm.assignment_title,
+        what_to_do: requestForm.what_to_do,
+        deadline: requestForm.deadline,
+      });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit request.',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Thanks for the information, Admin will respond back to you',
+      });
+      setShowRequestDialog(false);
+      setRequestForm({
+        course_name: '',
+        assignment_title: '',
+        what_to_do: '',
+        deadline: '',
+      });
+    }
+  };
+
   const handleToggleCompletion = async (assignmentId: string, isCompleted: boolean) => {
     if (isCompleted) {
-      // Revert completion - delete submission
       const { error } = await supabase
         .from('submissions')
         .delete()
@@ -176,7 +226,6 @@ const Assignments = () => {
         fetchAssignments();
       }
     } else {
-      // Mark as completed - create submission
       const { error } = await supabase
         .from('submissions')
         .insert({
@@ -225,80 +274,87 @@ const Assignments = () => {
           </p>
         </div>
         
-        {isAdmin && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Post Assignment
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Create New Assignment</DialogTitle>
-                <DialogDescription>
-                  Post a new assignment for your course
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="course">Course Name *</Label>
-                  <Select
-                    value={formData.course_id}
-                    onValueChange={(value) => setFormData({ ...formData, course_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="title">Assignment Name *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Enter assignment name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">What To Do</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Enter assignment description and instructions"
-                    rows={5}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="due_date">Deadline *</Label>
-                  <Input
-                    id="due_date"
-                    type="datetime-local"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
+        <div className="flex gap-2">
+          {isAdmin ? (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Post Assignment
                 </Button>
-                <Button onClick={handleCreateAssignment}>
-                  Create Assignment
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Create New Assignment</DialogTitle>
+                  <DialogDescription>
+                    Post a new assignment for your course
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="course">Course Name *</Label>
+                    <Select
+                      value={formData.course_id}
+                      onValueChange={(value) => setFormData({ ...formData, course_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a course" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {courses.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Assignment Name *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter assignment name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">What To Do</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Enter assignment description and instructions"
+                      rows={5}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="due_date">Deadline *</Label>
+                    <Input
+                      id="due_date"
+                      type="datetime-local"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateAssignment}>
+                    Create Assignment
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <Button onClick={() => setShowRequestDialog(true)} variant="outline" className="gap-2">
+              <FileText className="h-4 w-4" />
+              New Assignment Info
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -333,9 +389,13 @@ const Assignments = () => {
             return (
               <Card 
                 key={assignment.id} 
-                className={`group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden relative ${
+                className={`group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden relative cursor-pointer ${
                   isCompleted ? 'opacity-75' : ''
                 }`}
+                onClick={() => {
+                  setSelectedAssignment(assignment);
+                  setShowDetailDialog(true);
+                }}
               >
                 {isCompleted && (
                   <div className="absolute top-4 right-4 z-10">
@@ -394,7 +454,10 @@ const Assignments = () => {
                     <Button
                       className="w-full gap-2"
                       variant={isCompleted ? "outline" : "default"}
-                      onClick={() => handleToggleCompletion(assignment.id, isCompleted)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleCompletion(assignment.id, isCompleted);
+                      }}
                     >
                       {isCompleted ? (
                         <>
@@ -415,6 +478,63 @@ const Assignments = () => {
           })}
         </div>
       )}
+
+      <AssignmentDetailDialog
+        assignment={selectedAssignment}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+      />
+
+      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>New Assignment Information</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Course Name</Label>
+              <Input
+                value={requestForm.course_name}
+                onChange={(e) => setRequestForm({ ...requestForm, course_name: e.target.value })}
+                placeholder="Enter course name"
+              />
+            </div>
+            <div>
+              <Label>Assignment Title</Label>
+              <Input
+                value={requestForm.assignment_title}
+                onChange={(e) => setRequestForm({ ...requestForm, assignment_title: e.target.value })}
+                placeholder="Enter assignment title"
+              />
+            </div>
+            <div>
+              <Label>What To Do</Label>
+              <Textarea
+                value={requestForm.what_to_do}
+                onChange={(e) => setRequestForm({ ...requestForm, what_to_do: e.target.value })}
+                placeholder="Describe the assignment details"
+                rows={4}
+              />
+            </div>
+            <div>
+              <Label>Deadline</Label>
+              <Input
+                type="datetime-local"
+                value={requestForm.deadline}
+                onChange={(e) => setRequestForm({ ...requestForm, deadline: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRequestDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitRequest}>
+              Submit Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

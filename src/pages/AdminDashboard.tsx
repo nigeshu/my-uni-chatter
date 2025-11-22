@@ -11,7 +11,8 @@ import {
   Users,
   BarChart,
   Home,
-  Settings
+  Settings,
+  Shield
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -87,6 +88,7 @@ const AdminDashboard = () => {
     { path: '/admin/courses', icon: BookOpen, label: 'Manage Courses' },
     { path: '/admin/students', icon: Users, label: 'Students' },
     { path: '/admin/analytics', icon: BarChart, label: 'Analytics' },
+    { path: '/admin/control-center', icon: Shield, label: 'Control Center' },
   ];
 
   return (

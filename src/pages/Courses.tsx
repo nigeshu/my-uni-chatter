@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, TrendingUp, Search } from 'lucide-react';
+import { BookOpen, TrendingUp, Search, Upload } from 'lucide-react';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
+import ShareDocumentDialog from '@/components/ShareDocumentDialog';
 
 interface Course {
   id: string;
@@ -34,6 +35,7 @@ const Courses = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -120,6 +122,10 @@ const Courses = () => {
             Discover and enroll in amazing courses
           </p>
         </div>
+        <Button onClick={() => setShowShareDialog(true)} className="gap-2">
+          <Upload className="h-4 w-4" />
+          Provide Course Material
+        </Button>
       </div>
 
       {/* Search */}
@@ -216,6 +222,12 @@ const Courses = () => {
         course={selectedCourse}
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
+      />
+
+      {/* Share Document Dialog */}
+      <ShareDocumentDialog 
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
       />
     </div>
   );

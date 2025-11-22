@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -48,6 +48,8 @@ const DashboardHome = () => {
   });
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [newMessage, setNewMessage] = useState('');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -56,6 +58,7 @@ const DashboardHome = () => {
       fetchSemesterInfo();
       checkAdminRole();
       fetchAlerts();
+      fetchNotifications();
     }
   }, [user]);
 
@@ -181,7 +184,7 @@ const DashboardHome = () => {
       }));
     }
 
-    // Fetch urgent assignments (deadline <= 2 days)
+    // Fetch urgent and overdue assignments
     const twoDaysFromNow = new Date();
     twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
 
@@ -203,7 +206,6 @@ const DashboardHome = () => {
         `)
         .in('course_id', courseIds)
         .lte('due_date', twoDaysFromNow.toISOString())
-        .gte('due_date', new Date().toISOString())
         .order('due_date', { ascending: true });
 
       if (assignments) {
@@ -218,6 +220,31 @@ const DashboardHome = () => {
         }));
       }
     }
+  };
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+
+    const { data: assignmentResponses } = await supabase
+      .from('assignment_requests')
+      .select('*')
+      .eq('student_id', user.id)
+      .in('status', ['approved', 'rejected'])
+      .order('updated_at', { ascending: false });
+
+    const { data: materialResponses } = await supabase
+      .from('material_contributions')
+      .select('*')
+      .eq('student_id', user.id)
+      .in('status', ['approved', 'rejected'])
+      .order('updated_at', { ascending: false });
+
+    const allNotifications = [
+      ...(assignmentResponses || []).map(r => ({ ...r, type: 'assignment' })),
+      ...(materialResponses || []).map(r => ({ ...r, type: 'material' })),
+    ].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+    setNotifications(allNotifications);
   };
 
   const handleAddMessage = async () => {
@@ -296,10 +323,11 @@ const DashboardHome = () => {
     <div className="p-8 space-y-8 animate-fade-in">
       {/* Header */}
       <div className="relative">
-        <div className="flex items-center gap-4 mb-2">
-          <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-            Welcome Back! 👋
-          </h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+              Welcome Back! 👋
+            </h1>
           {semesterText && (
             <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 rounded-xl border border-primary/20 backdrop-blur-sm">
               <span className="text-lg font-semibold bg-gradient-to-r from-primary via-accent to-purple-500 bg-clip-text text-transparent">
@@ -336,6 +364,61 @@ const DashboardHome = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+              )}
+            </div>
+          )}
+          </div>
+          {!isAdmin && (
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative"
+              >
+                <Bell className="h-5 w-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </Button>
+              {showNotifications && (
+                <Card className="absolute right-0 top-full mt-2 w-96 max-h-96 overflow-y-auto z-50 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Notifications</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No notifications yet
+                      </p>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={`p-3 rounded-lg border ${
+                            notif.status === 'approved'
+                              ? 'bg-success/10 border-success/20'
+                              : 'bg-destructive/10 border-destructive/20'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <p className="font-semibold text-sm">
+                              {notif.type === 'assignment'
+                                ? `Assignment Request: ${notif.assignment_title}`
+                                : `Material Contribution: ${notif.course_title}`}
+                            </p>
+                            <Badge variant={notif.status === 'approved' ? 'default' : 'destructive'}>
+                              {notif.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{notif.admin_response}</p>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}

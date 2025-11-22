@@ -1,188 +1,155 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/components/ui/use-toast';
-import { Check } from 'lucide-react';
-
-interface Friend {
-  id: string;
-  email: string;
-  full_name: string | null;
-}
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Upload } from 'lucide-react';
 
 interface ShareDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  documentTitle: string;
-  documentUrl: string;
 }
 
-const ShareDocumentDialog = ({
-  open,
-  onOpenChange,
-  documentTitle,
-  documentUrl,
-}: ShareDocumentDialogProps) => {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
+const ShareDocumentDialog = ({ open, onOpenChange }: ShareDocumentDialogProps) => {
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({
+    course_title: '',
+    module_name: '',
+    topic_name: '',
+  });
+  const [file, setFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      fetchFriends();
-      setSelectedFriends(new Set());
-    }
-  }, [open]);
-
-  const fetchFriends = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: friendshipsData } = await supabase
-      .from('friendships')
-      .select('friend_id')
-      .eq('user_id', user.id);
-
-    if (friendshipsData && friendshipsData.length > 0) {
-      const friendIds = friendshipsData.map((f) => f.friend_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', friendIds);
-
-      if (profiles) {
-        setFriends(profiles);
-      }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
     }
   };
 
-  const toggleFriend = (friendId: string) => {
-    const newSelected = new Set(selectedFriends);
-    if (newSelected.has(friendId)) {
-      newSelected.delete(friendId);
-    } else {
-      newSelected.add(friendId);
-    }
-    setSelectedFriends(newSelected);
-  };
-
-  const handleShare = async () => {
-    if (selectedFriends.size === 0) {
+  const handleSubmit = async () => {
+    if (!form.course_title || !form.module_name || !form.topic_name || !file) {
       toast({
-        title: 'No friends selected',
-        description: 'Please select at least one friend to share with.',
+        title: 'Error',
+        description: 'Please fill in all fields and select a file.',
         variant: 'destructive',
       });
       return;
     }
 
-    setLoading(true);
+    setUploading(true);
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      // Upload file to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('course_materials')
+        .upload(fileName, file);
 
-      const shareMessage = `📄 Shared document: ${documentTitle}\n\n${documentUrl}`;
+      if (uploadError) throw uploadError;
 
-      const messages = Array.from(selectedFriends).map((friendId) => ({
-        sender_id: user.id,
-        receiver_id: friendId,
-        content: shareMessage,
-      }));
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('course_materials')
+        .getPublicUrl(fileName);
 
-      const { error } = await supabase.from('messages').insert(messages);
+      // Insert contribution record
+      const { error: insertError } = await supabase
+        .from('material_contributions')
+        .insert({
+          student_id: user?.id,
+          course_title: form.course_title,
+          module_name: form.module_name,
+          topic_name: form.topic_name,
+          file_url: publicUrl,
+        });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
       toast({
-        title: 'Document shared!',
-        description: `Shared with ${selectedFriends.size} friend${selectedFriends.size > 1 ? 's' : ''}`,
+        title: 'Success',
+        description: 'Thanks for the information, Admin will respond back to you',
       });
 
+      // Reset form
+      setForm({
+        course_title: '',
+        module_name: '',
+        topic_name: '',
+      });
+      setFile(null);
       onOpenChange(false);
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to share document.',
+        description: error.message || 'Failed to submit contribution.',
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Share Document</DialogTitle>
+          <DialogTitle>Provide Course Material</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            Share "{documentTitle}" with your friends
+          <div>
+            <Label>Course Title</Label>
+            <Input
+              value={form.course_title}
+              onChange={(e) => setForm({ ...form, course_title: e.target.value })}
+              placeholder="Enter course title"
+            />
           </div>
-
-          <ScrollArea className="h-[300px] border rounded-lg p-2">
-            {friends.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">
-                <p>No friends available</p>
-                <p className="text-sm mt-1">Add friends to share documents</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {friends.map((friend) => (
-                  <button
-                    key={friend.id}
-                    onClick={() => toggleFriend(friend.id)}
-                    className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
-                      selectedFriends.has(friend.id)
-                        ? 'bg-primary/10 border-2 border-primary'
-                        : 'hover:bg-muted border-2 border-transparent'
-                    }`}
-                  >
-                    <Avatar>
-                      <AvatarFallback className="bg-secondary text-secondary-foreground">
-                        {friend.full_name?.[0] || friend.email[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 text-left">
-                      <p className="font-medium">{friend.full_name || 'User'}</p>
-                      <p className="text-xs text-muted-foreground truncate">{friend.email}</p>
-                    </div>
-                    {selectedFriends.has(friend.id) && (
-                      <Check className="h-5 w-5 text-primary" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-
-          <div className="flex gap-3">
-            <Button
-              onClick={handleShare}
-              disabled={loading || selectedFriends.size === 0}
-              className="flex-1 bg-gradient-accent hover:opacity-90"
-            >
-              {loading ? 'Sharing...' : `Share with ${selectedFriends.size} friend${selectedFriends.size !== 1 ? 's' : ''}`}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
+          <div>
+            <Label>Module Name</Label>
+            <Input
+              value={form.module_name}
+              onChange={(e) => setForm({ ...form, module_name: e.target.value })}
+              placeholder="Enter module name"
+            />
+          </div>
+          <div>
+            <Label>Topic Name</Label>
+            <Input
+              value={form.topic_name}
+              onChange={(e) => setForm({ ...form, topic_name: e.target.value })}
+              placeholder="Enter topic name"
+            />
+          </div>
+          <div>
+            <Label>Upload Document</Label>
+            <div className="mt-2">
+              <Input
+                type="file"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+              />
+              {file && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Selected: {file.name}
+                </p>
+              )}
+            </div>
           </div>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={uploading} className="gap-2">
+            <Upload className="h-4 w-4" />
+            {uploading ? 'Submitting...' : 'Submit Request'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

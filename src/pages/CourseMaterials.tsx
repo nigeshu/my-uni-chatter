@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, FileText, Link, Video, File, Download } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 
 interface Material {
@@ -46,6 +47,9 @@ const CourseMaterials = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>('');
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (courseId) {

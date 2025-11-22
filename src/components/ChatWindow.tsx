@@ -4,9 +4,36 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send } from 'lucide-react';
+import { Send, ExternalLink } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
+
+const renderMessageContent = (content: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = content.split(urlRegex);
+  
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.match(urlRegex)) {
+          return (
+            <a
+              key={index}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
+            >
+              {part}
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+};
 
 interface Message {
   id: string;
@@ -160,7 +187,7 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
                       : 'bg-chat-received text-foreground'
                   }`}
                 >
-                  <p className="break-words">{message.content}</p>
+                  <p className="break-words">{renderMessageContent(message.content)}</p>
                   <p
                     className={`text-xs mt-1 ${
                       isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'

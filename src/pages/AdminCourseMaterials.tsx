@@ -63,6 +63,8 @@ const AdminCourseMaterials = () => {
     material_type: 'document',
     module_id: 'none',
   });
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [moduleFormData, setModuleFormData] = useState({
     serial_no: '',
@@ -108,15 +110,57 @@ const AdminCourseMaterials = () => {
     if (data) setModules(data);
   };
 
+  const handleFileUpload = async (file: File) => {
+    if (!file) return null;
+    
+    setUploadingFile(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${courseId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course_materials')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course_materials')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error: any) {
+      toast({
+        title: 'Upload Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let fileUrl = formData.file_url;
+      
+      // Upload file if selected
+      if (selectedFile) {
+        const uploadedUrl = await handleFileUpload(selectedFile);
+        if (uploadedUrl) {
+          fileUrl = uploadedUrl;
+        }
+      }
+
       const materialData = {
         title: formData.title,
         description: formData.description,
-        file_url: formData.file_url,
+        file_url: fileUrl,
         material_type: formData.material_type,
         module_id: formData.module_id || null,
       };
@@ -140,6 +184,7 @@ const AdminCourseMaterials = () => {
 
       setShowDialog(false);
       setEditingMaterial(null);
+      setSelectedFile(null);
       setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: 'none' });
       fetchMaterials();
     } catch (error: any) {
@@ -323,7 +368,24 @@ const AdminCourseMaterials = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="file_url">URL / File Link</Label>
+                <Label htmlFor="file">Upload File</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedFile(file);
+                    }
+                  }}
+                />
+                {selectedFile && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Selected: {selectedFile.name}
+                  </p>
+                )}
+                <div className="text-sm text-muted-foreground mt-2">Or</div>
+                <Label htmlFor="file_url">File URL</Label>
                 <Input
                   id="file_url"
                   placeholder="https://..."
@@ -353,8 +415,8 @@ const AdminCourseMaterials = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={loading} className="flex-1 bg-gradient-accent hover:opacity-90">
-                  {loading ? 'Saving...' : editingMaterial ? 'Update Material' : 'Add Material'}
+                <Button type="submit" disabled={loading || uploadingFile} className="flex-1 bg-gradient-accent hover:opacity-90">
+                  {uploadingFile ? 'Uploading...' : loading ? 'Saving...' : editingMaterial ? 'Update Material' : 'Add Material'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => setShowDialog(false)} disabled={loading}>
                   Cancel
@@ -501,61 +563,6 @@ const AdminCourseMaterials = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          {/* Materials without module */}
-          {materials.filter(m => !m.module_id).length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4 text-muted-foreground">General Materials</h3>
-              <div className="grid grid-cols-1 gap-4">
-                {materials.filter(m => !m.module_id).map((material) => (
-                  <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {getMaterialIcon(material.material_type)}
-                          <div>
-                            <CardTitle className="text-lg">{material.title}</CardTitle>
-                            <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(material)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(material.id)}
-                            className="text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    {(material.description || material.file_url) && (
-                      <CardContent>
-                        {material.description && (
-                          <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
-                        )}
-                        {material.file_url && (
-                          <a
-                            href={material.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-accent hover:underline inline-flex items-center gap-1"
-                          >
-                            <FileText className="h-3 w-3" />
-                            Open Resource
-                          </a>
-                        )}
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Materials grouped by module */}
           {modules.map((module) => {
             const moduleMaterials = materials.filter(m => m.module_id === module.id);
@@ -569,9 +576,8 @@ const AdminCourseMaterials = () => {
                   </div>
                   <div className="flex-1">
                     {module.heading && (
-                      <p className="text-sm font-semibold text-primary uppercase tracking-wide">{module.heading}</p>
+                      <h3 className="text-lg font-semibold">{module.heading}</h3>
                     )}
-                    <h3 className="text-lg font-semibold">{module.topic}</h3>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4">

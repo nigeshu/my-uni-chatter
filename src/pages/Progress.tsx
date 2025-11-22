@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Plus, Trash2, Calculator, Award } from 'lucide-react';
+import { TrendingUp, Plus, Trash2, Calculator, Award, FlaskConical, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -403,150 +404,194 @@ const Progress = () => {
           <CardTitle>Course Marks</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {enrolledCourses.map((enrollment) => {
-            const course = enrollment.course;
-            const mark = courseMarks[course.id];
-            const isLab = course.course_type === 'lab';
+          <Tabs defaultValue="lab" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="lab" className="gap-2">
+                <FlaskConical className="h-4 w-4" />
+                Lab Courses
+              </TabsTrigger>
+              <TabsTrigger value="theory" className="gap-2">
+                <BookOpen className="h-4 w-4" />
+                Theory Courses
+              </TabsTrigger>
+            </TabsList>
 
-            return (
-              <div key={enrollment.id} className="p-4 border rounded-lg space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">{course.title}</h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    isLab ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'
-                  }`}>
-                    {isLab ? 'Lab' : 'Theory'}
-                  </span>
-                </div>
+            <TabsContent value="lab">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {enrolledCourses
+                  .filter((enrollment) => enrollment.course.course_type === 'lab')
+                  .map((enrollment) => {
+                    const course = enrollment.course;
+                    const mark = courseMarks[course.id];
 
-                {isLab ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Internals (out of 60)</Label>
-                      <Input
-                        type="number"
-                        max="60"
-                        value={mark?.lab_internals || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'lab_internals', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>FAT (out of 50)</Label>
-                      <Input
-                        type="number"
-                        max="50"
-                        value={mark?.lab_fat || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-3">
-                      <div className="p-3 bg-muted/50 rounded-lg border">
+                    return (
+                      <div key={enrollment.id} className="p-4 border rounded-lg space-y-4">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Total (out of 100):</span>
-                          <span className="text-xl font-bold">{calculateLabTotal(mark || {}).toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div className="p-3 rounded-lg border">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">Grade:</span>
-                          <span className={`text-2xl font-bold px-4 py-2 rounded ${getLabGradeColor(getLabGrade(calculateLabTotal(mark || {})))}`}>
-                            {getLabGrade(calculateLabTotal(mark || {}))}
+                          <h3 className="font-semibold text-lg">{course.title}</h3>
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                            Lab
                           </span>
                         </div>
-                      </div>
-                      {calculateLabTotal(mark || {}) < 50 && (
-                        <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                            ⚠️ Failed! You need {getMarksNeededToPass(calculateLabTotal(mark || {}), true)} more marks to pass (minimum 50/100 required)
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>CAT 1 (out of 50)</Label>
-                      <Input
-                        type="number"
-                        max="50"
-                        value={mark?.cat1_mark || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'cat1_mark', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>CAT 2 (out of 50)</Label>
-                      <Input
-                        type="number"
-                        max="50"
-                        value={mark?.cat2_mark || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'cat2_mark', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>DA 1 (out of 10)</Label>
-                      <Input
-                        type="number"
-                        max="10"
-                        value={mark?.da1_mark || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'da1_mark', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>DA 2 (out of 10)</Label>
-                      <Input
-                        type="number"
-                        max="10"
-                        value={mark?.da2_mark || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'da2_mark', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>DA 3 (out of 10)</Label>
-                      <Input
-                        type="number"
-                        max="10"
-                        value={mark?.da3_mark || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'da3_mark', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>FAT (out of 100)</Label>
-                      <Input
-                        type="number"
-                        max="100"
-                        value={mark?.theory_fat || ''}
-                        onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-3">
-                      <div className="p-3 bg-muted/50 rounded-lg border">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">Total (out of 100):</span>
-                          <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Internals (out of 60)</Label>
+                            <Input
+                              type="number"
+                              max="60"
+                              value={mark?.lab_internals || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_internals', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>FAT (out of 50)</Label>
+                            <Input
+                              type="number"
+                              max="50"
+                              value={mark?.lab_fat || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="col-span-2 space-y-3">
+                            <div className="p-3 bg-muted/50 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Total (out of 100):</span>
+                                <span className="text-xl font-bold">{calculateLabTotal(mark || {}).toFixed(2)}</span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Grade:</span>
+                                <span className={`text-2xl font-bold px-4 py-2 rounded ${getLabGradeColor(getLabGrade(calculateLabTotal(mark || {})))}`}>
+                                  {getLabGrade(calculateLabTotal(mark || {}))}
+                                </span>
+                              </div>
+                            </div>
+                            {calculateLabTotal(mark || {}) < 50 && (
+                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateLabTotal(mark || {}), true)} more marks to pass (minimum 50/100 required)
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      {calculateTheoryTotal(mark || {}) < 50 ? (
-                        <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                          <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                            ⚠️ Failed! You need {getMarksNeededToPass(calculateTheoryTotal(mark || {}), false)} more marks to pass (minimum 50/100 required)
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                          <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                            ✓ Passed! You needed 40 out of 100 to pass, and you scored {calculateTheoryTotal(mark || {}).toFixed(2)}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                    );
+                  })}
               </div>
-            );
-          })}
-          </div>
+              {enrolledCourses.filter((e) => e.course.course_type === 'lab').length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FlaskConical className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p>No lab courses enrolled.</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="theory">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {enrolledCourses
+                  .filter((enrollment) => enrollment.course.course_type === 'theory')
+                  .map((enrollment) => {
+                    const course = enrollment.course;
+                    const mark = courseMarks[course.id];
+
+                    return (
+                      <div key={enrollment.id} className="p-4 border rounded-lg space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-lg">{course.title}</h3>
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-accent/10 text-accent">
+                            Theory
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>CAT 1 (out of 50)</Label>
+                            <Input
+                              type="number"
+                              max="50"
+                              value={mark?.cat1_mark || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'cat1_mark', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>CAT 2 (out of 50)</Label>
+                            <Input
+                              type="number"
+                              max="50"
+                              value={mark?.cat2_mark || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'cat2_mark', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>DA 1 (out of 10)</Label>
+                            <Input
+                              type="number"
+                              max="10"
+                              value={mark?.da1_mark || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'da1_mark', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>DA 2 (out of 10)</Label>
+                            <Input
+                              type="number"
+                              max="10"
+                              value={mark?.da2_mark || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'da2_mark', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>DA 3 (out of 10)</Label>
+                            <Input
+                              type="number"
+                              max="10"
+                              value={mark?.da3_mark || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'da3_mark', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>FAT (out of 100)</Label>
+                            <Input
+                              type="number"
+                              max="100"
+                              value={mark?.theory_fat || ''}
+                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="col-span-2 space-y-3">
+                            <div className="p-3 bg-muted/50 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Total (out of 100):</span>
+                                <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
+                              </div>
+                            </div>
+                            {calculateTheoryTotal(mark || {}) < 50 ? (
+                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateTheoryTotal(mark || {}), false)} more marks to pass (minimum 50/100 required)
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                  ✓ Passed! You needed 40 out of 100 to pass, and you scored {calculateTheoryTotal(mark || {}).toFixed(2)}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+              {enrolledCourses.filter((e) => e.course.course_type === 'theory').length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p>No theory courses enrolled.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
           {enrolledCourses.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-50" />

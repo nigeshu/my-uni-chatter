@@ -84,9 +84,15 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => {
+      if (scrollRef.current) {
+        const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }
+    }, 100);
   };
 
   const subscribeToMessages = () => {

@@ -9,10 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Share2 } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
-import ShareDocumentDialog from '@/components/ShareDocumentDialog';
 import {
   DndContext,
   closestCenter,
@@ -76,8 +75,6 @@ const AdminCourseMaterials = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [shareDocument, setShareDocument] = useState<{ title: string; url: string } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -373,19 +370,6 @@ const AdminCourseMaterials = () => {
     }
 
     toast({ title: 'Success', description: 'Material order updated.' });
-  };
-
-  const handleShareDocument = (title: string, url: string | null) => {
-    if (!url) {
-      toast({
-        title: 'Cannot share',
-        description: 'This document has no file URL.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setShareDocument({ title, url });
-    setShareDialogOpen(true);
   };
 
   const getMaterialIcon = (type: string) => {
@@ -701,7 +685,6 @@ const AdminCourseMaterials = () => {
                             setPreviewTitle(title);
                             setPreviewOpen(true);
                           }}
-                          onShare={handleShareDocument}
                         />
                       ))}
                     </div>
@@ -761,13 +744,6 @@ const AdminCourseMaterials = () => {
         course={selectedCourse}
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
-      />
-
-      <ShareDocumentDialog
-        open={shareDialogOpen}
-        onOpenChange={setShareDialogOpen}
-        documentTitle={shareDocument?.title || ''}
-        documentUrl={shareDocument?.url || ''}
       />
     </div>
   );
@@ -839,14 +815,12 @@ const SortableMaterialItem = ({
   onEdit,
   onDelete,
   onPreview,
-  onShare,
 }: {
   material: Material;
   getMaterialIcon: (type: string) => JSX.Element;
   onEdit: (material: Material) => void;
   onDelete: (id: string) => void;
   onPreview: (url: string | null, title: string) => void;
-  onShare: (title: string, url: string | null) => void;
 }) => {
   const {
     attributes,
@@ -882,13 +856,6 @@ const SortableMaterialItem = ({
             </div>
           </div>
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onShare(material.title, material.file_url)}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
             <Button size="sm" variant="outline" onClick={() => onEdit(material)}>
               <Edit className="h-4 w-4" />
             </Button>

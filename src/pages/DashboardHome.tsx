@@ -4,8 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { BookOpen, Award, Clock, TrendingUp, ArrowRight } from 'lucide-react';
+import { BookOpen, Award, Clock, TrendingUp, ArrowRight, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Stats {
   enrolledCourses: number;
@@ -17,6 +27,7 @@ interface Stats {
 const DashboardHome = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [stats, setStats] = useState<Stats>({
     enrolledCourses: 0,
     completedCourses: 0,
@@ -24,13 +35,65 @@ const DashboardHome = () => {
     averageProgress: 0,
   });
   const [recentCourses, setRecentCourses] = useState<any[]>([]);
+  const [semesterText, setSemesterText] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [newSemesterText, setNewSemesterText] = useState('');
 
   useEffect(() => {
     if (user) {
       fetchStats();
       fetchRecentCourses();
+      fetchSemesterInfo();
+      checkAdminRole();
     }
   }, [user]);
+
+  const checkAdminRole = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id)
+      .single();
+    
+    setIsAdmin(data?.role === 'admin');
+  };
+
+  const fetchSemesterInfo = async () => {
+    const { data } = await supabase
+      .from('semester_info')
+      .select('*')
+      .eq('is_active', true)
+      .single();
+    
+    if (data) {
+      setSemesterText(data.semester_text);
+    }
+  };
+
+  const handleUpdateSemester = async () => {
+    if (!newSemesterText.trim()) return;
+
+    const { error } = await supabase
+      .from('semester_info')
+      .update({ semester_text: newSemesterText })
+      .eq('is_active', true);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update semester text.',
+        variant: 'destructive',
+      });
+    } else {
+      setSemesterText(newSemesterText);
+      setEditDialogOpen(false);
+      toast({
+        title: 'Success',
+        description: 'Semester text updated successfully.',
+      });
+    }
+  };
 
   const fetchStats = async () => {
     const { data: enrollments } = await supabase
@@ -99,10 +162,51 @@ const DashboardHome = () => {
   return (
     <div className="p-8 space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-hero bg-clip-text text-transparent">
-          Welcome Back! 👋
-        </h1>
+      <div className="relative">
+        <div className="flex items-center gap-4 mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+            Welcome Back! 👋
+          </h1>
+          {semesterText && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 rounded-xl border border-primary/20 backdrop-blur-sm">
+              <span className="text-lg font-semibold bg-gradient-to-r from-primary via-accent to-purple-500 bg-clip-text text-transparent">
+                {semesterText}
+              </span>
+              {isAdmin && (
+                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => setNewSemesterText(semesterText)}
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Semester Text</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label>Semester Text</Label>
+                        <Input
+                          value={newSemesterText}
+                          onChange={(e) => setNewSemesterText(e.target.value)}
+                          placeholder="For Winter Semester 2025 - 2026"
+                        />
+                      </div>
+                      <Button onClick={handleUpdateSemester} className="w-full">
+                        Update
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          )}
+        </div>
         <p className="text-muted-foreground text-lg">
           Continue your learning journey
         </p>

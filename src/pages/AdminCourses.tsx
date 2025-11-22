@@ -54,6 +54,7 @@ const AdminCourses = () => {
     duration_hours: 10,
     credits: 3,
     class_days: [] as string[],
+    course_type: 'theory' as 'theory' | 'lab',
   });
   const [classDayInput, setClassDayInput] = useState('');
 
@@ -110,6 +111,7 @@ const AdminCourses = () => {
         duration_hours: 10,
         credits: 3,
         class_days: [],
+        course_type: 'theory',
       });
       setClassDayInput('');
       fetchCourses();
@@ -133,6 +135,7 @@ const AdminCourses = () => {
       duration_hours: course.duration_hours || 10,
       credits: course.credits || 3,
       class_days: course.class_days || [],
+      course_type: (course as any).course_type || 'theory',
     });
     setClassDayInput('');
     setShowDialog(true);
@@ -227,6 +230,7 @@ const AdminCourses = () => {
                   duration_hours: 10,
                   credits: 3,
                   class_days: [],
+                  course_type: 'theory',
                 });
                 setClassDayInput('');
               }}
@@ -301,18 +305,36 @@ const AdminCourses = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="credits">Course Credits</Label>
-                <Input
-                  id="credits"
-                  type="number"
-                  min="1"
-                  value={formData.credits}
-                  onChange={(e) =>
-                    setFormData({ ...formData, credits: parseInt(e.target.value) })
-                  }
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="credits">Course Credits</Label>
+                  <Input
+                    id="credits"
+                    type="number"
+                    min="1"
+                    value={formData.credits}
+                    onChange={(e) =>
+                      setFormData({ ...formData, credits: parseInt(e.target.value) })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="course_type">Course Type</Label>
+                  <Select
+                    value={formData.course_type}
+                    onValueChange={(value: 'theory' | 'lab') => setFormData({ ...formData, course_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="theory">Theory</SelectItem>
+                      <SelectItem value="lab">Lab</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">

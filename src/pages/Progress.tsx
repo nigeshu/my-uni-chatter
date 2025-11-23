@@ -35,6 +35,7 @@ interface Semester {
 interface EnrolledCourse {
   id: string;
   course_id: string;
+  completed_at?: string | null;
   course: {
     id: string;
     title: string;
@@ -66,7 +67,9 @@ const Progress = () => {
   const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
   const [newSemester, setNewSemester] = useState({ name: '', credits: '', gradedCredits: '', gpa: '' });
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [completedCourses, setCompletedCourses] = useState<EnrolledCourse[]>([]);
   const [courseMarks, setCourseMarks] = useState<Record<string, CourseMark>>({});
+  const [completedCourseMarks, setCompletedCourseMarks] = useState<Record<string, CourseMark>>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [semesterCompletionEnabled, setSemesterCompletionEnabled] = useState(false);
 
@@ -74,6 +77,7 @@ const Progress = () => {
     if (user) {
       fetchSemesters();
       fetchEnrolledCourses();
+      fetchCompletedCourses();
       checkAdminRole();
       fetchSemesterSettings();
     }
@@ -108,6 +112,7 @@ const Progress = () => {
       .select(`
         id,
         course_id,
+        completed_at,
         course:courses(id, title, course_type)
       `)
       .eq('student_id', user?.id)
@@ -119,7 +124,30 @@ const Progress = () => {
     }
   };
 
+  const fetchCompletedCourses = async () => {
+    const { data } = await supabase
+      .from('enrollments')
+      .select(`
+        id,
+        course_id,
+        completed_at,
+        course:courses(id, title, course_type)
+      `)
+      .eq('student_id', user?.id)
+      .not('completed_at', 'is', null);
+
+    if (data) {
+      setCompletedCourses(data as any);
+      fetchCompletedCourseMarks(data.map((e: any) => e.course_id));
+    }
+  };
+
   const fetchCourseMarks = async (courseIds: string[]) => {
+    if (courseIds.length === 0) {
+      setCourseMarks({});
+      return;
+    }
+    
     const { data } = await supabase
       .from('course_marks')
       .select('*')
@@ -144,6 +172,39 @@ const Progress = () => {
         };
       });
       setCourseMarks(marksMap);
+    }
+  };
+
+  const fetchCompletedCourseMarks = async (courseIds: string[]) => {
+    if (courseIds.length === 0) {
+      setCompletedCourseMarks({});
+      return;
+    }
+    
+    const { data } = await supabase
+      .from('course_marks')
+      .select('*')
+      .eq('student_id', user?.id)
+      .in('course_id', courseIds);
+
+    if (data) {
+      const marksMap: Record<string, CourseMark> = {};
+      data.forEach((mark: any) => {
+        marksMap[mark.course_id] = {
+          id: mark.id,
+          course_id: mark.course_id,
+          course_type: mark.course_type as 'theory' | 'lab',
+          lab_internals: mark.lab_internals,
+          lab_fat: mark.lab_fat,
+          cat1_mark: mark.cat1_mark,
+          cat2_mark: mark.cat2_mark,
+          da1_mark: mark.da1_mark,
+          da2_mark: mark.da2_mark,
+          da3_mark: mark.da3_mark,
+          theory_fat: mark.theory_fat,
+        };
+      });
+      setCompletedCourseMarks(marksMap);
     }
   };
 
@@ -241,11 +302,12 @@ const Progress = () => {
 
     toast({
       title: 'Success',
-      description: 'Semester completed! All enrolled courses have been marked as completed.',
+      description: 'Semester completed! View your marksheet below.',
     });
 
-    // Refresh data to show 0 enrolled courses
+    // Refresh data to show 0 enrolled courses and fetch completed courses
     fetchEnrolledCourses();
+    fetchCompletedCourses();
   };
 
   const handleDeleteSemester = async (id: string) => {
@@ -785,68 +847,61 @@ const Progress = () => {
         </CardContent>
       </Card>
 
-      {/* Marksheet Section */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-6 w-6 text-primary" />
-            Marksheet
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {enrolledCourses.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-semibold">Course</th>
-                      <th className="text-center py-3 px-4 font-semibold">Type</th>
-                      <th className="text-right py-3 px-4 font-semibold">Total Marks</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {enrolledCourses.map((enrollment) => {
-                      const course = enrollment.course;
-                      const mark = courseMarks[course.id];
-                      const total = course.course_type === 'theory' 
-                        ? calculateTheoryTotal(mark || {})
-                        : calculateLabTotal(mark || {});
+      {/* Marksheet Section - Only show if there are completed courses */}
+      {completedCourses.length > 0 && (
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-6 w-6 text-primary" />
+              Marksheet
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-semibold">Course</th>
+                    <th className="text-center py-3 px-4 font-semibold">Type</th>
+                    <th className="text-right py-3 px-4 font-semibold">Total Marks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completedCourses.map((enrollment) => {
+                    const course = enrollment.course;
+                    const mark = completedCourseMarks[course.id];
+                    const total = course.course_type === 'theory' 
+                      ? calculateTheoryTotal(mark || {})
+                      : calculateLabTotal(mark || {});
 
-                      return (
-                        <tr key={enrollment.id} className="border-b hover:bg-muted/50 transition-colors">
-                          <td className="py-3 px-4">
-                            <span className="font-medium">{course.title}</span>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              course.course_type === 'theory' 
-                                ? 'bg-accent/10 text-accent' 
-                                : 'bg-primary/10 text-primary'
-                            }`}>
-                              {course.course_type === 'theory' ? 'Theory' : 'Lab'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="text-lg font-bold">
-                              {total.toFixed(2)} / 100
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Award className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p>No courses available. Enroll in courses to view your marksheet.</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                    return (
+                      <tr key={enrollment.id} className="border-b hover:bg-muted/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <span className="font-medium">{course.title}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            course.course_type === 'theory' 
+                              ? 'bg-accent/10 text-accent' 
+                              : 'bg-primary/10 text-primary'
+                          }`}>
+                            {course.course_type === 'theory' ? 'Theory' : 'Lab'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <span className="text-lg font-bold">
+                            {total.toFixed(2)} / 100
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -317,43 +317,42 @@ const Auth = () => {
         </div>
       </div>
 
-      <Card className="w-full max-w-md border-2 border-primary/30 shadow-2xl backdrop-blur-md bg-card/95 relative z-10 animate-fade-in hover:border-primary/50 transition-all duration-500 group">
-        {/* Glowing border effect */}
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-pulse" />
+      <Card className="w-full max-w-md border-2 border-primary/30 shadow-2xl backdrop-blur-md bg-card relative z-10 animate-fade-in hover:border-primary/50 transition-all duration-500 group">
+        {/* Glowing border effect - behind content */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary via-secondary to-accent opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500 -z-10" />
         
-        <CardHeader className="space-y-1 text-center relative">
+        <CardHeader className="space-y-1 text-center relative z-20">
           <div className="flex justify-center mb-4">
             <div className="relative">
               {/* Outer glow ring */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-lg opacity-50 animate-pulse" style={{ padding: '8px' }} />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-lg opacity-30 animate-pulse" style={{ padding: '8px' }} />
               {/* Icon container */}
               <div className="relative p-4 bg-gradient-to-br from-primary to-primary/80 rounded-full shadow-2xl animate-scale-in hover:scale-110 transition-transform duration-300">
                 <MessageSquare className="h-10 w-10 text-primary-foreground" />
               </div>
             </div>
           </div>
-          <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in drop-shadow-lg">
+          <CardTitle className="text-4xl font-bold text-foreground drop-shadow-md relative z-20">
             Start Learning
           </CardTitle>
-          <CardDescription className="text-base font-medium">
+          <CardDescription className="text-base font-medium relative z-20">
             {userType === 'student' 
               ? '🎓 Sign in with your Google account' 
               : '⚡ Admin portal access'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative z-20">
           <Tabs value={userType} onValueChange={(v) => setUserType(v as 'student' | 'admin')} className="mb-6">
-            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg relative z-30">
               <TabsTrigger 
                 value="student" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:shadow-lg transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:shadow-lg transition-all duration-300 relative z-30 cursor-pointer"
               >
                 Student
               </TabsTrigger>
               <TabsTrigger 
                 value="admin" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary data-[state=active]:to-secondary/80 data-[state=active]:shadow-lg transition-all duration-300"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary data-[state=active]:to-secondary/80 data-[state=active]:shadow-lg transition-all duration-300 relative z-30 cursor-pointer"
               >
                 Admin
               </TabsTrigger>

@@ -200,6 +200,16 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
         console.error('Error deleting messages:', messagesError1);
       }
 
+      // Delete any friend requests between the users (both directions)
+      const { error: requestsError } = await supabase
+        .from('friend_requests')
+        .delete()
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${friendToRemove.id}),and(sender_id.eq.${friendToRemove.id},receiver_id.eq.${userId})`);
+
+      if (requestsError) {
+        console.error('Error deleting friend requests:', requestsError);
+      }
+
       // Delete both friendship records (reciprocal)
       const { error: error1 } = await supabase
         .from('friendships')

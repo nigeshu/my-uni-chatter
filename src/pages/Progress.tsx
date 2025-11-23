@@ -711,6 +711,35 @@ const Progress = () => {
                               onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
                             />
                           </div>
+                          <div className="col-span-2 space-y-3">
+                            <div className="p-3 bg-muted/50 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Total (out of 100):</span>
+                                <span className="text-xl font-bold">{calculateLabTotal(mark || {}).toFixed(2)}</span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Grade:</span>
+                                <span className={`text-2xl font-bold px-4 py-2 rounded ${getLabGradeColor(getLabGrade(calculateLabTotal(mark || {})))}`}>
+                                  {getLabGrade(calculateLabTotal(mark || {}))}
+                                </span>
+                              </div>
+                            </div>
+                            {calculateLabTotal(mark || {}) < 50 ? (
+                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateLabTotal(mark || {}), true)} more marks to pass (minimum 50/100 required)
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                  ✓ Passed! You just need 40 out of 100 in FAT to get passed
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -794,6 +823,27 @@ const Progress = () => {
                               value={mark?.theory_fat || ''}
                               onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}
                             />
+                          </div>
+                          <div className="col-span-2 space-y-3">
+                            <div className="p-3 bg-muted/50 rounded-lg border">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Total (out of 100):</span>
+                                <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
+                              </div>
+                            </div>
+                            {calculateTheoryTotal(mark || {}) < 50 ? (
+                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateTheoryTotal(mark || {}), false)} more marks to pass (minimum 50/100 required)
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                  ✓ Passed! You just need 40 out of 100 in FAT to get passed
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

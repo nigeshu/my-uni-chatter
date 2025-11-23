@@ -1,12 +1,23 @@
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const NotFound = () => {
   const location = useLocation();
+  const [show, setShow] = useState(false);
+
+  // Delay showing 404 to prevent flash during auth redirects
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+    if (show) {
+      console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    }
+  }, [location.pathname, show]);
+
+  if (!show) return null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted">

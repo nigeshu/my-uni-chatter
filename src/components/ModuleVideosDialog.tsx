@@ -3,8 +3,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Play, Loader2, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Video {
   id: string;
@@ -25,11 +36,21 @@ interface ModuleVideosDialogProps {
 const YOUTUBE_API_KEY = 'AIzaSyBEvlFCRamYfAssrTfy3yEwRZQfLBJFDfM';
 
 const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogProps) => {
+  const { user } = useAuth();
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const [addToSpaceOpen, setAddToSpaceOpen] = useState(false);
+  const [selectedVideoToAdd, setSelectedVideoToAdd] = useState<Video | null>(null);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showNewCategory, setShowNewCategory] = useState(false);
 
   const topics = module?.topic ? module.topic.split(/[–\-\n]/).map(t => t.trim()).filter(t => t.length > 10) : [];
 
@@ -81,6 +102,108 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
     setVideos([]);
     setSelectedVideo(null);
     onOpenChange(false);
+  };
+
+  const fetchSubjects = async () => {
+    const { data } = await supabase
+      .from('study_subjects')
+      .select('*')
+      .eq('student_id', user?.id);
+    
+    setSubjects(data || []);
+  };
+
+  const fetchCategories = async (subjectId: string) => {
+    const { data } = await supabase
+      .from('study_categories')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .eq('category_type', 'videos');
+    
+    setCategories(data || []);
+  };
+
+  const handleAddToSpace = (video: Video, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedVideoToAdd(video);
+    fetchSubjects();
+    setAddToSpaceOpen(true);
+  };
+
+  const handleSubjectChange = (value: string) => {
+    setSelectedSubject(value);
+    setSelectedCategory('');
+    if (value) {
+      fetchCategories(value);
+    }
+  };
+
+  const saveToSpace = async () => {
+    if (!selectedVideoToAdd) return;
+
+    let categoryId = selectedCategory;
+
+    // Create new category if needed
+    if (showNewCategory && newCategoryName.trim()) {
+      const { data, error } = await supabase
+        .from('study_categories')
+        .insert({
+          subject_id: selectedSubject,
+          name: newCategoryName.trim(),
+          category_type: 'videos',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to create category',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      categoryId = data.id;
+    }
+
+    if (!categoryId) {
+      toast({
+        title: 'Error',
+        description: 'Please select or create a category',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Save video
+    const { error } = await supabase.from('study_items').insert({
+      category_id: categoryId,
+      title: selectedVideoToAdd.title,
+      youtube_url: `https://www.youtube.com/watch?v=${selectedVideoToAdd.id}`,
+      video_source: 'course',
+    });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to add video to space',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Video added to your space!',
+    });
+
+    setAddToSpaceOpen(false);
+    setSelectedVideoToAdd(null);
+    setSelectedSubject('');
+    setSelectedCategory('');
+    setNewCategoryName('');
+    setShowNewCategory(false);
   };
 
   return (
@@ -145,27 +268,37 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
                   {videos.map((video) => (
                     <Card
                       key={video.id}
-                      className="cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40"
-                      onClick={() => setSelectedVideo(video.id)}
+                      className="cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40 relative group"
                     >
-                      <CardHeader className="p-0">
-                        <div className="relative aspect-video">
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-full h-full object-cover rounded-t-lg"
-                          />
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                            <Play className="h-12 w-12 text-white" />
+                      <div onClick={() => setSelectedVideo(video.id)}>
+                        <CardHeader className="p-0">
+                          <div className="relative aspect-video">
+                            <img
+                              src={video.thumbnail}
+                              alt={video.title}
+                              className="w-full h-full object-cover rounded-t-lg"
+                            />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Play className="h-12 w-12 text-white" />
+                            </div>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-3">
-                        <CardTitle className="text-sm line-clamp-2 mb-1">
-                          {video.title}
-                        </CardTitle>
-                        <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
-                      </CardContent>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <CardTitle className="text-sm line-clamp-2 mb-1">
+                            {video.title}
+                          </CardTitle>
+                          <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
+                        </CardContent>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        onClick={(e) => handleAddToSpace(video, e)}
+                        title="Add to My Space"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </Card>
                   ))}
                 </div>
@@ -174,6 +307,102 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
           </div>
         </div>
       </DialogContent>
+
+      {/* Add to Space Dialog */}
+      <Dialog open={addToSpaceOpen} onOpenChange={setAddToSpaceOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Video to My Space</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Do you want to add "{selectedVideoToAdd?.title}" to your space?
+            </p>
+
+            <div className="space-y-2">
+              <Label>Select Subject</Label>
+              <Select value={selectedSubject} onValueChange={handleSubjectChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedSubject && (
+              <div className="space-y-2">
+                <Label>Select Category</Label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={(value) => {
+                    if (value === 'new') {
+                      setShowNewCategory(true);
+                      setSelectedCategory('');
+                    } else {
+                      setShowNewCategory(false);
+                      setSelectedCategory(value);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="new">
+                      <span className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create New Category
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {showNewCategory && (
+              <div className="space-y-2">
+                <Label>New Category Name</Label>
+                <Input
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Enter category name..."
+                />
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button onClick={saveToSpace} className="flex-1" disabled={!selectedSubject}>
+                Add to Space
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAddToSpaceOpen(false);
+                  setSelectedVideoToAdd(null);
+                  setSelectedSubject('');
+                  setSelectedCategory('');
+                  setNewCategoryName('');
+                  setShowNewCategory(false);
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

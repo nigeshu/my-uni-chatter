@@ -720,6 +720,127 @@ export type Database = {
         }
         Relationships: []
       }
+      study_categories: {
+        Row: {
+          category_type: string
+          created_at: string | null
+          id: string
+          name: string
+          subject_id: string
+        }
+        Insert: {
+          category_type: string
+          created_at?: string | null
+          id?: string
+          name: string
+          subject_id: string
+        }
+        Update: {
+          category_type?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_subject"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "study_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_items: {
+        Row: {
+          category_id: string
+          content: string | null
+          created_at: string | null
+          file_url: string | null
+          id: string
+          title: string
+          video_source: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          category_id: string
+          content?: string | null
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          title: string
+          video_source?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          category_id?: string
+          content?: string | null
+          created_at?: string | null
+          file_url?: string | null
+          id?: string
+          title?: string
+          video_source?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_category"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "study_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_plans: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          start_date: string
+          student_id: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          start_date: string
+          student_id: string
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          start_date?: string
+          student_id?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      study_subjects: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           assignment_id: string

@@ -1,0 +1,646 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, BookOpen, FileText, Video, Upload, Trash2, FolderPlus } from 'lucide-react';
+
+interface Subject {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  category_type: 'notes' | 'videos';
+}
+
+interface StudyItem {
+  id: string;
+  title: string;
+  content: string | null;
+  file_url: string | null;
+  youtube_url: string | null;
+}
+
+export const NotesSection = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [items, setItems] = useState<StudyItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  
+  const [newSubjectOpen, setNewSubjectOpen] = useState(false);
+  const [subjectName, setSubjectName] = useState('');
+  
+  const [newCategoryOpen, setNewCategoryOpen] = useState(false);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryType, setCategoryType] = useState<'notes' | 'videos'>('notes');
+  
+  const [newItemOpen, setNewItemOpen] = useState(false);
+  const [itemTitle, setItemTitle] = useState('');
+  const [itemContent, setItemContent] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedSubject) {
+      fetchCategories();
+    }
+  }, [selectedSubject]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchItems();
+    }
+  }, [selectedCategory]);
+
+  const fetchSubjects = async () => {
+    const { data, error } = await supabase
+      .from('study_subjects')
+      .select('*')
+      .eq('student_id', user?.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setSubjects(data);
+    }
+  };
+
+  const fetchCategories = async () => {
+    if (!selectedSubject) return;
+
+    const { data, error } = await supabase
+      .from('study_categories')
+      .select('*')
+      .eq('subject_id', selectedSubject.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setCategories(data as Category[]);
+    }
+  };
+
+  const fetchItems = async () => {
+    if (!selectedCategory) return;
+
+    const { data, error } = await supabase
+      .from('study_items')
+      .select('*')
+      .eq('category_id', selectedCategory.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setItems(data);
+    }
+  };
+
+  const createSubject = async () => {
+    if (!subjectName.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a subject name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('study_subjects').insert({
+      student_id: user?.id,
+      name: subjectName.trim(),
+    });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create subject',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Subject created successfully',
+    });
+
+    setNewSubjectOpen(false);
+    setSubjectName('');
+    fetchSubjects();
+  };
+
+  const createCategory = async () => {
+    if (!categoryName.trim() || !selectedSubject) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a category name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('study_categories').insert({
+      subject_id: selectedSubject.id,
+      name: categoryName.trim(),
+      category_type: categoryType,
+    });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create category',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Category created successfully',
+    });
+
+    setNewCategoryOpen(false);
+    setCategoryName('');
+    fetchCategories();
+  };
+
+  const createItem = async (fileUrl?: string) => {
+    if (!itemTitle.trim() || !selectedCategory) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a title',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const itemData: any = {
+      category_id: selectedCategory.id,
+      title: itemTitle.trim(),
+    };
+
+    if (selectedCategory.category_type === 'notes') {
+      itemData.content = itemContent.trim();
+      if (fileUrl) itemData.file_url = fileUrl;
+    } else {
+      itemData.youtube_url = youtubeUrl.trim();
+    }
+
+    const { error } = await supabase.from('study_items').insert(itemData);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create item',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Item created successfully',
+    });
+
+    setNewItemOpen(false);
+    setItemTitle('');
+    setItemContent('');
+    setYoutubeUrl('');
+    fetchItems();
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: 'Error',
+        description: 'File size must be less than 20MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingFile(true);
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user?.id}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('workspace-files')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast({
+        title: 'Error',
+        description: 'Failed to upload file',
+        variant: 'destructive',
+      });
+      setUploadingFile(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('workspace-files')
+      .getPublicUrl(filePath);
+
+    setUploadingFile(false);
+    await createItem(urlData.publicUrl);
+  };
+
+  const deleteItem = async (id: string) => {
+    const { error } = await supabase.from('study_items').delete().eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete item',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Item deleted successfully',
+    });
+
+    fetchItems();
+  };
+
+  if (!selectedSubject) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Study Notes & Videos</h2>
+          <Dialog open={newSubjectOpen} onOpenChange={setNewSubjectOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Subject
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Subject</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject Name</Label>
+                  <Input
+                    id="subject"
+                    value={subjectName}
+                    onChange={(e) => setSubjectName(e.target.value)}
+                    placeholder="e.g., Mathematics, Physics..."
+                  />
+                </div>
+                <Button onClick={createSubject} className="w-full">
+                  Create Subject
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {subjects.map((subject) => (
+            <Card
+              key={subject.id}
+              className="p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary"
+              onClick={() => setSelectedSubject(subject)}
+            >
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold">{subject.name}</h3>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {subjects.length === 0 && (
+          <div className="text-center py-12">
+            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No subjects yet. Create your first subject!</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={() => setSelectedSubject(null)}>
+          ← Back
+        </Button>
+        <h2 className="text-2xl font-bold">{selectedSubject.name}</h2>
+      </div>
+
+      <Tabs defaultValue="notes" className="w-full" onValueChange={(v) => setCategoryType(v as 'notes' | 'videos')}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="notes">
+            <FileText className="h-4 w-4 mr-2" />
+            Notes
+          </TabsTrigger>
+          <TabsTrigger value="videos">
+            <Video className="h-4 w-4 mr-2" />
+            Videos
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="notes" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Categories</h3>
+            <Dialog open={newCategoryOpen && categoryType === 'notes'} onOpenChange={setNewCategoryOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2" onClick={() => setCategoryType('notes')}>
+                  <FolderPlus className="h-4 w-4" />
+                  New Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Category</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Category Name</Label>
+                    <Input
+                      value={categoryName}
+                      onChange={(e) => setCategoryName(e.target.value)}
+                      placeholder="e.g., Lecture Notes, Assignments..."
+                    />
+                  </div>
+                  <Button onClick={createCategory} className="w-full">
+                    Create Category
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {categories.filter(c => c.category_type === 'notes').map((category) => (
+              <Card
+                key={category.id}
+                className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => setSelectedCategory(category)}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span className="font-medium">{category.name}</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {selectedCategory && selectedCategory.category_type === 'notes' && (
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold">{selectedCategory.name}</h4>
+                <div className="flex gap-2">
+                  <Dialog open={newItemOpen} onOpenChange={setNewItemOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Note
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Note</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                          <Label>Title</Label>
+                          <Input
+                            value={itemTitle}
+                            onChange={(e) => setItemTitle(e.target.value)}
+                            placeholder="Note title..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Content</Label>
+                          <Textarea
+                            value={itemContent}
+                            onChange={(e) => setItemContent(e.target.value)}
+                            placeholder="Note content..."
+                            rows={6}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Upload Document/Image (Optional)</Label>
+                          <Input
+                            type="file"
+                            accept="image/*,.pdf,.doc,.docx,.txt"
+                            onChange={handleFileUpload}
+                            disabled={uploadingFile}
+                          />
+                        </div>
+                        {!uploadingFile && (
+                          <Button onClick={() => createItem()} className="w-full">
+                            Add Note
+                          </Button>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedCategory(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {items.map((item) => (
+                  <Card key={item.id} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-semibold">{item.title}</h5>
+                        {item.content && (
+                          <p className="text-sm text-muted-foreground mt-2">{item.content}</p>
+                        )}
+                        {item.file_url && (
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline mt-2 inline-block"
+                          >
+                            View Attachment
+                          </a>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:text-destructive"
+                        onClick={() => deleteItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="videos" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Categories</h3>
+            <Dialog open={newCategoryOpen && categoryType === 'videos'} onOpenChange={setNewCategoryOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2" onClick={() => setCategoryType('videos')}>
+                  <FolderPlus className="h-4 w-4" />
+                  New Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Category</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Category Name</Label>
+                    <Input
+                      value={categoryName}
+                      onChange={(e) => setCategoryName(e.target.value)}
+                      placeholder="e.g., Tutorials, Lectures..."
+                    />
+                  </div>
+                  <Button onClick={createCategory} className="w-full">
+                    Create Category
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {categories.filter(c => c.category_type === 'videos').map((category) => (
+              <Card
+                key={category.id}
+                className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => setSelectedCategory(category)}
+              >
+                <div className="flex items-center gap-2">
+                  <Video className="h-5 w-5 text-primary" />
+                  <span className="font-medium">{category.name}</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {selectedCategory && selectedCategory.category_type === 'videos' && (
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold">{selectedCategory.name}</h4>
+                <div className="flex gap-2">
+                  <Dialog open={newItemOpen} onOpenChange={setNewItemOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Video
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Video</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                          <Label>Title</Label>
+                          <Input
+                            value={itemTitle}
+                            onChange={(e) => setItemTitle(e.target.value)}
+                            placeholder="Video title..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>YouTube URL</Label>
+                          <Input
+                            value={youtubeUrl}
+                            onChange={(e) => setYoutubeUrl(e.target.value)}
+                            placeholder="https://www.youtube.com/watch?v=..."
+                          />
+                        </div>
+                        <Button onClick={() => createItem()} className="w-full">
+                          Add Video
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedCategory(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                {items.map((item) => (
+                  <Card key={item.id} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-semibold">{item.title}</h5>
+                        {item.youtube_url && (
+                          <a
+                            href={item.youtube_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline mt-2 inline-block"
+                          >
+                            Watch on YouTube
+                          </a>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:text-destructive"
+                        onClick={() => deleteItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};

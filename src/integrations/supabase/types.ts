@@ -414,24 +414,30 @@ export type Database = {
           course_name: string
           created_at: string
           exam_date: string
+          exam_type: string
           id: string
           portions: string
+          sub_category: string
           updated_at: string
         }
         Insert: {
           course_name: string
           created_at?: string
           exam_date: string
+          exam_type?: string
           id?: string
           portions: string
+          sub_category?: string
           updated_at?: string
         }
         Update: {
           course_name?: string
           created_at?: string
           exam_date?: string
+          exam_type?: string
           id?: string
           portions?: string
+          sub_category?: string
           updated_at?: string
         }
         Relationships: []

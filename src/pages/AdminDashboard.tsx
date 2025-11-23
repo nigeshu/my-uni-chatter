@@ -101,6 +101,19 @@ const AdminDashboard = () => {
         return;
       }
 
+      // Check if name already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('full_name', newName.trim())
+        .neq('id', user?.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        setNameError('This name is already taken. Please choose a different name.');
+        return;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({ full_name: newName.trim() })

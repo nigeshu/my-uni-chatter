@@ -133,12 +133,48 @@ const Auth = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
+      {/* Floating Objects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[10%] left-[5%] text-4xl animate-bounce opacity-70" style={{ animationDuration: '3s', animationDelay: '0s' }}>📚</div>
+        <div className="absolute top-[20%] right-[10%] text-5xl animate-bounce opacity-60" style={{ animationDuration: '4s', animationDelay: '0.5s' }}>🎓</div>
+        <div className="absolute bottom-[15%] left-[15%] text-3xl animate-bounce opacity-80" style={{ animationDuration: '3.5s', animationDelay: '1s' }}>✏️</div>
+        <div className="absolute top-[60%] right-[5%] text-4xl animate-bounce opacity-70" style={{ animationDuration: '4.5s', animationDelay: '1.5s' }}>📖</div>
+        <div className="absolute bottom-[40%] left-[8%] text-3xl animate-bounce opacity-60" style={{ animationDuration: '3s', animationDelay: '2s' }}>🌟</div>
+        <div className="absolute top-[40%] left-[20%] text-2xl animate-bounce opacity-50" style={{ animationDuration: '3.5s', animationDelay: '0.5s' }}>💡</div>
+        <div className="absolute bottom-[25%] right-[20%] text-3xl animate-bounce opacity-70" style={{ animationDuration: '4s', animationDelay: '1s' }}>🚀</div>
+      </div>
+
+      {/* Floating Text Animations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[15%] left-[25%] text-sm font-semibold text-primary/40 animate-pulse" style={{ animationDuration: '2s' }}>Learn</div>
+        <div className="absolute top-[30%] right-[25%] text-sm font-semibold text-secondary/40 animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>Grow</div>
+        <div className="absolute bottom-[20%] left-[30%] text-sm font-semibold text-accent/40 animate-pulse" style={{ animationDuration: '3s', animationDelay: '1s' }}>Succeed</div>
+        <div className="absolute top-[50%] right-[15%] text-sm font-semibold text-primary/30 animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '1.5s' }}>Excel</div>
+      </div>
+
       {/* Playful Bot */}
       <div className="absolute top-8 right-8 animate-bounce hidden md:block">
         <div className="relative group cursor-pointer">
           <div className="text-6xl transition-transform group-hover:scale-110">🤖</div>
           <div className="absolute -bottom-12 right-0 bg-popover border border-border rounded-lg px-3 py-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             <p className="text-sm font-medium">Hey there! Ready to learn? 🚀</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description Section */}
+      <div className="absolute top-8 left-8 max-w-md hidden lg:block animate-fade-in">
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-6 shadow-xl">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-3">
+            Welcome to Your LMS
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+            A comprehensive Learning Management System designed to empower students and educators. Track your progress, manage courses, collaborate with friends, and excel in your academic journey.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <span className="px-3 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">📊 Progress Tracking</span>
+            <span className="px-3 py-1 bg-secondary/10 text-secondary text-xs rounded-full font-medium">💬 Collaboration</span>
+            <span className="px-3 py-1 bg-accent/10 text-accent text-xs rounded-full font-medium">📚 Course Materials</span>
           </div>
         </div>
       </div>

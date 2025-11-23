@@ -202,7 +202,7 @@ const LMSDashboard = () => {
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold">
                 EduHub
               </h1>
               <p className="text-xs text-muted-foreground">Learning Platform</p>

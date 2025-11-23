@@ -390,7 +390,7 @@ const Progress = () => {
   return (
     <div className="p-8 space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-success bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-2">
           Progress Tracking
         </h1>
         <p className="text-muted-foreground text-lg">
@@ -406,7 +406,7 @@ const Progress = () => {
               <Award className="h-6 w-6 text-primary" />
               Your CGPA
             </CardTitle>
-            <div className="text-4xl font-bold bg-gradient-success bg-clip-text text-transparent">
+            <div className="text-4xl font-bold">
               {cgpa.toFixed(2)}
             </div>
           </div>

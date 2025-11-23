@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { WeekCalendar } from '@/components/WeekCalendar';
 import {
   Dialog,
   DialogContent,
@@ -702,6 +703,11 @@ const DashboardHome = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Week Calendar */}
+          <div className="md:col-span-1">
+            <WeekCalendar isAdmin={isAdmin} />
+          </div>
         </div>
       </div>
     </div>

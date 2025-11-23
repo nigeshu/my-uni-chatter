@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/supabase';
-import { format, eachDayOfInterval } from 'date-fns';
-import { Calendar as CalendarPicker } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const Calendar = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [dates, setDates] = useState<Date[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [dayStatuses, setDayStatuses] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -23,10 +19,8 @@ const Calendar = () => {
   }, [user]);
 
   useEffect(() => {
-    if (dates.length > 0) {
-      fetchDayStatuses();
-    }
-  }, [dates]);
+    fetchDayStatuses();
+  }, [currentMonth]);
 
   const checkAdminRole = async () => {
     if (!user) return;
@@ -39,7 +33,14 @@ const Calendar = () => {
   };
 
   const fetchDayStatuses = async () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    
+    const dates = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
     const dateStrings = dates.map(date => format(date, 'yyyy-MM-dd'));
+    
     const { data } = await supabase
       .from('day_status')
       .select('date, is_holiday')
@@ -52,20 +53,21 @@ const Calendar = () => {
     setDayStatuses(statusMap);
   };
 
-  const generateCalendar = () => {
-    if (!startDate || !endDate) {
-      toast.error('Please select both start and end dates');
-      return;
-    }
+  const getCalendarDays = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  };
 
-    if (startDate > endDate) {
-      toast.error('Start date must be before end date');
-      return;
-    }
+  const goToPreviousMonth = () => {
+    setCurrentMonth(prev => subMonths(prev, 1));
+  };
 
-    const interval = eachDayOfInterval({ start: startDate, end: endDate });
-    setDates(interval);
-    toast.success('Calendar generated successfully');
+  const goToNextMonth = () => {
+    setCurrentMonth(prev => addMonths(prev, 1));
   };
 
   const toggleDayStatus = async (date: Date) => {
@@ -96,13 +98,15 @@ const Calendar = () => {
   const getDayClassName = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const isHoliday = dayStatuses[dateStr] || false;
+    const isCurrentMonth = format(date, 'M') === format(currentMonth, 'M');
     
     return cn(
-      'p-6 rounded-xl transition-all duration-300 border-2',
+      'aspect-square p-3 rounded-lg transition-all duration-300 border flex items-center justify-center',
       isHoliday 
         ? 'bg-gradient-to-br from-green-500/20 to-green-600/20 border-green-500/50' 
         : 'bg-gradient-to-br from-red-500/20 to-red-600/20 border-red-500/50',
-      isAdmin && 'cursor-pointer hover:scale-105 hover:shadow-xl'
+      !isCurrentMonth && 'opacity-40',
+      isAdmin && 'cursor-pointer hover:scale-105 hover:shadow-lg'
     );
   };
 
@@ -117,118 +121,61 @@ const Calendar = () => {
         </p>
       </div>
 
-      {isAdmin && (
-        <Card className="p-6 border-0 shadow-xl">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Generate Calendar</h2>
+      <Card className="p-6 border-0 shadow-xl">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={goToPreviousMonth}
+              className="hover:bg-primary/10"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
             
-            <div className="flex flex-wrap gap-4 items-end">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-[240px] justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarPicker
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">End Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-[240px] justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarPicker
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <Button 
-                onClick={generateCalendar}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                Generate Calendar
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {dates.length > 0 ? (
-        <Card className="p-6 border-0 shadow-xl">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">
-              {format(dates[0], 'MMMM yyyy')} - {format(dates[dates.length - 1], 'MMMM yyyy')}
+            <h2 className="text-2xl font-bold">
+              {format(currentMonth, 'MMMM yyyy')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {isAdmin ? 'Click to toggle: Green = Holiday, Red = Working Day' : 'Green = Holiday, Red = Working Day'}
-            </p>
+            
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={goToNextMonth}
+              className="hover:bg-primary/10"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           </div>
+          
+          <p className="text-sm text-muted-foreground text-center">
+            {isAdmin ? 'Click to toggle: Green = Holiday, Red = Working Day' : 'Green = Holiday, Red = Working Day'}
+          </p>
+        </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {dates.map((date) => (
-              <div
-                key={date.toISOString()}
-                onClick={() => toggleDayStatus(date)}
-                className={getDayClassName(date)}
-              >
-                <div className="text-center">
-                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-1">
-                    {format(date, 'EEE')}
-                  </div>
-                  <div className="text-3xl font-bold">
-                    {format(date, 'd')}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {format(date, 'MMM yyyy')}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ) : (
-        <Card className="p-12 border-0 shadow-xl">
-          <div className="text-center text-muted-foreground">
-            <CalendarIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p>{isAdmin ? 'Select dates and click Generate Calendar to get started' : 'No calendar data available'}</p>
-          </div>
-        </Card>
-      )}
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 gap-2 mb-2">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+            <div key={day} className="text-center font-semibold text-sm text-muted-foreground p-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar days */}
+        <div className="grid grid-cols-7 gap-2">
+          {getCalendarDays().map((date) => (
+            <div
+              key={date.toISOString()}
+              onClick={() => toggleDayStatus(date)}
+              className={getDayClassName(date)}
+            >
+              <span className="text-lg font-semibold">
+                {format(date, 'd')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };

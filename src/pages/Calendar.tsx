@@ -257,7 +257,7 @@ const Calendar = () => {
               </Button>
               
               <div className="text-center">
-                <h2 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold">
                   {format(currentMonth, 'MMMM yyyy')}
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">

@@ -324,9 +324,7 @@ const LMSDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <div className="animate-fade-in">
-          <Outlet />
-        </div>
+        <Outlet />
       </div>
     </div>
   );

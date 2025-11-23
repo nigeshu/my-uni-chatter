@@ -4,9 +4,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, X, Users } from 'lucide-react';
+import { Check, X, Users, UserMinus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Profile {
   id: string;
@@ -34,6 +44,7 @@ interface FriendsListProps {
 const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProps) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -175,6 +186,48 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
     fetchRequests();
   };
 
+  const handleRemoveFriend = async () => {
+    if (!friendToRemove) return;
+
+    try {
+      // Delete both friendship records (reciprocal)
+      const { error: error1 } = await supabase
+        .from('friendships')
+        .delete()
+        .eq('user_id', userId)
+        .eq('friend_id', friendToRemove.id);
+
+      const { error: error2 } = await supabase
+        .from('friendships')
+        .delete()
+        .eq('user_id', friendToRemove.id)
+        .eq('friend_id', userId);
+
+      if (error1 || error2) {
+        throw error1 || error2;
+      }
+
+      toast({
+        title: 'Friend removed',
+        description: `${friendToRemove.full_name || 'Friend'} has been removed from your friends list.`,
+      });
+
+      // Clear selection if the removed friend was selected
+      if (selectedFriend === friendToRemove.id) {
+        onSelectFriend('');
+      }
+
+      setFriendToRemove(null);
+      fetchFriends();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove friend.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Tabs defaultValue="friends" className="h-full flex flex-col">
       <TabsList className="mx-4 mt-2">
@@ -208,30 +261,45 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
           ) : (
             <div className="space-y-1 p-2">
               {friends.map((friend) => (
-                <button
+                <div
                   key={friend.id}
-                  onClick={() => onSelectFriend(friend.id)}
-                  className={`w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
+                  className={`group relative w-full p-3 rounded-lg flex items-center gap-3 transition-colors ${
                     selectedFriend === friend.id
                       ? 'bg-primary/10 border border-primary/20'
                       : 'hover:bg-chat-hover'
                   }`}
                 >
-                  <Avatar>
-                    <AvatarFallback className="bg-secondary text-secondary-foreground">
-                      {friend.full_name?.[0] || friend.email[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium">{friend.full_name || 'User'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{friend.email}</p>
-                  </div>
-                  {friend.unreadCount! > 0 && (
-                    <Badge variant="default" className="rounded-full">
-                      {friend.unreadCount}
-                    </Badge>
-                  )}
-                </button>
+                  <button
+                    onClick={() => onSelectFriend(friend.id)}
+                    className="flex items-center gap-3 flex-1 text-left"
+                  >
+                    <Avatar>
+                      <AvatarFallback className="bg-secondary text-secondary-foreground">
+                        {friend.full_name?.[0] || friend.email[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{friend.full_name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{friend.email}</p>
+                    </div>
+                    {friend.unreadCount! > 0 && (
+                      <Badge variant="default" className="rounded-full">
+                        {friend.unreadCount}
+                      </Badge>
+                    )}
+                  </button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFriendToRemove(friend);
+                    }}
+                  >
+                    <UserMinus className="h-4 w-4" />
+                  </Button>
+                </div>
               ))}
             </div>
           )}
@@ -287,6 +355,27 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
           )}
         </ScrollArea>
       </TabsContent>
+
+      <AlertDialog open={!!friendToRemove} onOpenChange={() => setFriendToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Friend?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {friendToRemove?.full_name || 'this friend'} from your friends list? 
+              This action cannot be undone and you'll need to send a new friend request to reconnect.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemoveFriend}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Tabs>
   );
 };

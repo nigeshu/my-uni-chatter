@@ -35,7 +35,7 @@ const Auth = () => {
           const { data: settings } = await supabase
             .from('semester_settings')
             .select('maintenance_mode_enabled')
-            .single();
+            .maybeSingle();
           
           if (settings?.maintenance_mode_enabled) {
             navigate('/maintenance', { replace: true });

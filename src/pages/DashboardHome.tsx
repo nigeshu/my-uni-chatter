@@ -80,7 +80,7 @@ const DashboardHome = () => {
       .from('semester_info')
       .select('*')
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
     
     if (data) {
       setSemesterText(data.semester_text);
@@ -140,17 +140,11 @@ const DashboardHome = () => {
       totalCreditsEnrolled = enrollments
         .filter((e: any) => !e.completed_at)
         .reduce((sum, e: any) => sum + (e.course?.credits || 0), 0);
-      
-      // For credits earned, count completed courses
-      totalCreditsEarned = enrollments
-        .filter((e: any) => e.completed_at)
-        .reduce((sum, e: any) => sum + (e.course?.credits || 0), 0);
     }
 
-    // Add semester credits to earned credits
+    // Earned credits ONLY from manually added semesters
     if (semesters && semesters.length > 0) {
-      const semesterCredits = semesters.reduce((sum, sem) => sum + sem.credits, 0);
-      totalCreditsEarned += semesterCredits;
+      totalCreditsEarned = semesters.reduce((sum, sem) => sum + sem.credits, 0);
     }
 
     setStats({

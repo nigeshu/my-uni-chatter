@@ -32,7 +32,7 @@ const AdminHome = () => {
     const { data } = await supabase
       .from('semester_settings')
       .select('*')
-      .single();
+      .maybeSingle();
     
     if (data) {
       setSemesterCompletionEnabled(data.semester_completion_enabled);

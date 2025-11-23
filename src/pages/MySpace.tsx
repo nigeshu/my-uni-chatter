@@ -17,6 +17,11 @@ import {
   Move,
   X,
   Save,
+  CheckSquare,
+  Target,
+  ListTodo,
+  Bell,
+  Code,
 } from 'lucide-react';
 import {
   Dialog,
@@ -265,6 +270,12 @@ const MySpace = () => {
       accent: 'bg-accent/10 border-accent',
       success: 'bg-success/10 border-success',
       warning: 'bg-warning/10 border-warning',
+      destructive: 'bg-destructive/10 border-destructive',
+      purple: 'bg-purple-500/10 border-purple-500',
+      pink: 'bg-pink-500/10 border-pink-500',
+      orange: 'bg-orange-500/10 border-orange-500',
+      blue: 'bg-blue-500/10 border-blue-500',
+      green: 'bg-green-500/10 border-green-500',
     };
     return colors[color] || colors.primary;
   };
@@ -277,6 +288,16 @@ const MySpace = () => {
         return <FileText className="h-4 w-4" />;
       case 'link':
         return <LinkIcon className="h-4 w-4" />;
+      case 'todo':
+        return <CheckSquare className="h-4 w-4" />;
+      case 'goal':
+        return <Target className="h-4 w-4" />;
+      case 'task':
+        return <ListTodo className="h-4 w-4" />;
+      case 'reminder':
+        return <Bell className="h-4 w-4" />;
+      case 'code':
+        return <Code className="h-4 w-4" />;
       default:
         return <StickyNote className="h-4 w-4" />;
     }
@@ -314,9 +335,14 @@ const MySpace = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="note">Note</SelectItem>
-                      <SelectItem value="plan">Plan</SelectItem>
-                      <SelectItem value="link">Link</SelectItem>
+                      <SelectItem value="note">📝 Note</SelectItem>
+                      <SelectItem value="plan">📋 Plan</SelectItem>
+                      <SelectItem value="todo">✅ Todo List</SelectItem>
+                      <SelectItem value="goal">🎯 Goal</SelectItem>
+                      <SelectItem value="task">📌 Task</SelectItem>
+                      <SelectItem value="reminder">🔔 Reminder</SelectItem>
+                      <SelectItem value="code">💻 Code Snippet</SelectItem>
+                      <SelectItem value="link">🔗 Link</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -347,10 +373,16 @@ const MySpace = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="primary">Primary</SelectItem>
-                      <SelectItem value="accent">Accent</SelectItem>
-                      <SelectItem value="success">Success</SelectItem>
-                      <SelectItem value="warning">Warning</SelectItem>
+                      <SelectItem value="primary">🔵 Primary Blue</SelectItem>
+                      <SelectItem value="accent">💜 Accent Purple</SelectItem>
+                      <SelectItem value="success">✅ Success Green</SelectItem>
+                      <SelectItem value="warning">⚠️ Warning Yellow</SelectItem>
+                      <SelectItem value="destructive">🔴 Red</SelectItem>
+                      <SelectItem value="purple">💜 Purple</SelectItem>
+                      <SelectItem value="pink">💗 Pink</SelectItem>
+                      <SelectItem value="orange">🧡 Orange</SelectItem>
+                      <SelectItem value="blue">💙 Blue</SelectItem>
+                      <SelectItem value="green">💚 Green</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -373,8 +405,8 @@ const MySpace = () => {
       >
         <svg
           ref={svgRef}
-          className="absolute inset-0 w-full h-full pointer-events-none z-0"
-          style={{ overflow: 'visible' }}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ overflow: 'visible', zIndex: 0 }}
         >
           {connections.map((conn) => {
             const fromItem = items.find((i) => i.id === conn.from_item_id);
@@ -405,7 +437,7 @@ const MySpace = () => {
         {items.map((item) => (
           <Card
             key={item.id}
-            className={`absolute cursor-move transition-shadow hover:shadow-xl z-10 ${getColorClass(
+            className={`absolute cursor-move transition-shadow hover:shadow-xl bg-card ${getColorClass(
               item.color
             )} border-2 ${connectingFrom === item.id ? 'ring-4 ring-primary' : ''}`}
             style={{
@@ -413,6 +445,7 @@ const MySpace = () => {
               top: item.position_y,
               width: item.width,
               minHeight: item.height,
+              zIndex: 10,
             }}
             onMouseDown={(e) => handleMouseDown(e, item.id)}
           >

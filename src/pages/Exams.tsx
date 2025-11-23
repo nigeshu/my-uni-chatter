@@ -119,7 +119,7 @@ const Exams = () => {
               filteredExams.map((exam) => (
                 <TableRow
                   key={exam.id}
-                  className="cursor-pointer hover:bg-accent"
+                  className="cursor-pointer hover:bg-accent/50 transition-colors"
                   onClick={() => setSelectedExam(exam)}
                 >
                   <TableCell className="font-medium">{exam.sub_category}</TableCell>
@@ -127,10 +127,10 @@ const Exams = () => {
                   <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
                   <TableCell>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
                         isPast(new Date(exam.exam_date))
-                          ? "bg-green-100 text-green-800"
-                          : "bg-blue-100 text-blue-800"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                       }`}
                     >
                       {getExamStatus(exam.exam_date)}

@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { format } from "date-fns";
 
 interface Exam {
@@ -28,6 +29,9 @@ const AdminExams = () => {
   const [examType, setExamType] = useState("theory");
   const [subCategory, setSubCategory] = useState("Cat 1");
   const [customLabCategory, setCustomLabCategory] = useState("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,6 +105,45 @@ const AdminExams = () => {
     setExamDate("");
     setPortions("");
     setCustomLabCategory("");
+    setAddDialogOpen(false);
+    fetchExams();
+  };
+
+  const handleEditExam = async () => {
+    if (!editingExam || !editingExam.course_name || !editingExam.exam_date || !editingExam.portions) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("exams")
+      .update({
+        course_name: editingExam.course_name,
+        exam_date: editingExam.exam_date,
+        portions: editingExam.portions,
+      })
+      .eq("id", editingExam.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update exam",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Exam updated successfully",
+    });
+
+    setEditDialogOpen(false);
+    setEditingExam(null);
     fetchExams();
   };
 
@@ -128,7 +171,6 @@ const AdminExams = () => {
     if (examType === "theory") {
       return ["Cat 1", "Cat 2", "FAT"];
     } else if (examType === "lab") {
-      // Get unique lab categories from existing exams
       const labCategories = exams
         .filter(e => e.exam_type === "lab" && e.sub_category !== "Lab FAT")
         .map(e => e.sub_category)
@@ -149,137 +191,273 @@ const AdminExams = () => {
     }
   };
 
-  return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Manage Exams</h1>
-        <p className="text-muted-foreground">Add and manage exam schedules</p>
-      </div>
+  const groupExamsByTypeAndCategory = () => {
+    const grouped: Record<string, Record<string, Exam[]>> = {
+      theory: {},
+      lab: {},
+      non_graded: {}
+    };
 
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Add New Exam</h2>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="examType">Exam Type</Label>
-            <Select value={examType} onValueChange={setExamType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="theory">Theory</SelectItem>
-                <SelectItem value="lab">Lab</SelectItem>
-                <SelectItem value="non_graded">Non Graded</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="subCategory">Sub Category</Label>
-            {examType === "lab" && subCategory === "custom" ? (
-              <Input
-                id="customLabCategory"
-                value={customLabCategory}
-                onChange={(e) => {
-                  setCustomLabCategory(e.target.value);
-                  setSubCategory(e.target.value);
-                }}
-                placeholder="Enter custom lab category"
-              />
-            ) : (
-              <Select value={subCategory} onValueChange={setSubCategory}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {getSubCategoryOptions().map(option => (
-                    <SelectItem key={option} value={option}>
-                      {option === "custom" ? "+ Add Custom Category" : option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+    exams.forEach(exam => {
+      if (!grouped[exam.exam_type][exam.sub_category]) {
+        grouped[exam.exam_type][exam.sub_category] = [];
+      }
+      grouped[exam.exam_type][exam.sub_category].push(exam);
+    });
 
-          <div>
-            <Label htmlFor="courseName">Course Name</Label>
-            <Input
-              id="courseName"
-              value={courseName}
-              onChange={(e) => setCourseName(e.target.value)}
-              placeholder="Enter course name"
-            />
-          </div>
-          <div>
-            <Label htmlFor="examDate">Exam Date</Label>
-            <Input
-              id="examDate"
-              type="date"
-              value={examDate}
-              onChange={(e) => setExamDate(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="portions">Portions</Label>
-            <Textarea
-              id="portions"
-              value={portions}
-              onChange={(e) => setPortions(e.target.value)}
-              placeholder="Enter exam portions"
-              rows={4}
-            />
-          </div>
-          <Button onClick={handleAddExam} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Exam
-          </Button>
-        </div>
-      </Card>
+    return grouped;
+  };
 
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Scheduled Exams</h2>
-        <Table>
-          <TableHeader>
+  const renderExamTable = (categoryExams: Exam[], categoryName: string) => (
+    <Card key={categoryName} className="p-6 hover:shadow-lg transition-shadow">
+      <h3 className="text-lg font-semibold mb-4">{categoryName}</h3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Course Name</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Portions</TableHead>
+            <TableHead className="w-[120px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {categoryExams.length === 0 ? (
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Sub Category</TableHead>
-              <TableHead>Course Name</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Portions</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableCell colSpan={4} className="text-center text-muted-foreground">
+                No exams scheduled
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {exams.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No exams scheduled
-                </TableCell>
-              </TableRow>
-            ) : (
-              exams.map((exam) => (
-                <TableRow key={exam.id}>
-                  <TableCell className="font-medium">{getExamTypeLabel(exam.exam_type)}</TableCell>
-                  <TableCell>{exam.sub_category}</TableCell>
-                  <TableCell>{exam.course_name}</TableCell>
-                  <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
-                  <TableCell className="max-w-md truncate">{exam.portions}</TableCell>
-                  <TableCell>
+          ) : (
+            categoryExams.map((exam) => (
+              <TableRow key={exam.id} className="hover:bg-accent/50 transition-colors">
+                <TableCell className="font-medium">{exam.course_name}</TableCell>
+                <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
+                <TableCell className="max-w-md truncate">{exam.portions}</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditingExam(exam);
+                        setEditDialogOpen(true);
+                      }}
+                      className="hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteExam(exam.id)}
-                      className="hover:bg-destructive hover:text-destructive-foreground"
+                      className="hover:bg-destructive/10 hover:text-destructive transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </Card>
+  );
+
+  const groupedExams = groupExamsByTypeAndCategory();
+
+  return (
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Manage Exams</h1>
+          <p className="text-muted-foreground">Add and manage exam schedules</p>
+        </div>
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Exam
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Exam</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="examType">Exam Type</Label>
+                <Select value={examType} onValueChange={setExamType}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="theory">Theory</SelectItem>
+                    <SelectItem value="lab">Lab</SelectItem>
+                    <SelectItem value="non_graded">Non Graded</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="subCategory">Sub Category</Label>
+                {examType === "lab" && subCategory === "custom" ? (
+                  <Input
+                    id="customLabCategory"
+                    value={customLabCategory}
+                    onChange={(e) => {
+                      setCustomLabCategory(e.target.value);
+                      setSubCategory(e.target.value);
+                    }}
+                    placeholder="Enter custom lab category"
+                  />
+                ) : (
+                  <Select value={subCategory} onValueChange={setSubCategory}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {getSubCategoryOptions().map(option => (
+                        <SelectItem key={option} value={option}>
+                          {option === "custom" ? "+ Add Custom Category" : option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="courseName">Course Name</Label>
+                <Input
+                  id="courseName"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  placeholder="Enter course name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="examDate">Exam Date</Label>
+                <Input
+                  id="examDate"
+                  type="date"
+                  value={examDate}
+                  onChange={(e) => setExamDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="portions">Portions</Label>
+                <Textarea
+                  id="portions"
+                  value={portions}
+                  onChange={(e) => setPortions(e.target.value)}
+                  placeholder="Enter exam portions"
+                  rows={4}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddExam}>Add Exam</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Theory Exams */}
+      {Object.keys(groupedExams.theory).length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Theory Exams</h2>
+          <div className="grid gap-4">
+            {["Cat 1", "Cat 2", "FAT"].map(category => 
+              groupedExams.theory[category] && groupedExams.theory[category].length > 0 
+                ? renderExamTable(groupedExams.theory[category], category)
+                : null
             )}
-          </TableBody>
-        </Table>
-      </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Lab Exams */}
+      {Object.keys(groupedExams.lab).length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Lab Exams</h2>
+          <div className="grid gap-4">
+            {Object.keys(groupedExams.lab).map(category =>
+              renderExamTable(groupedExams.lab[category], category)
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Non Graded Exams */}
+      {Object.keys(groupedExams.non_graded).length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Non Graded Assessments</h2>
+          <div className="grid gap-4">
+            {["Assessment 1", "Assessment 2", "Assessment 3", "Assessment 4", "Assessment 5", "Assessment 6"].map(category =>
+              groupedExams.non_graded[category] && groupedExams.non_graded[category].length > 0
+                ? renderExamTable(groupedExams.non_graded[category], category)
+                : null
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Exam</DialogTitle>
+          </DialogHeader>
+          {editingExam && (
+            <div className="space-y-4 py-4">
+              <div>
+                <Label>Exam Type: {getExamTypeLabel(editingExam.exam_type)}</Label>
+              </div>
+              <div>
+                <Label>Sub Category: {editingExam.sub_category}</Label>
+              </div>
+              <div>
+                <Label htmlFor="editCourseName">Course Name</Label>
+                <Input
+                  id="editCourseName"
+                  value={editingExam.course_name}
+                  onChange={(e) => setEditingExam({...editingExam, course_name: e.target.value})}
+                  placeholder="Enter course name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editExamDate">Exam Date</Label>
+                <Input
+                  id="editExamDate"
+                  type="date"
+                  value={editingExam.exam_date}
+                  onChange={(e) => setEditingExam({...editingExam, exam_date: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPortions">Portions</Label>
+                <Textarea
+                  id="editPortions"
+                  value={editingExam.portions}
+                  onChange={(e) => setEditingExam({...editingExam, portions: e.target.value})}
+                  placeholder="Enter exam portions"
+                  rows={4}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditExam}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

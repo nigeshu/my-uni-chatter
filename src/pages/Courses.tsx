@@ -24,6 +24,7 @@ interface Course {
     full_name: string;
   };
   isEnrolled?: boolean;
+  isCompleted?: boolean;
 }
 
 const Courses = () => {
@@ -53,14 +54,18 @@ const Courses = () => {
     if (publishedCourses) {
       const { data: enrollments } = await supabase
         .from('enrollments')
-        .select('course_id')
+        .select('course_id, completed_at')
         .eq('student_id', user?.id);
 
       const enrolledIds = new Set(enrollments?.map(e => e.course_id) || []);
+      const completedIds = new Set(
+        enrollments?.filter(e => e.completed_at).map(e => e.course_id) || []
+      );
       
       const coursesWithEnrollment = publishedCourses.map(course => ({
         ...course,
         isEnrolled: enrolledIds.has(course.id),
+        isCompleted: completedIds.has(course.id),
       }));
 
       setCourses(coursesWithEnrollment);
@@ -187,7 +192,7 @@ const Courses = () => {
               {course.isEnrolled ? (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
                   <BookOpen className="h-4 w-4" />
-                  <span>Completed</span>
+                  <span>{course.isCompleted ? 'Completed' : 'Click to view materials'}</span>
                 </div>
               ) : (
                 <Button

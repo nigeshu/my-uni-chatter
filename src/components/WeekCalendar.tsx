@@ -96,7 +96,8 @@ export const WeekCalendar = ({ isAdmin }: WeekCalendarProps) => {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+      <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
       <CardHeader className="pb-3">
         <CardTitle className="text-center text-lg">{monthYear}</CardTitle>
       </CardHeader>

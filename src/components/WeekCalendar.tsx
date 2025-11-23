@@ -96,12 +96,12 @@ export const WeekCalendar = ({ isAdmin }: WeekCalendarProps) => {
   };
 
   return (
-    <Card className="w-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+    <Card className="w-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-full">
       <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
       <CardHeader className="pb-3">
-        <CardTitle className="text-center text-lg">{monthYear}</CardTitle>
+        <CardTitle className="text-center text-lg font-bold">{monthYear}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-6">
         <div className="grid grid-cols-7 gap-2">
           {dates.map((date) => (
             <div
@@ -119,7 +119,7 @@ export const WeekCalendar = ({ isAdmin }: WeekCalendarProps) => {
           ))}
         </div>
         {isAdmin && (
-          <p className="text-xs text-muted-foreground text-center mt-3">
+          <p className="text-xs text-muted-foreground text-center mt-4">
             Click to toggle: Green = Holiday, Red = Working Day
           </p>
         )}

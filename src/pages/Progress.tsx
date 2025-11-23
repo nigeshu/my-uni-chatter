@@ -72,6 +72,7 @@ const Progress = () => {
   const [completedCourseMarks, setCompletedCourseMarks] = useState<Record<string, CourseMark>>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [semesterCompletionEnabled, setSemesterCompletionEnabled] = useState(false);
+  const [marksheetDialogOpen, setMarksheetDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -847,20 +848,44 @@ const Progress = () => {
         </CardContent>
       </Card>
 
-      {/* Marksheet Section - Only show if there are completed courses */}
+      {/* Marksheet Button - Only show if there are completed courses */}
       {completedCourses.length > 0 && (
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-6 w-6 text-primary" />
-              Marksheet
+              Semester Marksheet
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <p className="text-muted-foreground mb-4">
+              View your completed semester marksheet with all course marks
+            </p>
+            <Button 
+              onClick={() => setMarksheetDialogOpen(true)}
+              className="w-full gap-2"
+            >
+              <Award className="h-4 w-4" />
+              View Marksheet
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Marksheet Dialog */}
+      <Dialog open={marksheetDialogOpen} onOpenChange={setMarksheetDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Award className="h-6 w-6 text-primary" />
+              Semester Marksheet
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
+                  <tr className="border-b-2">
                     <th className="text-left py-3 px-4 font-semibold">Course</th>
                     <th className="text-center py-3 px-4 font-semibold">Type</th>
                     <th className="text-right py-3 px-4 font-semibold">Total Marks</th>
@@ -899,9 +924,15 @@ const Progress = () => {
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            {completedCourses.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Award className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p>No completed courses yet. Complete a semester to view your marksheet.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

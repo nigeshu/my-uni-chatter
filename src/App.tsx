@@ -13,6 +13,7 @@ import Assignments from "./pages/Assignments";
 import Progress from "./pages/Progress";
 import Query from "./pages/Query";
 import ChatPage from "./pages/ChatPage";
+import MySpace from "./pages/MySpace";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminHome from "./pages/AdminHome";
 import AdminCourses from "./pages/AdminCourses";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="courses/:courseId/materials" element={<CourseMaterials />} />
               <Route path="assignments" element={<Assignments />} />
               <Route path="progress" element={<Progress />} />
+              <Route path="myspace" element={<MySpace />} />
               <Route path="query" element={<Query />} />
               <Route path="chat" element={<ChatPage />} />
             </Route>

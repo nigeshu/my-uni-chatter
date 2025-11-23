@@ -792,6 +792,93 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_connections: {
+        Row: {
+          created_at: string
+          from_item_id: string
+          id: string
+          student_id: string
+          to_item_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_item_id: string
+          id?: string
+          student_id: string
+          to_item_id: string
+        }
+        Update: {
+          created_at?: string
+          from_item_id?: string
+          id?: string
+          student_id?: string
+          to_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_connections_from_item_id_fkey"
+            columns: ["from_item_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_connections_to_item_id_fkey"
+            columns: ["to_item_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_items: {
+        Row: {
+          color: string
+          content: string | null
+          created_at: string
+          file_url: string | null
+          height: number
+          id: string
+          item_type: string
+          position_x: number
+          position_y: number
+          student_id: string
+          title: string
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          color?: string
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          height?: number
+          id?: string
+          item_type: string
+          position_x?: number
+          position_y?: number
+          student_id: string
+          title: string
+          updated_at?: string
+          width?: number
+        }
+        Update: {
+          color?: string
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          height?: number
+          id?: string
+          item_type?: string
+          position_x?: number
+          position_y?: number
+          student_id?: string
+          title?: string
+          updated_at?: string
+          width?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

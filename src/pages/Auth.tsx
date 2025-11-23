@@ -30,7 +30,8 @@ const Auth = () => {
           .eq('id', session.user.id)
           .single();
         
-        navigate(profile?.role === 'admin' ? '/admin' : '/dashboard');
+        // Use replace to avoid navigation issues
+        navigate(profile?.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
       }
     };
     

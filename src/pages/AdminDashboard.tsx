@@ -69,11 +69,6 @@ const AdminDashboard = () => {
 
     if (data) {
       if (data.role !== 'admin') {
-        toast({
-          title: 'Access Denied',
-          description: 'You do not have admin privileges.',
-          variant: 'destructive',
-        });
         navigate('/dashboard');
         return;
       }

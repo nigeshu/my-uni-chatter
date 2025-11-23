@@ -145,52 +145,144 @@ const Auth = () => {
 
       {/* Description Box 1 - Top Left */}
       <div className="absolute top-8 left-8 max-w-sm hidden lg:block animate-fade-in">
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
             Lernet
           </h2>
           <p className="text-muted-foreground text-xs leading-relaxed">
             A comprehensive Learning Management System designed to empower students and educators in their academic journey.
           </p>
+          <div className="mt-3 max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-300">
+            <p className="text-xs text-primary font-medium pt-2 border-t border-border/50">
+              ✨ Join thousands of students achieving their goals with Lernet
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Description Box 2 - Bottom Left */}
       <div className="absolute bottom-8 left-8 max-w-sm hidden lg:block animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-3xl">📊</span>
+            <span className="text-3xl group-hover:scale-110 transition-transform">📊</span>
             <h3 className="text-lg font-bold text-foreground">Smart Analytics</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Track your CGPA, monitor course progress, and view detailed performance analytics. Get insights into your academic achievements with real-time updates.
+            Track your CGPA, monitor course progress, and view detailed performance analytics.
           </p>
+          <div className="mt-3 max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-300">
+            <p className="text-xs text-primary font-medium pt-2 border-t border-border/50">
+              📈 Real-time updates • Visual reports • Performance trends
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Description Box 3 - Top Right (below bot) */}
       <div className="absolute top-32 right-8 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-3xl">💬</span>
+            <span className="text-3xl group-hover:scale-110 transition-transform">💬</span>
             <h3 className="text-lg font-bold text-foreground">Stay Connected</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Collaborate with friends through our integrated chat system. Share materials, discuss assignments, and build your learning community.
+            Collaborate with friends through our integrated chat system.
           </p>
+          <div className="mt-3 max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-300">
+            <p className="text-xs text-primary font-medium pt-2 border-t border-border/50">
+              🤝 Friend requests • Group chats • File sharing
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Description Box 4 - Bottom Right */}
       <div className="absolute bottom-8 right-8 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.6s' }}>
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-3xl">🎯</span>
+            <span className="text-3xl group-hover:scale-110 transition-transform">🎯</span>
             <h3 className="text-lg font-bold text-foreground">Personal Workspace</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Create your custom study space with notes, plans, and organized materials. Visualize connections between topics and manage your learning flow.
+            Create your custom study space with notes, plans, and organized materials.
           </p>
+          <div className="mt-3 max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-300">
+            <p className="text-xs text-primary font-medium pt-2 border-t border-border/50">
+              📝 Visual planning • Mind maps • Resource organization
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description Box 5 - Center Left */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-8 max-w-xs hidden lg:block animate-fade-in" style={{ animationDelay: '0.8s' }}>
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-secondary/50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl group-hover:scale-110 transition-transform">📚</span>
+            <h3 className="text-base font-bold text-foreground">Rich Materials</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Access course videos, PDFs, and interactive content anytime.
+          </p>
+          <div className="mt-2 max-h-0 overflow-hidden group-hover:max-h-16 transition-all duration-300">
+            <p className="text-xs text-secondary font-medium pt-2 border-t border-border/50">
+              🎥 HD videos • 📄 Documents • 🔍 Search tools
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description Box 6 - Center Right */}
+      <div className="absolute top-1/2 -translate-y-1/2 right-8 max-w-xs hidden xl:block animate-fade-in" style={{ animationDelay: '1s' }}>
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-secondary/50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl group-hover:scale-110 transition-transform">📝</span>
+            <h3 className="text-base font-bold text-foreground">Assignment Hub</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Submit assignments, track deadlines, and receive feedback instantly.
+          </p>
+          <div className="mt-2 max-h-0 overflow-hidden group-hover:max-h-16 transition-all duration-300">
+            <p className="text-xs text-secondary font-medium pt-2 border-t border-border/50">
+              ⏰ Reminders • 📊 Status tracking • ✅ Quick submissions
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description Box 7 - Top Center Left */}
+      <div className="absolute top-8 left-1/4 max-w-xs hidden 2xl:block animate-fade-in" style={{ animationDelay: '1.2s' }}>
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-accent/50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl group-hover:scale-110 transition-transform">🔔</span>
+            <h3 className="text-base font-bold text-foreground">Smart Alerts</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Stay updated with exam schedules and urgent notifications.
+          </p>
+          <div className="mt-2 max-h-0 overflow-hidden group-hover:max-h-16 transition-all duration-300">
+            <p className="text-xs text-accent font-medium pt-2 border-t border-border/50">
+              📅 Exam countdown • 🚨 Urgent updates • 📢 Announcements
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description Box 8 - Bottom Center Right */}
+      <div className="absolute bottom-8 right-1/4 max-w-xs hidden 2xl:block animate-fade-in" style={{ animationDelay: '1.4s' }}>
+        <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-accent/50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl group-hover:scale-110 transition-transform">🎓</span>
+            <h3 className="text-base font-bold text-foreground">Exam Prep</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Organize exam portions and track preparation progress effectively.
+          </p>
+          <div className="mt-2 max-h-0 overflow-hidden group-hover:max-h-16 transition-all duration-300">
+            <p className="text-xs text-accent font-medium pt-2 border-t border-border/50">
+              📖 Syllabus tracker • ✍️ Practice tests • 📊 Readiness score
+            </p>
+          </div>
         </div>
       </div>
 

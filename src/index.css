@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes flowDiagonal1 {
+  0%, 100% {
+    transform: rotate(45deg) scale(1.5) translate(-30%, 30%);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.5) translate(10%, -10%);
+  }
+}
+
+@keyframes flowDiagonal2 {
+  0%, 100% {
+    transform: rotate(45deg) scale(1.5) translate(-40%, 40%);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.5) translate(5%, -5%);
+  }
+}
+
+@keyframes flowDiagonal3 {
+  0%, 100% {
+    transform: rotate(45deg) scale(1.5) translate(-50%, 50%);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.5) translate(0%, 0%);
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

@@ -317,17 +317,26 @@ const Auth = () => {
         </div>
       </div>
 
-      <Card className="w-full max-w-md border-border shadow-2xl backdrop-blur-sm bg-card/95 relative z-10 animate-fade-in">
+      <Card className="w-full max-w-md border-2 border-primary/30 shadow-2xl backdrop-blur-md bg-card/95 relative z-10 animate-fade-in hover:border-primary/50 transition-all duration-500 group">
+        {/* Glowing border effect */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-pulse" />
+        
         <CardHeader className="space-y-1 text-center relative">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-gradient-to-br from-primary to-primary/80 rounded-full shadow-lg animate-scale-in hover:scale-110 transition-transform">
-              <MessageSquare className="h-8 w-8 text-primary-foreground" />
+            <div className="relative">
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-lg opacity-50 animate-pulse" style={{ padding: '8px' }} />
+              {/* Icon container */}
+              <div className="relative p-4 bg-gradient-to-br from-primary to-primary/80 rounded-full shadow-2xl animate-scale-in hover:scale-110 transition-transform duration-300">
+                <MessageSquare className="h-10 w-10 text-primary-foreground" />
+              </div>
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <CardTitle className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in drop-shadow-lg">
             Start Learning
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-base font-medium">
             {userType === 'student' 
               ? '🎓 Sign in with your Google account' 
               : '⚡ Admin portal access'}
@@ -335,11 +344,17 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={userType} onValueChange={(v) => setUserType(v as 'student' | 'admin')} className="mb-6">
-            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-              <TabsTrigger value="student" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger 
+                value="student" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:shadow-lg transition-all duration-300"
+              >
                 Student
               </TabsTrigger>
-              <TabsTrigger value="admin" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary data-[state=active]:to-secondary/80">
+              <TabsTrigger 
+                value="admin" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary data-[state=active]:to-secondary/80 data-[state=active]:shadow-lg transition-all duration-300"
+              >
                 Admin
               </TabsTrigger>
             </TabsList>
@@ -350,20 +365,21 @@ const Auth = () => {
             <Button
               type="button"
               variant="outline"
-              className="w-full hover:scale-105 transition-all hover:shadow-lg hover:border-primary group"
+              className="w-full h-12 hover:scale-105 transition-all hover:shadow-xl hover:border-primary group relative overflow-hidden"
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
-              <svg className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              <svg className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform relative z-10" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
               </svg>
-              {loading ? '✨ Connecting...' : 'Continue with Google'}
+              <span className="relative z-10 font-semibold">{loading ? '✨ Connecting...' : 'Continue with Google'}</span>
             </Button>
           ) : (
             // Admins: Only email/password
-            <form onSubmit={handleAuth} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
+                <Label htmlFor="email" className="flex items-center gap-2 font-semibold">
                   📧 Email
                 </Label>
                 <Input
@@ -373,12 +389,12 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="transition-all focus:scale-[1.02]"
+                  className="h-12 transition-all focus:scale-[1.02] focus:border-primary focus:shadow-lg"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center gap-2">
+                <Label htmlFor="password" className="flex items-center gap-2 font-semibold">
                   🔐 Password
                 </Label>
                 <Input
@@ -389,16 +405,17 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="transition-all focus:scale-[1.02]"
+                  className="h-12 transition-all focus:scale-[1.02] focus:border-primary focus:shadow-lg"
                 />
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all hover:scale-105 hover:shadow-lg" 
+                className="w-full h-12 bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] hover:bg-right transition-all duration-500 hover:scale-105 hover:shadow-2xl font-semibold text-base relative overflow-hidden group" 
                 disabled={loading}
               >
-                {loading ? '⚡ Please wait...' : '🚀 Sign In as Admin'}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <span className="relative z-10">{loading ? '⚡ Please wait...' : '🚀 Sign In as Admin'}</span>
               </Button>
             </form>
           )}

@@ -89,7 +89,7 @@ const Calendar = () => {
 
   const goToPreviousMonth = () => {
     const newMonth = subMonths(currentMonth, 1);
-    if (startDate && isBefore(newMonth, startOfMonth(startDate))) {
+    if (startDate && isBefore(endOfMonth(newMonth), startDate)) {
       toast.error('Cannot go before start date');
       return;
     }
@@ -98,7 +98,7 @@ const Calendar = () => {
 
   const goToNextMonth = () => {
     const newMonth = addMonths(currentMonth, 1);
-    if (endDate && isAfter(newMonth, startOfMonth(endDate))) {
+    if (endDate && isAfter(startOfMonth(newMonth), endDate)) {
       toast.error('Cannot go after end date');
       return;
     }

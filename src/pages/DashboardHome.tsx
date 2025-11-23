@@ -375,17 +375,17 @@ const DashboardHome = () => {
   ];
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 animate-fade-in">
       {/* Header */}
       <div className="relative">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
-            <h1 className="text-4xl font-bold">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
               Welcome Back! 👋
             </h1>
           {semesterText && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 rounded-xl border border-primary/20 backdrop-blur-sm">
-              <span className="text-lg font-semibold">
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 rounded-xl border border-primary/20 backdrop-blur-sm">
+              <span className="text-sm sm:text-base lg:text-lg font-semibold">
                 {semesterText}
               </span>
               {isAdmin && (
@@ -439,7 +439,7 @@ const DashboardHome = () => {
                 )}
               </Button>
               {showNotifications && (
-                <Card className="absolute right-0 top-full mt-2 w-96 max-h-96 overflow-y-auto z-50 shadow-xl">
+                <Card className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-96 max-h-96 overflow-y-auto z-50 shadow-xl">
                   <CardHeader>
                     <CardTitle className="text-lg">Notifications</CardTitle>
                   </CardHeader>
@@ -480,24 +480,24 @@ const DashboardHome = () => {
             </div>
           )}
         </div>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
           Continue your learning journey
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <Card key={stat.title} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
-                    <Icon className="h-6 w-6 text-white" />
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${stat.gradient}`}>
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold">{stat.value}</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>

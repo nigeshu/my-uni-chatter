@@ -116,20 +116,21 @@ const Courses = () => {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
             Explore Courses
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
             Discover and enroll in amazing courses
           </p>
         </div>
-        <Button onClick={() => setShowShareDialog(true)} className="gap-2">
+        <Button onClick={() => setShowShareDialog(true)} className="gap-2 w-full sm:w-auto">
           <Upload className="h-4 w-4" />
-          Provide Course Material
+          <span className="hidden sm:inline">Provide Course Material</span>
+          <span className="sm:hidden">Share Material</span>
         </Button>
       </div>
 
@@ -140,12 +141,12 @@ const Courses = () => {
           placeholder="Search courses..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 h-12"
+          className="pl-10 h-11 sm:h-12"
         />
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredCourses.map((course) => (
           <Card 
             key={course.id}

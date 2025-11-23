@@ -53,6 +53,8 @@ const CourseMaterials = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [videosDialogOpen, setVideosDialogOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [expandedModule, setExpandedModule] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -180,16 +182,19 @@ const CourseMaterials = () => {
         </TabsList>
       </Tabs>
 
-      <Card>
-        <CardContent className="pt-6">
-          {/* Materials grouped by module */}
-          {modules.map((module) => {
-            const moduleMaterials = materials.filter(m => m.module_id === module.id);
-            if (moduleMaterials.length === 0) return null;
-            
-            return (
-              <div key={module.id} className="mb-8 last:mb-0">
-                <div className="flex items-center gap-3 mb-4 pb-2 border-b">
+      <div className="space-y-6">
+        {modules.map((module) => {
+          const moduleMaterials = materials.filter(m => m.module_id === module.id);
+          const topics = module.topic ? module.topic.split(/[–\-\n]/).map(t => t.trim()).filter(t => t.length > 10) : [];
+          const isExpanded = expandedModule === module.id;
+          
+          return (
+            <Card key={module.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div 
+                  className="flex items-center gap-3 p-6 cursor-pointer hover:bg-accent/5 transition-colors"
+                  onClick={() => setExpandedModule(isExpanded ? null : module.id)}
+                >
                   <div className="w-12 h-12 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0">
                     <span className="font-bold text-white">{module.serial_no}</span>
                   </div>
@@ -197,11 +202,13 @@ const CourseMaterials = () => {
                     {module.heading && (
                       <h3 className="text-lg font-semibold">{module.heading}</h3>
                     )}
+                    <p className="text-sm text-muted-foreground">{topics.length} topics</p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedModule(module);
                       setVideosDialogOpen(true);
                     }}
@@ -210,59 +217,102 @@ const CourseMaterials = () => {
                     Videos
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 gap-4">
-                  {moduleMaterials.map((material) => (
-                    <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40">
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          {getMaterialIcon(material.material_type)}
-                          <div className="flex-1">
-                            <CardTitle className="text-lg">{material.title}</CardTitle>
-                            <p className="text-sm text-muted-foreground capitalize">{material.material_type}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            {material.file_url && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setPreviewUrl(material.file_url);
-                                    setPreviewTitle(material.title);
-                                    setPreviewOpen(true);
-                                  }}
-                                >
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Open
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </CardHeader>
-                      {material.description && (
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground">{material.description}</p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
 
-          {materials.length === 0 && (
-            <div className="text-center py-16">
+                {isExpanded && (
+                  <div className="border-t p-6 space-y-4 bg-accent/5">
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Topics</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {topics.map((topic, index) => (
+                        <Card
+                          key={index}
+                          className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary"
+                          onClick={() => {
+                            setSelectedTopic(topic);
+                            setSelectedModule(module);
+                          }}
+                        >
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="font-medium text-sm line-clamp-2">{topic}</span>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {selectedTopic && selectedModule?.id === module.id && (
+                      <div className="border-t pt-4 mt-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-lg font-semibold">Materials</h4>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedTopic(null)}
+                          >
+                            Close
+                          </Button>
+                        </div>
+                        
+                        <div className="grid gap-4">
+                          {moduleMaterials.length > 0 ? (
+                            moduleMaterials.map((material) => (
+                              <Card key={material.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-3">
+                                    {getMaterialIcon(material.material_type)}
+                                    <div className="flex-1">
+                                      <h5 className="font-semibold">{material.title}</h5>
+                                      <p className="text-sm text-muted-foreground capitalize mb-2">{material.material_type}</p>
+                                      {material.description && (
+                                        <p className="text-sm text-muted-foreground">{material.description}</p>
+                                      )}
+                                      {material.file_url && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="mt-3"
+                                          onClick={() => {
+                                            setPreviewUrl(material.file_url);
+                                            setPreviewTitle(material.title);
+                                            setPreviewOpen(true);
+                                          }}
+                                        >
+                                          <Download className="h-4 w-4 mr-2" />
+                                          Open
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          ) : (
+                            <div className="text-center py-8">
+                              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-2 opacity-50" />
+                              <p className="text-sm text-muted-foreground">No materials available for this topic yet</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {modules.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-16">
               <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
                 <FileText className="h-20 w-20 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No materials available yet</h3>
-              <p className="text-muted-foreground">Check back later for course materials</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              <h3 className="text-xl font-semibold mb-2">No modules available yet</h3>
+              <p className="text-muted-foreground">Check back later for course content</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-[900px]">

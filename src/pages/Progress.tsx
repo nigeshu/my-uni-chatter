@@ -374,11 +374,22 @@ const Progress = () => {
     
     if (!course) return;
 
+    // Clamp values to their maximum limits
+    let clampedValue = value;
+    if (field === 'lab_internals' && value > 60) clampedValue = 60;
+    if (field === 'lab_fat' && value > 50) clampedValue = 50;
+    if (field === 'cat1_mark' && value > 50) clampedValue = 50;
+    if (field === 'cat2_mark' && value > 50) clampedValue = 50;
+    if (field === 'da1_mark' && value > 10) clampedValue = 10;
+    if (field === 'da2_mark' && value > 10) clampedValue = 10;
+    if (field === 'da3_mark' && value > 10) clampedValue = 10;
+    if (field === 'theory_fat' && value > 100) clampedValue = 100;
+
     const updatedMark = {
       ...(currentMark || {}),
       course_id: courseId,
       course_type: course.course.course_type,
-      [field]: value,
+      [field]: clampedValue,
     };
 
     setCourseMarks(prev => ({ ...prev, [courseId]: updatedMark }));
@@ -387,7 +398,7 @@ const Progress = () => {
     if (currentMark?.id) {
       await supabase
         .from('course_marks')
-        .update({ [field]: value })
+        .update({ [field]: clampedValue })
         .eq('id', currentMark.id);
     } else {
       const { data } = await supabase
@@ -457,6 +468,13 @@ const Progress = () => {
   const ensurePositive = (value: string) => {
     const num = parseFloat(value);
     return isNaN(num) || num < 0 ? 0 : num;
+  };
+
+  const clampValue = (value: string, max?: number) => {
+    const num = parseFloat(value);
+    if (isNaN(num) || num < 0) return 0;
+    if (max !== undefined && num > max) return max;
+    return num;
   };
 
   return (
@@ -539,7 +557,10 @@ const Progress = () => {
                       max="10"
                       value={newSemester.gpa}
                       onKeyDown={preventNegative}
-                      onChange={(e) => setNewSemester({ ...newSemester, gpa: e.target.value })}
+                      onChange={(e) => {
+                        const val = clampValue(e.target.value, 10);
+                        setNewSemester({ ...newSemester, gpa: val.toString() });
+                      }}
                       placeholder="e.g., 8.5"
                     />
                   </div>
@@ -642,7 +663,7 @@ const Progress = () => {
                       max="10"
                       value={editingSemester.gpa}
                       onKeyDown={preventNegative}
-                      onChange={(e) => setEditingSemester({ ...editingSemester, gpa: ensurePositive(e.target.value) })}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, gpa: clampValue(e.target.value, 10) })}
                       placeholder="e.g., 8.5"
                     />
                   </div>
@@ -724,7 +745,7 @@ const Progress = () => {
                               max="60"
                               value={mark?.lab_internals || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'lab_internals', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_internals', clampValue(e.target.value, 60))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -735,7 +756,7 @@ const Progress = () => {
                               max="50"
                               value={mark?.lab_fat || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', clampValue(e.target.value, 50))}
                             />
                           </div>
                           <div className="col-span-2 space-y-3">
@@ -805,7 +826,7 @@ const Progress = () => {
                               max="50"
                               value={mark?.cat1_mark || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'cat1_mark', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'cat1_mark', clampValue(e.target.value, 50))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -816,7 +837,7 @@ const Progress = () => {
                               max="50"
                               value={mark?.cat2_mark || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'cat2_mark', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'cat2_mark', clampValue(e.target.value, 50))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -827,7 +848,7 @@ const Progress = () => {
                               max="10"
                               value={mark?.da1_mark || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'da1_mark', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'da1_mark', clampValue(e.target.value, 10))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -838,7 +859,7 @@ const Progress = () => {
                               max="10"
                               value={mark?.da2_mark || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'da2_mark', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'da2_mark', clampValue(e.target.value, 10))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -849,7 +870,7 @@ const Progress = () => {
                               max="10"
                               value={mark?.da3_mark || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'da3_mark', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'da3_mark', clampValue(e.target.value, 10))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -860,7 +881,7 @@ const Progress = () => {
                               max="100"
                               value={mark?.theory_fat || ''}
                               onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', ensurePositive(e.target.value))}
+                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', clampValue(e.target.value, 100))}
                             />
                           </div>
                           <div className="col-span-2 space-y-3">

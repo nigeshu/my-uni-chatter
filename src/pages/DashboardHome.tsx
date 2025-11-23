@@ -515,7 +515,7 @@ const DashboardHome = () => {
           <p className="text-muted-foreground">Stay updated with important announcements</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Admin Messages Box */}
           <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <div className="h-2 bg-gradient-accent" />
@@ -657,23 +657,23 @@ const DashboardHome = () => {
           </Card>
 
           {/* Upcoming Exam Box */}
-          {alerts.upcomingExam && (
-            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-                    <BookMarked className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xl font-bold">Upcoming Exam</div>
-                    <p className="text-sm text-muted-foreground font-normal">
-                      Next scheduled exam
-                    </p>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                  <BookMarked className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <div className="text-xl font-bold">Upcoming Exam</div>
+                  <p className="text-sm text-muted-foreground font-normal">
+                    Next scheduled exam
+                  </p>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {alerts.upcomingExam ? (
                 <div 
                   className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20 hover:border-blue-500/40 hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => navigate('/dashboard/exams')}
@@ -700,12 +700,16 @@ const DashboardHome = () => {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No upcoming exams
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Week Calendar */}
-          <div className="md:col-span-1">
+          <div className="lg:col-span-1">
             <WeekCalendar isAdmin={isAdmin} />
           </div>
         </div>

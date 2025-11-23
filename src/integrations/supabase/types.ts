@@ -839,6 +839,7 @@ export type Database = {
           file_url: string | null
           height: number
           id: string
+          is_minimized: boolean | null
           item_type: string
           position_x: number
           position_y: number
@@ -854,6 +855,7 @@ export type Database = {
           file_url?: string | null
           height?: number
           id?: string
+          is_minimized?: boolean | null
           item_type: string
           position_x?: number
           position_y?: number
@@ -869,6 +871,7 @@ export type Database = {
           file_url?: string | null
           height?: number
           id?: string
+          is_minimized?: boolean | null
           item_type?: string
           position_x?: number
           position_y?: number

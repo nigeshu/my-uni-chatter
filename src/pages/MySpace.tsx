@@ -22,6 +22,10 @@ import {
   ListTodo,
   Bell,
   Code,
+  Minimize2,
+  Maximize2,
+  File,
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   Dialog,
@@ -49,6 +53,7 @@ interface WorkspaceItem {
   width: number;
   height: number;
   color: string;
+  is_minimized: boolean;
 }
 
 interface Connection {
@@ -71,8 +76,12 @@ const MySpace = () => {
   const [newItemTitle, setNewItemTitle] = useState('');
   const [newItemContent, setNewItemContent] = useState('');
   const [newItemColor, setNewItemColor] = useState('primary');
+  const [resizingItem, setResizingItem] = useState<string | null>(null);
+  const [resizeStart, setResizeStart] = useState({ width: 0, height: 0, x: 0, y: 0 });
+  const [uploadingFile, setUploadingFile] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -166,7 +175,10 @@ const MySpace = () => {
         content: item.content,
         position_x: item.position_x,
         position_y: item.position_y,
+        width: item.width,
+        height: item.height,
         color: item.color,
+        is_minimized: item.is_minimized,
       })
       .eq('id', item.id);
 
@@ -253,6 +265,13 @@ const MySpace = () => {
       }
       setDraggedItem(null);
     }
+    if (resizingItem) {
+      const item = items.find((i) => i.id === resizingItem);
+      if (item) {
+        updateItem(item);
+      }
+      setResizingItem(null);
+    }
   };
 
   const handleConnect = (itemId: string) => {
@@ -262,6 +281,146 @@ const MySpace = () => {
       createConnection(connectingFrom, itemId);
       setConnectingFrom(null);
     }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
+
+    setResizingItem(itemId);
+    setResizeStart({
+      width: item.width,
+      height: item.height,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
+  const handleResizeMove = (e: React.MouseEvent) => {
+    if (!resizingItem) return;
+
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === resizingItem
+          ? {
+              ...item,
+              width: Math.max(200, resizeStart.width + deltaX),
+              height: Math.max(150, resizeStart.height + deltaY),
+            }
+          : item
+      )
+    );
+  };
+
+  const toggleMinimize = (itemId: string) => {
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
+
+    const updatedItem = { ...item, is_minimized: !item.is_minimized };
+    setItems((prev) => prev.map((i) => (i.id === itemId ? updatedItem : i)));
+    updateItem(updatedItem);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, itemId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: 'Error',
+        description: 'File size must be less than 20MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingFile(true);
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user?.id}/${itemId}-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('workspace-files')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast({
+        title: 'Error',
+        description: 'Failed to upload file',
+        variant: 'destructive',
+      });
+      setUploadingFile(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('workspace-files')
+      .getPublicUrl(filePath);
+
+    const item = items.find((i) => i.id === itemId);
+    if (item) {
+      const updatedItem = { ...item, file_url: urlData.publicUrl };
+      setItems((prev) => prev.map((i) => (i.id === itemId ? updatedItem : i)));
+      
+      const { error } = await supabase
+        .from('workspace_items')
+        .update({ file_url: urlData.publicUrl })
+        .eq('id', itemId);
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to save file reference',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: 'File uploaded successfully',
+        });
+      }
+    }
+
+    setUploadingFile(false);
+  };
+
+  const getEdgePoint = (item: WorkspaceItem, targetItem: WorkspaceItem) => {
+    const centerX = item.position_x + item.width / 2;
+    const centerY = item.position_y + item.height / 2;
+    const targetCenterX = targetItem.position_x + targetItem.width / 2;
+    const targetCenterY = targetItem.position_y + targetItem.height / 2;
+
+    const dx = targetCenterX - centerX;
+    const dy = targetCenterY - centerY;
+
+    const angle = Math.atan2(dy, dx);
+
+    let x, y;
+    if (Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))) {
+      // Horizontal edge
+      if (dx > 0) {
+        x = item.position_x + item.width;
+        y = centerY + Math.tan(angle) * (item.width / 2);
+      } else {
+        x = item.position_x;
+        y = centerY - Math.tan(angle) * (item.width / 2);
+      }
+    } else {
+      // Vertical edge
+      if (dy > 0) {
+        y = item.position_y + item.height;
+        x = centerX + (item.height / 2) / Math.tan(angle);
+      } else {
+        y = item.position_y;
+        x = centerX - (item.height / 2) / Math.tan(angle);
+      }
+    }
+
+    return { x, y };
   };
 
   const getColorClass = (color: string) => {
@@ -399,7 +558,10 @@ const MySpace = () => {
       <div
         ref={canvasRef}
         className="relative w-full h-[calc(100vh-120px)] cursor-move"
-        onMouseMove={handleMouseMove}
+        onMouseMove={(e) => {
+          handleMouseMove(e);
+          handleResizeMove(e);
+        }}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
@@ -413,18 +575,16 @@ const MySpace = () => {
             const toItem = items.find((i) => i.id === conn.to_item_id);
             if (!fromItem || !toItem) return null;
 
-            const x1 = fromItem.position_x + fromItem.width / 2;
-            const y1 = fromItem.position_y + fromItem.height / 2;
-            const x2 = toItem.position_x + toItem.width / 2;
-            const y2 = toItem.position_y + toItem.height / 2;
+            const fromPoint = getEdgePoint(fromItem, toItem);
+            const toPoint = getEdgePoint(toItem, fromItem);
 
             return (
               <line
                 key={conn.id}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
+                x1={fromPoint.x}
+                y1={fromPoint.y}
+                x2={toPoint.x}
+                y2={toPoint.y}
                 stroke="hsl(var(--primary))"
                 strokeWidth="2"
                 strokeDasharray="5,5"
@@ -444,47 +604,127 @@ const MySpace = () => {
               left: item.position_x,
               top: item.position_y,
               width: item.width,
-              minHeight: item.height,
+              minHeight: item.is_minimized ? 'auto' : item.height,
               zIndex: 10,
             }}
             onMouseDown={(e) => handleMouseDown(e, item.id)}
           >
             <div className="p-4 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   {getIconForType(item.item_type)}
                   <h3 className="font-semibold text-sm truncate">{item.title}</h3>
                 </div>
-                <div className="flex items-center gap-1 no-drag">
+                <div className="flex items-center gap-1 no-drag flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => toggleMinimize(item.id)}
+                    title={item.is_minimized ? 'Maximize' : 'Minimize'}
+                  >
+                    {item.is_minimized ? (
+                      <Maximize2 className="h-3 w-3" />
+                    ) : (
+                      <Minimize2 className="h-3 w-3" />
+                    )}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
                     onClick={() => handleConnect(item.id)}
+                    title="Connect to another item"
                   >
                     <LinkIcon className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Upload file"
+                    disabled={uploadingFile}
+                  >
+                    <Upload className="h-3 w-3" />
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, item.id)}
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-6 w-6 p-0 hover:text-destructive"
                     onClick={() => deleteItem(item.id)}
+                    title="Delete item"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
 
-              {item.content && (
-                <p className="text-xs text-muted-foreground line-clamp-4">
-                  {item.content}
-                </p>
-              )}
+              {!item.is_minimized && (
+                <>
+                  {item.file_url && (
+                    <div className="mt-2 p-2 bg-muted rounded border">
+                      {item.file_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                        <img
+                          src={item.file_url}
+                          alt="Uploaded file"
+                          className="max-w-full h-auto rounded"
+                        />
+                      ) : item.file_url.match(/\.pdf$/i) ? (
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4" />
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline"
+                          >
+                            View PDF
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4" />
+                          <a
+                            href={item.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline"
+                          >
+                            View File
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-              <Badge variant="outline" className="text-xs">
-                {item.item_type}
-              </Badge>
+                  {item.content && (
+                    <p className="text-xs text-muted-foreground line-clamp-4">
+                      {item.content}
+                    </p>
+                  )}
+
+                  <Badge variant="outline" className="text-xs">
+                    {item.item_type}
+                  </Badge>
+                </>
+              )}
             </div>
+
+            {!item.is_minimized && (
+              <div
+                className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize no-drag bg-primary/20 hover:bg-primary/40 rounded-tl"
+                onMouseDown={(e) => handleResizeStart(e, item.id)}
+                title="Drag to resize"
+              />
+            )}
           </Card>
         ))}
 

@@ -367,6 +367,30 @@ export type Database = {
           },
         ]
       }
+      day_status: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_holiday: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          is_holiday?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_holiday?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           completed_at: string | null

@@ -49,7 +49,9 @@ const Exams = () => {
       return "Completed";
     }
     const daysUntil = Math.ceil(differenceInDays(date, new Date()));
-    return daysUntil === 0 ? "Today" : `Coming in ${daysUntil} days`;
+    if (daysUntil === 0) return "Tomorrow";
+    if (daysUntil === 1) return "Today";
+    return `Coming in ${daysUntil} days`;
   };
 
   const filteredExams = exams.filter(exam => exam.exam_type === activeTab);

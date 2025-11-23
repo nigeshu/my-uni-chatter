@@ -66,15 +66,18 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
 
       const { data: existingRequest } = await supabase
         .from('friend_requests')
-        .select('id')
-        .eq('sender_id', userId)
-        .eq('receiver_id', friendProfile.id)
-        .single();
+        .select('id, sender_id, receiver_id, status')
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${friendProfile.id}),and(sender_id.eq.${friendProfile.id},receiver_id.eq.${userId})`)
+        .eq('status', 'pending')
+        .maybeSingle();
 
       if (existingRequest) {
+        const isSentByMe = existingRequest.sender_id === userId;
         toast({
-          title: 'Request already sent',
-          description: 'You have already sent a friend request to this user.',
+          title: isSentByMe ? 'Request already sent' : 'Request already received',
+          description: isSentByMe
+            ? 'You have already sent a friend request to this user.'
+            : 'This user has already sent you a friend request. Please check your Requests tab.',
         });
         return;
       }

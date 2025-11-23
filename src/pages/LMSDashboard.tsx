@@ -241,7 +241,7 @@ const LMSDashboard = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold">
-                EduHub
+                Lernet
               </h1>
               <p className="text-xs text-muted-foreground">Learning Platform</p>
             </div>

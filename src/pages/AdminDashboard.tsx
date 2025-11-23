@@ -157,7 +157,7 @@ const AdminDashboard = () => {
               <h1 className="text-xl font-bold">
                 Admin Panel
               </h1>
-              <p className="text-xs text-muted-foreground">EduHub LMS</p>
+              <p className="text-xs text-muted-foreground">Lernet</p>
             </div>
           </div>
           

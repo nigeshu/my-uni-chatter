@@ -54,7 +54,117 @@ const Exams = () => {
     return `Coming in ${daysUntil} days`;
   };
 
-  const filteredExams = exams.filter(exam => exam.exam_type === activeTab);
+  const groupExamsByCategory = (examType: string) => {
+    const filtered = exams.filter(exam => exam.exam_type === examType);
+    const grouped: Record<string, Exam[]> = {};
+    
+    filtered.forEach(exam => {
+      if (!grouped[exam.sub_category]) {
+        grouped[exam.sub_category] = [];
+      }
+      grouped[exam.sub_category].push(exam);
+    });
+    
+    return grouped;
+  };
+
+  const renderExamTable = (categoryExams: Exam[], categoryName: string) => (
+    <Card key={categoryName} className="p-6 hover:shadow-lg transition-shadow animate-fade-in">
+      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent w-fit px-2 py-1">
+        {categoryName}
+      </h3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Course Name</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Exam Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {categoryExams.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center text-muted-foreground">
+                No exams scheduled
+              </TableCell>
+            </TableRow>
+          ) : (
+            categoryExams.map((exam) => (
+              <TableRow
+                key={exam.id}
+                className="cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => setSelectedExam(exam)}
+              >
+                <TableCell className="font-medium">{exam.course_name}</TableCell>
+                <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      isPast(new Date(exam.exam_date))
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    }`}
+                  >
+                    {getExamStatus(exam.exam_date)}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </Card>
+  );
+
+  const groupedExams = {
+    theory: groupExamsByCategory("theory"),
+    lab: groupExamsByCategory("lab"),
+    non_graded: groupExamsByCategory("non_graded")
+  };
+
+  const renderTabContent = () => {
+    const currentGrouped = groupedExams[activeTab];
+    const categories = Object.keys(currentGrouped);
+    
+    if (categories.length === 0) {
+      return (
+        <Card className="p-12 text-center">
+          <p className="text-muted-foreground">No exams scheduled</p>
+        </Card>
+      );
+    }
+
+    if (activeTab === "theory") {
+      return (
+        <div className="grid gap-4">
+          {["Cat 1", "Cat 2", "FAT"].map(category => 
+            currentGrouped[category] && currentGrouped[category].length > 0 
+              ? renderExamTable(currentGrouped[category], category)
+              : null
+          )}
+        </div>
+      );
+    } else if (activeTab === "non_graded") {
+      return (
+        <div className="grid gap-4">
+          {["Assessment 1", "Assessment 2", "Assessment 3", "Assessment 4", "Assessment 5", "Assessment 6"].map(category =>
+            currentGrouped[category] && currentGrouped[category].length > 0
+              ? renderExamTable(currentGrouped[category], category)
+              : null
+          )}
+        </div>
+      );
+    } else {
+      // Lab - show all categories dynamically
+      return (
+        <div className="grid gap-4">
+          {categories.map(category =>
+            renderExamTable(currentGrouped[category], category)
+          )}
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="p-8 space-y-6">
@@ -98,50 +208,7 @@ const Exams = () => {
         </button>
       </div>
 
-      <Card className="p-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Sub Category</TableHead>
-              <TableHead>Course Name</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Exam Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredExams.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No exams scheduled
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredExams.map((exam) => (
-                <TableRow
-                  key={exam.id}
-                  className="cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => setSelectedExam(exam)}
-                >
-                  <TableCell className="font-medium">{exam.sub_category}</TableCell>
-                  <TableCell>{exam.course_name}</TableCell>
-                  <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        isPast(new Date(exam.exam_date))
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      }`}
-                    >
-                      {getExamStatus(exam.exam_date)}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      {renderTabContent()}
 
       <Dialog open={!!selectedExam} onOpenChange={() => setSelectedExam(null)}>
         <DialogContent>

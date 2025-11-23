@@ -19,7 +19,8 @@ import {
   Edit2,
   Sparkles,
   BookMarked,
-  Menu
+  Menu,
+  CalendarDays
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -242,6 +243,7 @@ const LMSDashboard = () => {
     { path: '/dashboard/myspace', icon: Sparkles, label: 'My Space' },
     { path: '/dashboard/exams', icon: BookMarked, label: 'Exams' },
     { path: '/dashboard/query', icon: HelpCircle, label: 'Query' },
+    { path: '/dashboard/calendar', icon: CalendarDays, label: 'Calendar' },
     { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
   ];
 

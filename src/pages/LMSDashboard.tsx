@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
   BookOpen, 
   MessageSquare, 
@@ -17,7 +18,8 @@ import {
   HelpCircle,
   Edit2,
   Sparkles,
-  BookMarked
+  BookMarked,
+  Menu
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -53,6 +55,7 @@ const LMSDashboard = () => {
   const [editNameOpen, setEditNameOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [nameError, setNameError] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -242,140 +245,174 @@ const LMSDashboard = () => {
     { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
   ];
 
-  return (
-    <div className="h-screen flex bg-background">
-      {/* Sidebar */}
-      <div className="w-64 border-r border-border flex flex-col bg-gradient-to-b from-card via-card to-primary/5">
-        {/* Logo */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-primary rounded-lg">
-              <GraduationCap className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">
-                Lernet
-              </h1>
-              <p className="text-xs text-muted-foreground">Learning Platform</p>
-            </div>
+  const SidebarContent = () => (
+    <>
+      {/* Logo */}
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-gradient-primary rounded-lg">
+            <GraduationCap className="h-6 w-6 text-white" />
           </div>
-          
-          <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-                {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
-                <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0 hover:bg-primary/10"
-                      onClick={handleEditName}
-                    >
-                      <Edit2 className="h-3 w-3" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Name</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          value={newName}
-                          onChange={(e) => {
-                            setNewName(e.target.value);
-                            setNameError('');
-                          }}
-                          placeholder="Enter your name"
-                          maxLength={100}
-                        />
-                        {nameError && (
-                          <p className="text-sm text-destructive">{nameError}</p>
-                        )}
-                      </div>
-                      <Button onClick={handleSaveName} className="w-full">
-                        Save Changes
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold">
+              Lernet
+            </h1>
+            <p className="text-xs text-muted-foreground">Learning Platform</p>
           </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isLetsTalk = item.path === '/dashboard/chat';
-            const showBadge = isLetsTalk && unreadCount > 0;
-            
-            return (
-              <div key={item.path} className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
-                <NavLink
-                  to={item.path}
-                  end={item.path === '/dashboard'}
-                  className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-300 hover:scale-105 z-10"
-                  activeClassName="bg-gradient-primary text-white hover:text-white shadow-md scale-105"
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.label}</span>
-                  {showBadge && (
-                    <Badge 
-                      className="ml-auto bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                      variant="default"
-                    >
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </Badge>
-                  )}
-                </NavLink>
-              </div>
-            );
-          })}
-          
-          {profile?.role === 'admin' && (
-            <div className="pt-4 border-t border-border mt-4">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
-                <NavLink
-                  to="/admin"
-                  className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-300 hover:scale-105 z-10"
-                >
-                  <GraduationCap className="h-5 w-5" />
-                  <span className="font-medium">Admin Panel</span>
-                </NavLink>
-              </div>
+        
+        <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+          <Avatar className="h-10 w-10 border-2 border-primary/20">
+            <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+              {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
+              <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 hover:bg-primary/10"
+                    onClick={handleEditName}
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Edit Name</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={newName}
+                        onChange={(e) => {
+                          setNewName(e.target.value);
+                          setNameError('');
+                        }}
+                        placeholder="Enter your name"
+                        maxLength={100}
+                      />
+                      {nameError && (
+                        <p className="text-sm text-destructive">{nameError}</p>
+                      )}
+                    </div>
+                    <Button onClick={handleSaveName} className="w-full">
+                      Save Changes
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-          )}
-        </nav>
-
-        {/* Sign Out */}
-        <div className="p-4 border-t border-border">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Sign Out
-          </Button>
+            <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
+          </div>
         </div>
       </div>
 
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isLetsTalk = item.path === '/dashboard/chat';
+          const showBadge = isLetsTalk && unreadCount > 0;
+          
+          return (
+            <div key={item.path} className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
+              <NavLink
+                to={item.path}
+                end={item.path === '/dashboard'}
+                className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-300 hover:scale-105 z-10"
+                activeClassName="bg-gradient-primary text-white hover:text-white shadow-md scale-105"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                <span className="font-medium">{item.label}</span>
+                {showBadge && (
+                  <Badge 
+                    className="ml-auto bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                    variant="default"
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
+              </NavLink>
+            </div>
+          );
+        })}
+        
+        {profile?.role === 'admin' && (
+          <div className="pt-4 border-t border-border mt-4">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
+              <NavLink
+                to="/admin"
+                className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-300 hover:scale-105 z-10"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <GraduationCap className="h-5 w-5" />
+                <span className="font-medium">Admin Panel</span>
+              </NavLink>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Sign Out */}
+      <div className="p-4 border-t border-border">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-5 w-5 mr-3" />
+          Sign Out
+        </Button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="h-screen flex bg-background">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex w-64 border-r border-border flex-col bg-gradient-to-b from-card via-card to-primary/5">
+        <SidebarContent />
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <Outlet />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header */}
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-64">
+              <div className="h-full flex flex-col bg-gradient-to-b from-card via-card to-primary/5">
+                <SidebarContent />
+              </div>
+            </SheetContent>
+          </Sheet>
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gradient-primary rounded-lg">
+              <GraduationCap className="h-5 w-5 text-white" />
+            </div>
+            <h1 className="text-lg font-bold">Lernet</h1>
+          </div>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

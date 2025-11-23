@@ -238,21 +238,21 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
   return (
     <>
       {/* Chat Header */}
-      <div className="h-16 border-b border-border flex items-center px-6 bg-card">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback className="bg-primary text-primary-foreground">
+      <div className="h-14 sm:h-16 border-b border-border flex items-center px-4 sm:px-6 bg-card">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+          <AvatarFallback className="bg-primary text-primary-foreground text-sm sm:text-base">
             {friend?.full_name?.[0] || friend?.email?.[0] || 'U'}
           </AvatarFallback>
         </Avatar>
-        <div className="ml-3">
-          <p className="font-semibold">{friend?.full_name || 'User'}</p>
-          <p className="text-xs text-muted-foreground">{friend?.email}</p>
+        <div className="ml-3 min-w-0 flex-1">
+          <p className="font-semibold text-sm sm:text-base truncate">{friend?.full_name || 'User'}</p>
+          <p className="text-xs text-muted-foreground truncate">{friend?.email}</p>
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef}>
+        <div className="space-y-3 sm:space-y-4">
           {messages.map((message) => {
             const isSent = message.sender_id === userId;
             return (
@@ -261,13 +261,13 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
                 className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                  className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 ${
                     isSent
                       ? 'bg-chat-sent text-primary-foreground'
                       : 'bg-chat-received text-foreground'
                   }`}
                 >
-                  <p className="break-words">{renderMessageContent(message.content)}</p>
+                  <p className="break-words text-sm sm:text-base">{renderMessageContent(message.content)}</p>
                   <p
                     className={`text-xs mt-1 ${
                       isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'
@@ -283,7 +283,7 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
           {/* Typing Indicator */}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-chat-received rounded-2xl px-4 py-3">
+              <div className="bg-chat-received rounded-2xl px-3 sm:px-4 py-2 sm:py-3">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -296,15 +296,15 @@ const ChatWindow = ({ userId, friendId }: ChatWindowProps) => {
       </ScrollArea>
 
       {/* Message Input */}
-      <div className="border-t border-border p-4 bg-card">
+      <div className="border-t border-border p-3 sm:p-4 bg-card">
         <form onSubmit={sendMessage} className="flex gap-2">
           <Input
             value={newMessage}
             onChange={(e) => handleTyping(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1"
+            className="flex-1 text-sm sm:text-base"
           />
-          <Button type="submit" size="icon">
+          <Button type="submit" size="icon" className="h-10 w-10 sm:h-11 sm:w-11">
             <Send className="h-4 w-4" />
           </Button>
         </form>

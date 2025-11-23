@@ -703,18 +703,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          maintenance_mode_enabled: boolean
           semester_completion_enabled: boolean
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          maintenance_mode_enabled?: boolean
           semester_completion_enabled?: boolean
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          maintenance_mode_enabled?: boolean
           semester_completion_enabled?: boolean
           updated_at?: string
         }

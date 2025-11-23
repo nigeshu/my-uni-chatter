@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { BookOpen, Users, FileText, TrendingUp, GraduationCap } from 'lucide-react';
+import { BookOpen, Users, FileText, TrendingUp, GraduationCap, Construction } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const AdminHome = () => {
@@ -18,6 +18,7 @@ const AdminHome = () => {
     activeEnrollments: 0,
   });
   const [semesterCompletionEnabled, setSemesterCompletionEnabled] = useState(false);
+  const [maintenanceModeEnabled, setMaintenanceModeEnabled] = useState(false);
   const [settingsId, setSettingsId] = useState<string>('');
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const AdminHome = () => {
     
     if (data) {
       setSemesterCompletionEnabled(data.semester_completion_enabled);
+      setMaintenanceModeEnabled(data.maintenance_mode_enabled);
       setSettingsId(data.id);
     }
   };
@@ -56,6 +58,27 @@ const AdminHome = () => {
       toast({
         title: 'Success',
         description: `Semester completion ${enabled ? 'enabled' : 'disabled'} for all students`,
+      });
+    }
+  };
+
+  const handleToggleMaintenanceMode = async (enabled: boolean) => {
+    const { error } = await supabase
+      .from('semester_settings')
+      .update({ maintenance_mode_enabled: enabled })
+      .eq('id', settingsId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update maintenance mode',
+        variant: 'destructive',
+      });
+    } else {
+      setMaintenanceModeEnabled(enabled);
+      toast({
+        title: 'Success',
+        description: `Maintenance mode ${enabled ? 'enabled' : 'disabled'}. Students will ${enabled ? 'see maintenance page' : 'have normal access'}.`,
       });
     }
   };
@@ -147,13 +170,37 @@ const AdminHome = () => {
                 </Label>
               </div>
               <p className="text-sm text-muted-foreground">
-                Allow students to complete their semester and add enrolled credits to earned credits
+                Allow students to complete their semester and mark courses as completed
               </p>
             </div>
             <Switch
               id="semester-completion"
               checked={semesterCompletionEnabled}
               onCheckedChange={handleToggleSemesterCompletion}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Maintenance Mode Control */}
+      <Card className="border-0 shadow-lg border-l-4 border-l-warning">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Construction className="h-5 w-5 text-warning" />
+                <Label htmlFor="maintenance-mode" className="text-base font-semibold cursor-pointer">
+                  Enable Maintenance Mode
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                When enabled, students will be redirected to a maintenance page after login
+              </p>
+            </div>
+            <Switch
+              id="maintenance-mode"
+              checked={maintenanceModeEnabled}
+              onCheckedChange={handleToggleMaintenanceMode}
             />
           </div>
         </CardContent>

@@ -211,8 +211,9 @@ const Progress = () => {
     // Get all enrolled courses
     const { data: enrollments } = await supabase
       .from('enrollments')
-      .select('*, course:courses(credits)')
-      .eq('student_id', user.id);
+      .select('id')
+      .eq('student_id', user.id)
+      .is('completed_at', null);
 
     if (!enrollments || enrollments.length === 0) {
       toast({
@@ -221,11 +222,6 @@ const Progress = () => {
       });
       return;
     }
-
-    // Calculate total enrolled credits
-    const totalEnrolledCredits = enrollments.reduce((sum, enrollment) => {
-      return sum + (enrollment.course?.credits || 0);
-    }, 0);
 
     // Update all enrollments to completed
     const { error: updateError } = await supabase
@@ -245,7 +241,7 @@ const Progress = () => {
 
     toast({
       title: 'Success',
-      description: `Semester completed! ${totalEnrolledCredits} credits added to earned credits.`,
+      description: 'Semester completed! All enrolled courses have been marked as completed.',
     });
 
     // Refresh data

@@ -106,7 +106,7 @@ export const WeekCalendar = ({ isAdmin }: WeekCalendarProps) => {
           {dates.map((date) => (
             <div
               key={date.toISOString()}
-              onClick={() => toggleDayStatus(date)}
+              onClick={() => isAdmin && toggleDayStatus(date)}
               className={getDayClassName(date)}
             >
               <span className="text-xs font-medium mb-1">
@@ -118,11 +118,12 @@ export const WeekCalendar = ({ isAdmin }: WeekCalendarProps) => {
             </div>
           ))}
         </div>
-        {isAdmin && (
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Click to toggle: Green = Holiday, Red = Working Day
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          {isAdmin 
+            ? 'Click to toggle: Green = Holiday, Red = Working Day'
+            : 'Green = Holiday, Red = Working Day'
+          }
+        </p>
       </CardContent>
     </Card>
   );

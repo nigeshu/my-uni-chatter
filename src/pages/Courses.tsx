@@ -187,7 +187,7 @@ const Courses = () => {
               {course.isEnrolled ? (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
                   <BookOpen className="h-4 w-4" />
-                  <span>Click to view materials</span>
+                  <span>Completed</span>
                 </div>
               ) : (
                 <Button

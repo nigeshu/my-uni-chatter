@@ -224,7 +224,7 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
 
       // Clear selection if the removed friend was selected
       if (selectedFriend === friendToRemove.id) {
-        onSelectFriend('');
+        onSelectFriend(null as any);
       }
 
       setFriendToRemove(null);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,11 +19,34 @@ const Exams = () => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [activeTab, setActiveTab] = useState<"theory" | "lab" | "non_graded">("theory");
+  const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
+  const theoryRef = useRef<HTMLButtonElement>(null);
+  const labRef = useRef<HTMLButtonElement>(null);
+  const nonGradedRef = useRef<HTMLButtonElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchExams();
   }, []);
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const refs = {
+        theory: theoryRef,
+        lab: labRef,
+        non_graded: nonGradedRef
+      };
+      const activeRef = refs[activeTab];
+      if (activeRef.current) {
+        const { offsetWidth, offsetLeft } = activeRef.current;
+        setIndicatorStyle({ width: offsetWidth, left: offsetLeft });
+      }
+    };
+    
+    updateIndicator();
+    window.addEventListener('resize', updateIndicator);
+    return () => window.removeEventListener('resize', updateIndicator);
+  }, [activeTab]);
 
   const fetchExams = async () => {
     const { data, error } = await supabase
@@ -178,11 +201,12 @@ const Exams = () => {
         <div 
           className="absolute top-1 bottom-1 bg-primary rounded-md transition-all duration-300 ease-in-out"
           style={{
-            width: '33.333%',
-            left: activeTab === "theory" ? "0%" : activeTab === "lab" ? "33.333%" : "66.666%",
+            width: `${indicatorStyle.width}px`,
+            left: `${indicatorStyle.left}px`,
           }}
         />
         <button
+          ref={theoryRef}
           onClick={() => setActiveTab("theory")}
           className={`relative z-10 px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
             activeTab === "theory" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
@@ -191,6 +215,7 @@ const Exams = () => {
           Theory
         </button>
         <button
+          ref={labRef}
           onClick={() => setActiveTab("lab")}
           className={`relative z-10 px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
             activeTab === "lab" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
@@ -199,6 +224,7 @@ const Exams = () => {
           Lab
         </button>
         <button
+          ref={nonGradedRef}
           onClick={() => setActiveTab("non_graded")}
           className={`relative z-10 px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
             activeTab === "non_graded" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, FileText, Video, Upload, Trash2, FolderPlus } from 'lucide-react';
+import { Plus, BookOpen, FileText, Video, Trash2, FolderPlus, Info } from 'lucide-react';
 
 interface Subject {
   id: string;
@@ -52,11 +52,7 @@ export const NotesSection = () => {
   const [categoryName, setCategoryName] = useState('');
   const [categoryType, setCategoryType] = useState<'notes' | 'videos'>('notes');
   
-  const [newItemOpen, setNewItemOpen] = useState(false);
-  const [itemTitle, setItemTitle] = useState('');
-  const [itemContent, setItemContent] = useState('');
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [uploadingFile, setUploadingFile] = useState(false);
+  // Remove manual item creation - students can only add from courses
 
   useEffect(() => {
     fetchSubjects();
@@ -183,90 +179,7 @@ export const NotesSection = () => {
     fetchCategories();
   };
 
-  const createItem = async (fileUrl?: string) => {
-    if (!itemTitle.trim() || !selectedCategory) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a title',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const itemData: any = {
-      category_id: selectedCategory.id,
-      title: itemTitle.trim(),
-    };
-
-    if (selectedCategory.category_type === 'notes') {
-      itemData.content = itemContent.trim();
-      if (fileUrl) itemData.file_url = fileUrl;
-    } else {
-      itemData.youtube_url = youtubeUrl.trim();
-    }
-
-    const { error } = await supabase.from('study_items').insert(itemData);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create item',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    toast({
-      title: 'Success',
-      description: 'Item created successfully',
-    });
-
-    setNewItemOpen(false);
-    setItemTitle('');
-    setItemContent('');
-    setYoutubeUrl('');
-    fetchItems();
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 20 * 1024 * 1024) {
-      toast({
-        title: 'Error',
-        description: 'File size must be less than 20MB',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setUploadingFile(true);
-
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${user?.id}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('workspace-files')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      toast({
-        title: 'Error',
-        description: 'Failed to upload file',
-        variant: 'destructive',
-      });
-      setUploadingFile(false);
-      return;
-    }
-
-    const { data: urlData } = supabase.storage
-      .from('workspace-files')
-      .getPublicUrl(filePath);
-
-    setUploadingFile(false);
-    await createItem(urlData.publicUrl);
-  };
+  // Manual creation removed - students can only add from courses
 
   const deleteItem = async (id: string) => {
     const { error } = await supabase.from('study_items').delete().eq('id', id);
@@ -453,62 +366,28 @@ export const NotesSection = () => {
             <div className="border-t pt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-lg font-semibold">{selectedCategory.name}</h4>
-                <div className="flex gap-2">
-                  <Dialog open={newItemOpen} onOpenChange={setNewItemOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add Note
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Note</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                          <Label>Title</Label>
-                          <Input
-                            value={itemTitle}
-                            onChange={(e) => setItemTitle(e.target.value)}
-                            placeholder="Note title..."
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Content</Label>
-                          <Textarea
-                            value={itemContent}
-                            onChange={(e) => setItemContent(e.target.value)}
-                            placeholder="Note content..."
-                            rows={6}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Upload Document/Image (Optional)</Label>
-                          <Input
-                            type="file"
-                            accept="image/*,.pdf,.doc,.docx,.txt"
-                            onChange={handleFileUpload}
-                            disabled={uploadingFile}
-                          />
-                        </div>
-                        {!uploadingFile && (
-                          <Button onClick={() => createItem()} className="w-full">
-                            Add Note
-                          </Button>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedCategory(null)}
-                  >
-                    Close
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  Close
+                </Button>
               </div>
+              
+              {items.length === 0 && (
+                <Card className="p-6 bg-muted/50">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-medium">Add materials from Courses</p>
+                      <p className="text-sm text-muted-foreground">
+                        Go to Courses → select a course → click on materials and use the "Add to Space" option to save them here.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               <div className="grid gap-4">
                 {items.map((item) => (
@@ -596,50 +475,28 @@ export const NotesSection = () => {
             <div className="border-t pt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-lg font-semibold">{selectedCategory.name}</h4>
-                <div className="flex gap-2">
-                  <Dialog open={newItemOpen} onOpenChange={setNewItemOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add Video
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Video</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                          <Label>Title</Label>
-                          <Input
-                            value={itemTitle}
-                            onChange={(e) => setItemTitle(e.target.value)}
-                            placeholder="Video title..."
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>YouTube URL</Label>
-                          <Input
-                            value={youtubeUrl}
-                            onChange={(e) => setYoutubeUrl(e.target.value)}
-                            placeholder="https://www.youtube.com/watch?v=..."
-                          />
-                        </div>
-                        <Button onClick={() => createItem()} className="w-full">
-                          Add Video
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedCategory(null)}
-                  >
-                    Close
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  Close
+                </Button>
               </div>
+              
+              {items.length === 0 && (
+                <Card className="p-6 bg-muted/50">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-medium">Add videos from Courses</p>
+                      <p className="text-sm text-muted-foreground">
+                        Go to Courses → select a course → click on module videos and use the "Add to Space" option to save them here.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               <div className="grid gap-4">
                 {items.map((item) => (

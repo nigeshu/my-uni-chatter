@@ -60,7 +60,7 @@ const CourseDetailDialog = ({ course, open, onOpenChange }: CourseDetailDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold">
             {course.title} - Course Modules
           </DialogTitle>
         </DialogHeader>

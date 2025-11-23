@@ -87,7 +87,7 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-6xl h-[80vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl bg-gradient-accent bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl">
             {module?.heading} - Videos
           </DialogTitle>
         </DialogHeader>

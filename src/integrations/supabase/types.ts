@@ -121,6 +121,33 @@ export type Database = {
           },
         ]
       }
+      calendar_settings: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cgpa_semesters: {
         Row: {
           created_at: string

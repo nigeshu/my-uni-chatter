@@ -210,7 +210,9 @@ const AdminExams = () => {
 
   const renderExamTable = (categoryExams: Exam[], categoryName: string) => (
     <Card key={categoryName} className="p-6 hover:shadow-lg transition-shadow">
-      <h3 className="text-lg font-semibold mb-4">{categoryName}</h3>
+      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent w-fit px-2 py-1">
+        {categoryName}
+      </h3>
       <Table>
         <TableHeader>
           <TableRow>

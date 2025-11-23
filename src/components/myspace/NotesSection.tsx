@@ -288,6 +288,31 @@ export const NotesSection = () => {
     fetchItems();
   };
 
+  const deleteSubject = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when deleting
+    
+    const { error } = await supabase.from('study_subjects').delete().eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete subject',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Subject deleted successfully',
+    });
+
+    if (selectedSubject?.id === id) {
+      setSelectedSubject(null);
+    }
+    fetchSubjects();
+  };
+
   if (!selectedSubject) {
     return (
       <div className="space-y-4">
@@ -326,9 +351,17 @@ export const NotesSection = () => {
           {subjects.map((subject) => (
             <Card
               key={subject.id}
-              className="p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary"
+              className="p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-105 border-2 hover:border-primary relative group"
               onClick={() => setSelectedSubject(subject)}
             >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                onClick={(e) => deleteSubject(subject.id, e)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="p-3 bg-primary/10 rounded-full">
                   <BookOpen className="h-6 w-6 text-primary" />

@@ -784,6 +784,69 @@ const Progress = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Marksheet Section */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="h-6 w-6 text-primary" />
+            Marksheet
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {enrolledCourses.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-semibold">Course</th>
+                      <th className="text-center py-3 px-4 font-semibold">Type</th>
+                      <th className="text-right py-3 px-4 font-semibold">Total Marks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enrolledCourses.map((enrollment) => {
+                      const course = enrollment.course;
+                      const mark = courseMarks[course.id];
+                      const total = course.course_type === 'theory' 
+                        ? calculateTheoryTotal(mark || {})
+                        : calculateLabTotal(mark || {});
+
+                      return (
+                        <tr key={enrollment.id} className="border-b hover:bg-muted/50 transition-colors">
+                          <td className="py-3 px-4">
+                            <span className="font-medium">{course.title}</span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              course.course_type === 'theory' 
+                                ? 'bg-accent/10 text-accent' 
+                                : 'bg-primary/10 text-primary'
+                            }`}>
+                              {course.course_type === 'theory' ? 'Theory' : 'Lab'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="text-lg font-bold">
+                              {total.toFixed(2)} / 100
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Award className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p>No courses available. Enroll in courses to view your marksheet.</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

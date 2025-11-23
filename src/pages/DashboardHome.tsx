@@ -366,12 +366,12 @@ const DashboardHome = () => {
       <div className="relative">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
-            <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold">
               Welcome Back! 👋
             </h1>
           {semesterText && (
             <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 rounded-xl border border-primary/20 backdrop-blur-sm">
-              <span className="text-lg font-semibold bg-gradient-to-r from-primary via-accent to-purple-500 bg-clip-text text-transparent">
+              <span className="text-lg font-semibold">
                 {semesterText}
               </span>
               {isAdmin && (

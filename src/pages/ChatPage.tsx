@@ -77,7 +77,7 @@ const ChatPage = () => {
                 <MessageSquare className="h-20 w-20 text-white" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold mb-2">
                   Start a Conversation
                 </h2>
                 <p className="text-muted-foreground text-lg">

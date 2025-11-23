@@ -30,6 +30,19 @@ const Auth = () => {
           .eq('id', session.user.id)
           .single();
         
+        // Check if maintenance mode is enabled for students
+        if (profile?.role === 'student') {
+          const { data: settings } = await supabase
+            .from('semester_settings')
+            .select('maintenance_mode_enabled')
+            .single();
+          
+          if (settings?.maintenance_mode_enabled) {
+            navigate('/maintenance', { replace: true });
+            return;
+          }
+        }
+        
         // Use replace to avoid navigation issues
         navigate(profile?.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
       }

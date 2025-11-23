@@ -21,6 +21,7 @@ import AdminCourseMaterials from "./pages/AdminCourseMaterials";
 import AdminStudents from "./pages/AdminStudents";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminControlCenter from "./pages/AdminControlCenter";
+import Maintenance from "./pages/Maintenance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
         <Router>
           <Routes>
             <Route path="/" element={<Auth />} />
+            <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/dashboard" element={<LMSDashboard />}>
               <Route index element={<DashboardHome />} />
               <Route path="courses" element={<Courses />} />

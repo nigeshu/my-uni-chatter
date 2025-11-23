@@ -244,7 +244,7 @@ const Progress = () => {
       description: 'Semester completed! All enrolled courses have been marked as completed.',
     });
 
-    // Refresh data
+    // Refresh data to show 0 enrolled courses
     fetchEnrolledCourses();
   };
 

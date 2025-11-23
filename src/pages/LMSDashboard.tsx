@@ -15,7 +15,8 @@ import {
   Home,
   Shield,
   HelpCircle,
-  Edit2
+  Edit2,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -185,8 +186,9 @@ const LMSDashboard = () => {
     { path: '/dashboard/courses', icon: BookOpen, label: 'My Courses' },
     { path: '/dashboard/assignments', icon: FileText, label: 'Assignments' },
     { path: '/dashboard/progress', icon: BarChart, label: 'Progress' },
-    { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
+    { path: '/dashboard/myspace', icon: Sparkles, label: 'My Space' },
     { path: '/dashboard/query', icon: HelpCircle, label: 'Query' },
+    { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
   ];
 
   return (
@@ -322,7 +324,9 @@ const LMSDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <Outlet />
+        <div className="animate-fade-in">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

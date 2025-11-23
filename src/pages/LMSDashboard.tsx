@@ -325,16 +325,16 @@ const LMSDashboard = () => {
           
           return (
             <div key={item.path} className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/40 to-primary/0 opacity-0 group-hover:opacity-100 blur-2xl transition-all duration-500 ease-in-out transform group-hover:scale-110" />
               <NavLink
                 to={item.path}
                 end={item.path === '/dashboard'}
-                className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-300 hover:scale-105 z-10"
-                activeClassName="bg-gradient-primary text-white hover:text-white shadow-md scale-105"
+                className="relative flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg z-10 backdrop-blur-sm"
+                activeClassName="bg-gradient-primary text-white hover:text-white shadow-xl scale-105 border border-primary/20"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                <span className="font-medium">{item.label}</span>
+                <Icon className="h-5 w-5 flex-shrink-0 transition-transform duration-500 group-hover:rotate-12" />
+                <span className="font-medium transition-all duration-500">{item.label}</span>
                 {showBadge && (
                   <Badge 
                     className="ml-auto bg-red-500 text-white hover:bg-red-600 animate-pulse"
@@ -351,14 +351,14 @@ const LMSDashboard = () => {
         {profile?.role === 'admin' && (
           <div className="pt-4 border-t border-border mt-4">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/30 to-accent/0 opacity-0 group-hover:opacity-100 blur-xl transition-all duration-700 ease-out" />
+              <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/40 to-accent/0 opacity-0 group-hover:opacity-100 blur-2xl transition-all duration-500 ease-in-out transform group-hover:scale-110" />
               <NavLink
                 to="/admin"
-                className="relative flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-300 hover:scale-105 z-10"
+                className="relative flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-accent/10 hover:text-accent transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg z-10 backdrop-blur-sm"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <GraduationCap className="h-5 w-5" />
-                <span className="font-medium">Admin Panel</span>
+                <GraduationCap className="h-5 w-5 transition-transform duration-500 group-hover:rotate-12" />
+                <span className="font-medium transition-all duration-500">Admin Panel</span>
               </NavLink>
             </div>
           </div>
@@ -367,14 +367,17 @@ const LMSDashboard = () => {
 
       {/* Sign Out */}
       <div className="p-4 border-t border-border">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={handleSignOut}
-        >
-          <LogOut className="h-5 w-5 mr-3" />
-          Sign Out
-        </Button>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-destructive/0 via-destructive/40 to-destructive/0 opacity-0 group-hover:opacity-100 blur-2xl transition-all duration-500 ease-in-out transform group-hover:scale-110" />
+          <Button 
+            variant="ghost" 
+            className="relative w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-500 ease-in-out hover:scale-105 rounded-xl z-10 backdrop-blur-sm"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-5 w-5 mr-3 transition-transform duration-500 group-hover:rotate-12" />
+            <span className="transition-all duration-500">Sign Out</span>
+          </Button>
+        </div>
       </div>
     </>
   );

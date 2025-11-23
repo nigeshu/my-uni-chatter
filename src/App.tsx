@@ -14,12 +14,14 @@ import Progress from "./pages/Progress";
 import Query from "./pages/Query";
 import ChatPage from "./pages/ChatPage";
 import MySpace from "./pages/MySpace";
+import Exams from "./pages/Exams";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminHome from "./pages/AdminHome";
 import AdminCourses from "./pages/AdminCourses";
 import AdminCourseMaterials from "./pages/AdminCourseMaterials";
 import AdminStudents from "./pages/AdminStudents";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminExams from "./pages/AdminExams";
 import AdminControlCenter from "./pages/AdminControlCenter";
 import Maintenance from "./pages/Maintenance";
 import NotFound from "./pages/NotFound";
@@ -43,6 +45,7 @@ const App = () => (
               <Route path="assignments" element={<Assignments />} />
               <Route path="progress" element={<Progress />} />
               <Route path="myspace" element={<MySpace />} />
+              <Route path="exams" element={<Exams />} />
               <Route path="query" element={<Query />} />
               <Route path="chat" element={<ChatPage />} />
             </Route>
@@ -52,6 +55,7 @@ const App = () => (
               <Route path="courses/:courseId/materials" element={<AdminCourseMaterials />} />
               <Route path="students" element={<AdminStudents />} />
               <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="exams" element={<AdminExams />} />
               <Route path="control-center" element={<AdminControlCenter />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

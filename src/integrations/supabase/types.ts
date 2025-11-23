@@ -409,6 +409,33 @@ export type Database = {
           },
         ]
       }
+      exams: {
+        Row: {
+          course_name: string
+          created_at: string
+          exam_date: string
+          id: string
+          portions: string
+          updated_at: string
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          exam_date: string
+          id?: string
+          portions: string
+          updated_at?: string
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          exam_date?: string
+          id?: string
+          portions?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string

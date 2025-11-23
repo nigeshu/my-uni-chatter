@@ -16,7 +16,8 @@ import {
   Shield,
   HelpCircle,
   Edit2,
-  Sparkles
+  Sparkles,
+  BookMarked
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -223,6 +224,7 @@ const LMSDashboard = () => {
     { path: '/dashboard/assignments', icon: FileText, label: 'Assignments' },
     { path: '/dashboard/progress', icon: BarChart, label: 'Progress' },
     { path: '/dashboard/myspace', icon: Sparkles, label: 'My Space' },
+    { path: '/dashboard/exams', icon: BookMarked, label: 'Exams' },
     { path: '/dashboard/query', icon: HelpCircle, label: 'Query' },
     { path: '/dashboard/chat', icon: MessageSquare, label: "Let's Talk" },
   ];

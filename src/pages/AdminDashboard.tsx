@@ -13,7 +13,8 @@ import {
   Home,
   Settings,
   Shield,
-  Edit2
+  Edit2,
+  BookMarked
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -138,6 +139,7 @@ const AdminDashboard = () => {
     { path: '/admin/courses', icon: BookOpen, label: 'Manage Courses' },
     { path: '/admin/students', icon: Users, label: 'Students' },
     { path: '/admin/analytics', icon: BarChart, label: 'Analytics' },
+    { path: '/admin/exams', icon: BookMarked, label: 'Exams' },
     { path: '/admin/control-center', icon: Shield, label: 'Control Center' },
   ];
 

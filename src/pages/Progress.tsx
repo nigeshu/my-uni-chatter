@@ -448,6 +448,17 @@ const Progress = () => {
     return cat1 + cat2 + da1 + da2 + da3 + fat;
   };
 
+  const preventNegative = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+    }
+  };
+
+  const ensurePositive = (value: string) => {
+    const num = parseFloat(value);
+    return isNaN(num) || num < 0 ? 0 : num;
+  };
+
   return (
     <div className="p-8 space-y-8 animate-fade-in">
       <div>
@@ -502,6 +513,7 @@ const Progress = () => {
                       step="0.1"
                       min="0"
                       value={newSemester.credits}
+                      onKeyDown={preventNegative}
                       onChange={(e) => setNewSemester({ ...newSemester, credits: e.target.value })}
                       placeholder="e.g., 20"
                     />
@@ -513,6 +525,7 @@ const Progress = () => {
                       step="0.1"
                       min="0"
                       value={newSemester.gradedCredits}
+                      onKeyDown={preventNegative}
                       onChange={(e) => setNewSemester({ ...newSemester, gradedCredits: e.target.value })}
                       placeholder="e.g., 18"
                     />
@@ -525,6 +538,7 @@ const Progress = () => {
                       min="0"
                       max="10"
                       value={newSemester.gpa}
+                      onKeyDown={preventNegative}
                       onChange={(e) => setNewSemester({ ...newSemester, gpa: e.target.value })}
                       placeholder="e.g., 8.5"
                     />
@@ -602,7 +616,8 @@ const Progress = () => {
                       step="0.1"
                       min="0"
                       value={editingSemester.credits}
-                      onChange={(e) => setEditingSemester({ ...editingSemester, credits: parseFloat(e.target.value) || 0 })}
+                      onKeyDown={preventNegative}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, credits: ensurePositive(e.target.value) })}
                       placeholder="e.g., 20"
                     />
                   </div>
@@ -613,7 +628,8 @@ const Progress = () => {
                       step="0.1"
                       min="0"
                       value={editingSemester.graded_credits}
-                      onChange={(e) => setEditingSemester({ ...editingSemester, graded_credits: parseFloat(e.target.value) || 0 })}
+                      onKeyDown={preventNegative}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, graded_credits: ensurePositive(e.target.value) })}
                       placeholder="e.g., 18"
                     />
                   </div>
@@ -625,7 +641,8 @@ const Progress = () => {
                       min="0"
                       max="10"
                       value={editingSemester.gpa}
-                      onChange={(e) => setEditingSemester({ ...editingSemester, gpa: parseFloat(e.target.value) || 0 })}
+                      onKeyDown={preventNegative}
+                      onChange={(e) => setEditingSemester({ ...editingSemester, gpa: ensurePositive(e.target.value) })}
                       placeholder="e.g., 8.5"
                     />
                   </div>
@@ -706,7 +723,8 @@ const Progress = () => {
                               min="0"
                               max="60"
                               value={mark?.lab_internals || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'lab_internals', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_internals', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -716,7 +734,8 @@ const Progress = () => {
                               min="0"
                               max="50"
                               value={mark?.lab_fat || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="col-span-2 space-y-3">
@@ -785,7 +804,8 @@ const Progress = () => {
                               min="0"
                               max="50"
                               value={mark?.cat1_mark || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'cat1_mark', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'cat1_mark', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -795,7 +815,8 @@ const Progress = () => {
                               min="0"
                               max="50"
                               value={mark?.cat2_mark || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'cat2_mark', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'cat2_mark', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -805,7 +826,8 @@ const Progress = () => {
                               min="0"
                               max="10"
                               value={mark?.da1_mark || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'da1_mark', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'da1_mark', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -815,7 +837,8 @@ const Progress = () => {
                               min="0"
                               max="10"
                               value={mark?.da2_mark || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'da2_mark', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'da2_mark', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -825,7 +848,8 @@ const Progress = () => {
                               min="0"
                               max="10"
                               value={mark?.da3_mark || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'da3_mark', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'da3_mark', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="space-y-2">
@@ -835,7 +859,8 @@ const Progress = () => {
                               min="0"
                               max="100"
                               value={mark?.theory_fat || ''}
-                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', ensurePositive(e.target.value))}
                             />
                           </div>
                           <div className="col-span-2 space-y-3">

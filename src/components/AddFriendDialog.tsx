@@ -67,18 +67,39 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
       const { data: existingRequest } = await supabase
         .from('friend_requests')
         .select('id, sender_id, receiver_id, status')
-        .or(`and(sender_id.eq.${userId},receiver_id.eq.${friendProfile.id}),and(sender_id.eq.${friendProfile.id},receiver_id.eq.${userId})`)
-        .eq('status', 'pending')
+        .or(
+          `and(sender_id.eq.${userId},receiver_id.eq.${friendProfile.id}),` +
+            `and(sender_id.eq.${friendProfile.id},receiver_id.eq.${userId})`
+        )
         .maybeSingle();
 
       if (existingRequest) {
-        const isSentByMe = existingRequest.sender_id === userId;
+        if (existingRequest.status === 'pending') {
+          const isSentByMe = existingRequest.sender_id === userId;
+          toast({
+            title: isSentByMe ? 'Request already sent' : 'Request already received',
+            description: isSentByMe
+              ? 'You have already sent a friend request to this user.'
+              : 'This user has already sent you a friend request. Please check your Requests tab.',
+          });
+          return;
+        }
+
+        // Row exists but is not pending (e.g. rejected/accepted); reuse it to avoid unique constraint error
+        const { error: updateError } = await supabase
+          .from('friend_requests')
+          .update({ status: 'pending', sender_id: userId, receiver_id: friendProfile.id })
+          .eq('id', existingRequest.id);
+
+        if (updateError) throw updateError;
+
         toast({
-          title: isSentByMe ? 'Request already sent' : 'Request already received',
-          description: isSentByMe
-            ? 'You have already sent a friend request to this user.'
-            : 'This user has already sent you a friend request. Please check your Requests tab.',
+          title: 'Success!',
+          description: 'Friend request sent successfully.',
         });
+
+        setFriendName('');
+        onClose();
         return;
       }
 

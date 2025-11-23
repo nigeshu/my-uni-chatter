@@ -500,6 +500,7 @@ const Progress = () => {
                     <Input
                       type="number"
                       step="0.1"
+                      min="0"
                       value={newSemester.credits}
                       onChange={(e) => setNewSemester({ ...newSemester, credits: e.target.value })}
                       placeholder="e.g., 20"
@@ -510,6 +511,7 @@ const Progress = () => {
                     <Input
                       type="number"
                       step="0.1"
+                      min="0"
                       value={newSemester.gradedCredits}
                       onChange={(e) => setNewSemester({ ...newSemester, gradedCredits: e.target.value })}
                       placeholder="e.g., 18"
@@ -520,6 +522,7 @@ const Progress = () => {
                     <Input
                       type="number"
                       step="0.01"
+                      min="0"
                       max="10"
                       value={newSemester.gpa}
                       onChange={(e) => setNewSemester({ ...newSemester, gpa: e.target.value })}
@@ -597,6 +600,7 @@ const Progress = () => {
                     <Input
                       type="number"
                       step="0.1"
+                      min="0"
                       value={editingSemester.credits}
                       onChange={(e) => setEditingSemester({ ...editingSemester, credits: parseFloat(e.target.value) || 0 })}
                       placeholder="e.g., 20"
@@ -607,6 +611,7 @@ const Progress = () => {
                     <Input
                       type="number"
                       step="0.1"
+                      min="0"
                       value={editingSemester.graded_credits}
                       onChange={(e) => setEditingSemester({ ...editingSemester, graded_credits: parseFloat(e.target.value) || 0 })}
                       placeholder="e.g., 18"
@@ -617,6 +622,7 @@ const Progress = () => {
                     <Input
                       type="number"
                       step="0.01"
+                      min="0"
                       max="10"
                       value={editingSemester.gpa}
                       onChange={(e) => setEditingSemester({ ...editingSemester, gpa: parseFloat(e.target.value) || 0 })}
@@ -697,6 +703,7 @@ const Progress = () => {
                             <Label>Internals (out of 60)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="60"
                               value={mark?.lab_internals || ''}
                               onChange={(e) => handleMarkChange(course.id, 'lab_internals', parseFloat(e.target.value) || 0)}
@@ -706,6 +713,7 @@ const Progress = () => {
                             <Label>FAT (out of 50)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="50"
                               value={mark?.lab_fat || ''}
                               onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
@@ -774,6 +782,7 @@ const Progress = () => {
                             <Label>CAT 1 (out of 50)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="50"
                               value={mark?.cat1_mark || ''}
                               onChange={(e) => handleMarkChange(course.id, 'cat1_mark', parseFloat(e.target.value) || 0)}
@@ -783,6 +792,7 @@ const Progress = () => {
                             <Label>CAT 2 (out of 50)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="50"
                               value={mark?.cat2_mark || ''}
                               onChange={(e) => handleMarkChange(course.id, 'cat2_mark', parseFloat(e.target.value) || 0)}
@@ -792,6 +802,7 @@ const Progress = () => {
                             <Label>DA 1 (out of 10)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="10"
                               value={mark?.da1_mark || ''}
                               onChange={(e) => handleMarkChange(course.id, 'da1_mark', parseFloat(e.target.value) || 0)}
@@ -801,6 +812,7 @@ const Progress = () => {
                             <Label>DA 2 (out of 10)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="10"
                               value={mark?.da2_mark || ''}
                               onChange={(e) => handleMarkChange(course.id, 'da2_mark', parseFloat(e.target.value) || 0)}
@@ -810,6 +822,7 @@ const Progress = () => {
                             <Label>DA 3 (out of 10)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="10"
                               value={mark?.da3_mark || ''}
                               onChange={(e) => handleMarkChange(course.id, 'da3_mark', parseFloat(e.target.value) || 0)}
@@ -819,6 +832,7 @@ const Progress = () => {
                             <Label>FAT (out of 100)</Label>
                             <Input
                               type="number"
+                              min="0"
                               max="100"
                               value={mark?.theory_fat || ''}
                               onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}

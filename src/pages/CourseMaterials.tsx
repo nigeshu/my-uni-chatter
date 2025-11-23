@@ -46,6 +46,7 @@ const CourseMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -77,7 +78,10 @@ const CourseMaterials = () => {
 
   const checkEnrollment = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const { data } = await supabase
       .from('enrollments')
@@ -91,6 +95,7 @@ const CourseMaterials = () => {
       fetchMaterials();
       fetchModules();
     }
+    setLoading(false);
   };
 
   const fetchModules = async () => {
@@ -130,6 +135,10 @@ const CourseMaterials = () => {
       default: return <FileText className="h-5 w-5" />;
     }
   };
+
+  if (loading) {
+    return null;
+  }
 
   if (!isEnrolled) {
     return (

@@ -73,6 +73,7 @@ const Progress = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [semesterCompletionEnabled, setSemesterCompletionEnabled] = useState(false);
   const [marksheetDialogOpen, setMarksheetDialogOpen] = useState(false);
+  const [totalMarksDialogOpen, setTotalMarksDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -648,7 +649,19 @@ const Progress = () => {
       {/* Marks Section */}
       <Card className="border-0 shadow-lg">
         <CardHeader>
-          <CardTitle>Course Marks</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Course Marks</CardTitle>
+            {enrolledCourses.length > 0 && (
+              <Button 
+                onClick={() => setTotalMarksDialogOpen(true)}
+                variant="outline"
+                className="gap-2"
+              >
+                <Calculator className="h-4 w-4" />
+                Total Marks
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="theory" className="w-full">
@@ -697,29 +710,6 @@ const Progress = () => {
                               value={mark?.lab_fat || ''}
                               onChange={(e) => handleMarkChange(course.id, 'lab_fat', parseFloat(e.target.value) || 0)}
                             />
-                          </div>
-                          <div className="col-span-2 space-y-3">
-                            <div className="p-3 bg-muted/50 rounded-lg border">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">Total (out of 100):</span>
-                                <span className="text-xl font-bold">{calculateLabTotal(mark || {}).toFixed(2)}</span>
-                              </div>
-                            </div>
-                            <div className="p-3 rounded-lg border">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">Grade:</span>
-                                <span className={`text-2xl font-bold px-4 py-2 rounded ${getLabGradeColor(getLabGrade(calculateLabTotal(mark || {})))}`}>
-                                  {getLabGrade(calculateLabTotal(mark || {}))}
-                                </span>
-                              </div>
-                            </div>
-                            {calculateLabTotal(mark || {}) < 50 && (
-                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateLabTotal(mark || {}), true)} more marks to pass (minimum 50/100 required)
-                                </p>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -805,27 +795,6 @@ const Progress = () => {
                               onChange={(e) => handleMarkChange(course.id, 'theory_fat', parseFloat(e.target.value) || 0)}
                             />
                           </div>
-                          <div className="col-span-2 space-y-3">
-                            <div className="p-3 bg-muted/50 rounded-lg border">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">Total (out of 100):</span>
-                                <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
-                              </div>
-                            </div>
-                            {calculateTheoryTotal(mark || {}) < 50 ? (
-                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateTheoryTotal(mark || {}), false)} more marks to pass (minimum 50/100 required)
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                  ✓ Passed! You needed 40 out of 100 to pass, and you scored {calculateTheoryTotal(mark || {}).toFixed(2)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </div>
                     );
@@ -871,6 +840,145 @@ const Progress = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Total Marks Dialog */}
+      <Dialog open={totalMarksDialogOpen} onOpenChange={setTotalMarksDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Calculator className="h-6 w-6 text-primary" />
+              Total Marks
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <Tabs defaultValue="theory" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="theory" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Theory Courses
+                </TabsTrigger>
+                <TabsTrigger value="lab" className="gap-2">
+                  <FlaskConical className="h-4 w-4" />
+                  Lab Courses
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="theory">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2">
+                        <th className="text-left py-3 px-4 font-semibold">Course</th>
+                        <th className="text-right py-3 px-4 font-semibold">Total Marks</th>
+                        <th className="text-center py-3 px-4 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {enrolledCourses
+                        .filter((enrollment) => enrollment.course.course_type === 'theory')
+                        .map((enrollment) => {
+                          const course = enrollment.course;
+                          const mark = courseMarks[course.id];
+                          const total = calculateTheoryTotal(mark || {});
+
+                          return (
+                            <tr key={enrollment.id} className="border-b hover:bg-muted/50 transition-colors">
+                              <td className="py-3 px-4">
+                                <span className="font-medium">{course.title}</span>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <span className="text-lg font-bold">
+                                  {total.toFixed(2)} / 100
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {total < 50 ? (
+                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium">
+                                    ⚠️ Need {getMarksNeededToPass(total, false)} more to pass
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium">
+                                    ✓ Passed
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                {enrolledCourses.filter((e) => e.course.course_type === 'theory').length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <BookOpen className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p>No theory courses enrolled.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="lab">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2">
+                        <th className="text-left py-3 px-4 font-semibold">Course</th>
+                        <th className="text-right py-3 px-4 font-semibold">Total Marks</th>
+                        <th className="text-center py-3 px-4 font-semibold">Grade</th>
+                        <th className="text-center py-3 px-4 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {enrolledCourses
+                        .filter((enrollment) => enrollment.course.course_type === 'lab')
+                        .map((enrollment) => {
+                          const course = enrollment.course;
+                          const mark = courseMarks[course.id];
+                          const total = calculateLabTotal(mark || {});
+                          const grade = getLabGrade(total);
+
+                          return (
+                            <tr key={enrollment.id} className="border-b hover:bg-muted/50 transition-colors">
+                              <td className="py-3 px-4">
+                                <span className="font-medium">{course.title}</span>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <span className="text-lg font-bold">
+                                  {total.toFixed(2)} / 100
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <span className={`text-lg font-bold px-3 py-1 rounded ${getLabGradeColor(grade)}`}>
+                                  {grade}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {total < 50 ? (
+                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium">
+                                    ⚠️ Need {getMarksNeededToPass(total, true)} more to pass
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium">
+                                    ✓ Passed
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                {enrolledCourses.filter((e) => e.course.course_type === 'lab').length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <FlaskConical className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p>No lab courses enrolled.</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Marksheet Dialog */}
       <Dialog open={marksheetDialogOpen} onOpenChange={setMarksheetDialogOpen}>

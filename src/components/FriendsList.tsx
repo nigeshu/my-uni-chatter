@@ -190,6 +190,16 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
     if (!friendToRemove) return;
 
     try {
+      // Delete all messages between the two users
+      const { error: messagesError1 } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${friendToRemove.id}),and(sender_id.eq.${friendToRemove.id},receiver_id.eq.${userId})`);
+
+      if (messagesError1) {
+        console.error('Error deleting messages:', messagesError1);
+      }
+
       // Delete both friendship records (reciprocal)
       const { error: error1 } = await supabase
         .from('friendships')
@@ -209,7 +219,7 @@ const FriendsList = ({ userId, selectedFriend, onSelectFriend }: FriendsListProp
 
       toast({
         title: 'Friend removed',
-        description: `${friendToRemove.full_name || 'Friend'} has been removed from your friends list.`,
+        description: `${friendToRemove.full_name || 'Friend'} has been removed. All chat history has been deleted.`,
       });
 
       // Clear selection if the removed friend was selected

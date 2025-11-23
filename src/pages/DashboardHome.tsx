@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -43,6 +43,7 @@ const DashboardHome = () => {
   const [alerts, setAlerts] = useState<{
     messages: Array<{ id: string; message: string }>;
     urgentAssignments: Array<{ id: string; title: string; course_title: string; due_date: string }>;
+    upcomingExam?: { id: string; course_name: string; exam_date: string };
   }>({
     messages: [],
     urgentAssignments: [],
@@ -223,6 +224,25 @@ const DashboardHome = () => {
           })),
         }));
       }
+    }
+
+    // Fetch upcoming exam (latest one that hasn't happened yet)
+    const { data: exams } = await supabase
+      .from('exams')
+      .select('*')
+      .gte('exam_date', new Date().toISOString().split('T')[0])
+      .order('exam_date', { ascending: true })
+      .limit(1);
+
+    if (exams && exams.length > 0) {
+      setAlerts(prev => ({
+        ...prev,
+        upcomingExam: {
+          id: exams[0].id,
+          course_name: exams[0].course_name,
+          exam_date: exams[0].exam_date,
+        },
+      }));
     }
   };
 
@@ -634,6 +654,49 @@ const DashboardHome = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Upcoming Exam Box */}
+          {alerts.upcomingExam && (
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                    <BookMarked className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold">Upcoming Exam</div>
+                    <p className="text-sm text-muted-foreground font-normal">
+                      Next scheduled exam
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div 
+                  className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20 hover:border-blue-500/40 hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => navigate('/dashboard/exams')}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm mb-1 truncate">
+                        {alerts.upcomingExam.course_name}
+                      </h4>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Clock className="h-3 w-3 text-blue-600" />
+                        <span className="font-medium text-blue-600">
+                          Coming in {differenceInDays(new Date(alerts.upcomingExam.exam_date), new Date())} days
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(alerts.upcomingExam.exam_date), 'MMM dd, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

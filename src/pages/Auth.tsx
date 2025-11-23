@@ -133,6 +133,37 @@ const Auth = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
+      {/* Fancy Flowing Background - Bottom Left to Top Right */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Flow Line 1 */}
+        <div 
+          className="absolute bottom-0 left-0 w-full h-full opacity-20 blur-3xl"
+          style={{
+            background: 'linear-gradient(45deg, transparent 0%, hsl(var(--primary) / 0.3) 30%, hsl(var(--secondary) / 0.3) 50%, hsl(var(--accent) / 0.3) 70%, transparent 100%)',
+            animation: 'flowDiagonal1 15s ease-in-out infinite',
+            transform: 'rotate(45deg) scale(1.5) translate(-30%, 30%)'
+          }}
+        />
+        {/* Flow Line 2 */}
+        <div 
+          className="absolute bottom-0 left-0 w-full h-full opacity-15 blur-2xl"
+          style={{
+            background: 'linear-gradient(45deg, transparent 0%, hsl(var(--secondary) / 0.4) 35%, hsl(var(--accent) / 0.4) 55%, hsl(var(--primary) / 0.4) 75%, transparent 100%)',
+            animation: 'flowDiagonal2 12s ease-in-out infinite',
+            transform: 'rotate(45deg) scale(1.5) translate(-40%, 40%)'
+          }}
+        />
+        {/* Flow Line 3 */}
+        <div 
+          className="absolute bottom-0 left-0 w-full h-full opacity-10 blur-xl"
+          style={{
+            background: 'linear-gradient(45deg, transparent 0%, hsl(var(--accent) / 0.5) 40%, hsl(var(--primary) / 0.5) 60%, hsl(var(--secondary) / 0.5) 80%, transparent 100%)',
+            animation: 'flowDiagonal3 18s ease-in-out infinite',
+            transform: 'rotate(45deg) scale(1.5) translate(-50%, 50%)'
+          }}
+        />
+      </div>
+
       {/* Playful Bot */}
       <div className="absolute top-8 right-8 animate-bounce hidden md:block">
         <div className="relative group cursor-pointer">

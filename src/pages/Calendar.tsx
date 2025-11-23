@@ -21,6 +21,7 @@ const Calendar = () => {
 
   useEffect(() => {
     checkAdminRole();
+    loadCalendarSettings();
   }, [user]);
 
   useEffect(() => {
@@ -39,7 +40,24 @@ const Calendar = () => {
     setIsAdmin(data?.role === 'admin');
   };
 
-  const setDateRange = () => {
+  const loadCalendarSettings = async () => {
+    const { data } = await supabase
+      .from('calendar_settings')
+      .select('*')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (data) {
+      const start = new Date(data.start_date);
+      const end = new Date(data.end_date);
+      setStartDate(start);
+      setEndDate(end);
+      setCurrentMonth(start);
+      setDateRangeSet(true);
+    }
+  };
+
+  const setDateRange = async () => {
     if (!startDate || !endDate) {
       toast.error('Please select both start and end dates');
       return;
@@ -50,9 +68,31 @@ const Calendar = () => {
       return;
     }
 
-    setCurrentMonth(startDate);
-    setDateRangeSet(true);
-    toast.success('Date range set successfully');
+    try {
+      // Deactivate all existing settings
+      await supabase
+        .from('calendar_settings')
+        .update({ is_active: false })
+        .eq('is_active', true);
+
+      // Insert new active settings
+      const { error } = await supabase
+        .from('calendar_settings')
+        .insert({
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          end_date: format(endDate, 'yyyy-MM-dd'),
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      setCurrentMonth(startDate);
+      setDateRangeSet(true);
+      toast.success('Academic calendar saved successfully');
+    } catch (error: any) {
+      toast.error('Failed to save calendar settings');
+      console.error(error);
+    }
   };
 
   const fetchDayStatuses = async () => {
@@ -236,7 +276,7 @@ const Calendar = () => {
                 className="bg-gradient-primary hover:opacity-90 shadow-lg"
                 size="lg"
               >
-                Set Range
+                Save & Set Range
               </Button>
             </div>
           </div>

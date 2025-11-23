@@ -110,7 +110,8 @@ const Progress = () => {
         course_id,
         course:courses(id, title, course_type)
       `)
-      .eq('student_id', user?.id);
+      .eq('student_id', user?.id)
+      .is('completed_at', null);
 
     if (data) {
       setEnrolledCourses(data as any);

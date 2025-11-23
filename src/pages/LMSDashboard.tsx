@@ -63,8 +63,44 @@ const LMSDashboard = () => {
       fetchProfile();
       fetchUnreadCount();
       subscribeToMessages();
+      checkMaintenanceMode();
+      subscribeToMaintenanceChanges();
     }
   }, [user, loading, navigate]);
+
+  const checkMaintenanceMode = async () => {
+    const { data } = await supabase
+      .from('semester_settings')
+      .select('maintenance_mode_enabled')
+      .single();
+    
+    if (data?.maintenance_mode_enabled) {
+      navigate('/maintenance', { replace: true });
+    }
+  };
+
+  const subscribeToMaintenanceChanges = () => {
+    const channel = supabase
+      .channel('maintenance-mode')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'semester_settings',
+        },
+        (payload: any) => {
+          if (payload.new.maintenance_mode_enabled) {
+            navigate('/maintenance', { replace: true });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const fetchProfile = async () => {
     const { data } = await supabase

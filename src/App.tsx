@@ -15,6 +15,7 @@ import Query from "./pages/Query";
 import ChatPage from "./pages/ChatPage";
 import MySpace from "./pages/MySpace";
 import Exams from "./pages/Exams";
+import Calendar from "./pages/Calendar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminHome from "./pages/AdminHome";
 import AdminCourses from "./pages/AdminCourses";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="myspace" element={<MySpace />} />
               <Route path="exams" element={<Exams />} />
               <Route path="query" element={<Query />} />
+              <Route path="calendar" element={<Calendar />} />
               <Route path="chat" element={<ChatPage />} />
             </Route>
             <Route path="/admin" element={<AdminDashboard />}>

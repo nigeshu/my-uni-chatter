@@ -11,8 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { UserPlus, Copy, Search } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserPlus, Search } from 'lucide-react';
 
 interface AddFriendDialogProps {
   userId: string;
@@ -24,8 +23,6 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
   const [friendName, setFriendName] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  const shareableLink = `${window.location.origin}/friend-invite/${userId}`;
 
   const handleAddFriend = async () => {
     if (!friendName.trim()) {
@@ -128,70 +125,33 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
     }
   };
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(shareableLink);
-    toast({
-      title: 'Link copied!',
-      description: 'Share this link with your friends.',
-    });
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
           <DialogDescription>
-            Search for friends by name or share your friend link
+            Search for friends by name
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="search">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="search">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </TabsTrigger>
-            <TabsTrigger value="share">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Share Link
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Friend's Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter friend's name"
+              value={friendName}
+              onChange={(e) => setFriendName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddFriend()}
+            />
+          </div>
 
-          <TabsContent value="search" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Friend's Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter friend's name"
-                value={friendName}
-                onChange={(e) => setFriendName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddFriend()}
-              />
-            </div>
-
-            <Button onClick={handleAddFriend} disabled={loading} className="w-full">
-              {loading ? 'Sending...' : 'Send Friend Request'}
-            </Button>
-          </TabsContent>
-
-          <TabsContent value="share" className="space-y-4">
-            <div className="space-y-2">
-              <Label>Your Friend Link</Label>
-              <div className="flex gap-2">
-                <Input value={shareableLink} readOnly className="flex-1" />
-                <Button onClick={copyLink} size="icon" variant="outline">
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Share this link with friends. When they click it and sign up, you'll both be
-                connected!
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
+          <Button onClick={handleAddFriend} disabled={loading} className="w-full">
+            {loading ? 'Sending...' : 'Send Friend Request'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

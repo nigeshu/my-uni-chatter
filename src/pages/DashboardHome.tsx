@@ -515,7 +515,7 @@ const DashboardHome = () => {
           <p className="text-muted-foreground">Stay updated with important announcements</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Admin Messages Box */}
           <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
             <div className="h-2 bg-gradient-accent" />
@@ -709,9 +709,7 @@ const DashboardHome = () => {
           </Card>
 
           {/* Week Calendar */}
-          <div className="lg:col-span-1">
-            <WeekCalendar isAdmin={isAdmin} />
-          </div>
+          <WeekCalendar isAdmin={isAdmin} />
         </div>
       </div>
     </div>

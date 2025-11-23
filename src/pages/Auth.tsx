@@ -185,7 +185,7 @@ const Auth = () => {
           </p>
           <div className="mt-3 max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-300">
             <p className="text-xs text-primary font-medium pt-2 border-t border-border/50">
-              ✨ Join thousands of students achieving their goals with Lernet
+              ✨ Your complete platform for modern learning and collaboration
             </p>
           </div>
         </div>

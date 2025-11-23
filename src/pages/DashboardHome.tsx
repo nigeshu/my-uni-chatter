@@ -685,7 +685,7 @@ const DashboardHome = () => {
                       <div className="flex items-center gap-1 text-xs">
                         <Clock className="h-3 w-3 text-blue-600" />
                         <span className="font-medium text-blue-600">
-                          Coming in {differenceInDays(new Date(alerts.upcomingExam.exam_date), new Date())} days
+                          Coming in {Math.ceil(differenceInDays(new Date(alerts.upcomingExam.exam_date), new Date()))} days
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">

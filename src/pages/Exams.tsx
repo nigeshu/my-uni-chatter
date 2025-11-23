@@ -11,11 +11,14 @@ interface Exam {
   course_name: string;
   exam_date: string;
   portions: string;
+  exam_type: string;
+  sub_category: string;
 }
 
 const Exams = () => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+  const [activeTab, setActiveTab] = useState<"theory" | "lab" | "non_graded">("theory");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,6 +52,8 @@ const Exams = () => {
     return daysUntil === 0 ? "Today" : `Coming in ${daysUntil} days`;
   };
 
+  const filteredExams = exams.filter(exam => exam.exam_type === activeTab);
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -56,30 +61,67 @@ const Exams = () => {
         <p className="text-muted-foreground">View your upcoming exams and portions</p>
       </div>
 
+      {/* Tab Switcher with Liquid Hover */}
+      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit relative">
+        <div 
+          className="absolute top-1 bottom-1 bg-primary rounded-md transition-all duration-300 ease-in-out"
+          style={{
+            width: '33.333%',
+            left: activeTab === "theory" ? "0%" : activeTab === "lab" ? "33.333%" : "66.666%",
+          }}
+        />
+        <button
+          onClick={() => setActiveTab("theory")}
+          className={`relative z-10 px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
+            activeTab === "theory" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Theory
+        </button>
+        <button
+          onClick={() => setActiveTab("lab")}
+          className={`relative z-10 px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
+            activeTab === "lab" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Lab
+        </button>
+        <button
+          onClick={() => setActiveTab("non_graded")}
+          className={`relative z-10 px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
+            activeTab === "non_graded" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Non Graded
+        </button>
+      </div>
+
       <Card className="p-6">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Sub Category</TableHead>
               <TableHead>Course Name</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Exam Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {exams.length === 0 ? (
+            {filteredExams.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground">
+                <TableCell colSpan={4} className="text-center text-muted-foreground">
                   No exams scheduled
                 </TableCell>
               </TableRow>
             ) : (
-              exams.map((exam) => (
+              filteredExams.map((exam) => (
                 <TableRow
                   key={exam.id}
                   className="cursor-pointer hover:bg-accent"
                   onClick={() => setSelectedExam(exam)}
                 >
-                  <TableCell className="font-medium">{exam.course_name}</TableCell>
+                  <TableCell className="font-medium">{exam.sub_category}</TableCell>
+                  <TableCell>{exam.course_name}</TableCell>
                   <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
                   <TableCell>
                     <span
@@ -105,6 +147,10 @@ const Exams = () => {
             <DialogTitle>{selectedExam?.course_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Sub Category</p>
+              <p className="text-lg">{selectedExam?.sub_category}</p>
+            </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Exam Date</p>
               <p className="text-lg">

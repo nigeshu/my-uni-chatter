@@ -260,8 +260,8 @@ const Calendar = () => {
                 <h2 className="text-3xl font-bold">
                   {format(currentMonth, 'MMMM yyyy')}
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {format(startDate!, 'MMM d, yyyy')} - {format(endDate!, 'MMM d, yyyy')}
+                <p className="text-sm text-muted-foreground mt-2 font-medium">
+                  Academic Year: {format(startDate!, 'MMMM yyyy')} - {format(endDate!, 'MMMM yyyy')}
                 </p>
               </div>
               

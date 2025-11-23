@@ -143,45 +143,54 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Description Section */}
-      <div className="absolute top-8 left-8 max-w-md hidden lg:block animate-fade-in">
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-6 shadow-xl">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-3">
+      {/* Description Box 1 - Top Left */}
+      <div className="absolute top-8 left-8 max-w-sm hidden lg:block animate-fade-in">
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
             Lernet
           </h2>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-            A comprehensive Learning Management System designed to empower students and educators. Track your progress, manage courses, collaborate with friends, and excel in your academic journey.
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            A comprehensive Learning Management System designed to empower students and educators in their academic journey.
           </p>
-          <div className="space-y-3 mb-4">
-            <div className="flex items-start gap-3">
-              <span className="text-xl">📊</span>
-              <div>
-                <h3 className="font-semibold text-sm mb-1">Smart Progress Tracking</h3>
-                <p className="text-xs text-muted-foreground">Monitor your CGPA, course completion, and academic milestones in real-time</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-xl">💬</span>
-              <div>
-                <h3 className="font-semibold text-sm mb-1">Seamless Collaboration</h3>
-                <p className="text-xs text-muted-foreground">Connect with friends, share materials, and collaborate on assignments</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-xl">📚</span>
-              <div>
-                <h3 className="font-semibold text-sm mb-1">Rich Course Materials</h3>
-                <p className="text-xs text-muted-foreground">Access videos, documents, and interactive learning resources anytime</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-xl">🎯</span>
-              <div>
-                <h3 className="font-semibold text-sm mb-1">Personal Study Space</h3>
-                <p className="text-xs text-muted-foreground">Organize your notes, plans, and study materials in your custom workspace</p>
-              </div>
-            </div>
+        </div>
+      </div>
+
+      {/* Description Box 2 - Bottom Left */}
+      <div className="absolute bottom-8 left-8 max-w-sm hidden lg:block animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-3xl">📊</span>
+            <h3 className="text-lg font-bold text-foreground">Smart Analytics</h3>
           </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Track your CGPA, monitor course progress, and view detailed performance analytics. Get insights into your academic achievements with real-time updates.
+          </p>
+        </div>
+      </div>
+
+      {/* Description Box 3 - Top Right (below bot) */}
+      <div className="absolute top-32 right-8 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-3xl">💬</span>
+            <h3 className="text-lg font-bold text-foreground">Stay Connected</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Collaborate with friends through our integrated chat system. Share materials, discuss assignments, and build your learning community.
+          </p>
+        </div>
+      </div>
+
+      {/* Description Box 4 - Bottom Right */}
+      <div className="absolute bottom-8 right-8 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.6s' }}>
+        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-3xl">🎯</span>
+            <h3 className="text-lg font-bold text-foreground">Personal Workspace</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Create your custom study space with notes, plans, and organized materials. Visualize connections between topics and manage your learning flow.
+          </p>
         </div>
       </div>
 

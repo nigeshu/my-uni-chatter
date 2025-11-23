@@ -72,7 +72,7 @@ const LMSDashboard = () => {
     const { data } = await supabase
       .from('semester_settings')
       .select('maintenance_mode_enabled')
-      .single();
+      .maybeSingle();
     
     if (data?.maintenance_mode_enabled) {
       navigate('/maintenance', { replace: true });

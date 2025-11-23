@@ -259,7 +259,7 @@ const Progress = () => {
     const { data } = await supabase
       .from('semester_settings')
       .select('semester_completion_enabled')
-      .single();
+      .maybeSingle();
     
     if (data) {
       setSemesterCompletionEnabled(data.semester_completion_enabled);

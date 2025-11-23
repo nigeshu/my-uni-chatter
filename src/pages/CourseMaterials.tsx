@@ -136,7 +136,7 @@ const CourseMaterials = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/courses')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-4xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold">
             Access Denied
           </h1>
         </div>
@@ -158,7 +158,7 @@ const CourseMaterials = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold">
             {course?.title}
           </h1>
           <p className="text-muted-foreground text-lg">Course Content</p>

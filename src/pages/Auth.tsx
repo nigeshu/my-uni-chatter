@@ -175,7 +175,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 1 - Top Left */}
-      <div className="absolute top-8 left-8 max-w-sm hidden lg:block animate-fade-in">
+      <div className="absolute top-16 left-16 max-w-sm hidden lg:block animate-fade-in">
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
             Lernet
@@ -192,7 +192,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 2 - Bottom Left */}
-      <div className="absolute bottom-8 left-8 max-w-sm hidden lg:block animate-fade-in" style={{ animationDelay: '0.2s' }}>
+      <div className="absolute bottom-16 left-16 max-w-sm hidden lg:block animate-fade-in" style={{ animationDelay: '0.2s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-3xl group-hover:scale-110 transition-transform">📊</span>
@@ -210,7 +210,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 3 - Top Right (below bot) */}
-      <div className="absolute top-32 right-8 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
+      <div className="absolute top-32 right-16 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-3xl group-hover:scale-110 transition-transform">💬</span>
@@ -228,7 +228,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 4 - Bottom Right */}
-      <div className="absolute bottom-8 right-8 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.6s' }}>
+      <div className="absolute bottom-16 right-16 max-w-sm hidden xl:block animate-fade-in" style={{ animationDelay: '0.6s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/50">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-3xl group-hover:scale-110 transition-transform">🎯</span>
@@ -246,7 +246,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 5 - Center Left */}
-      <div className="absolute top-1/2 -translate-y-1/2 left-8 max-w-xs hidden lg:block animate-fade-in" style={{ animationDelay: '0.8s' }}>
+      <div className="absolute top-1/2 -translate-y-1/2 left-20 max-w-xs hidden lg:block animate-fade-in" style={{ animationDelay: '0.8s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-secondary/50">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl group-hover:scale-110 transition-transform">📚</span>
@@ -264,7 +264,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 6 - Center Right */}
-      <div className="absolute top-1/2 -translate-y-1/2 right-8 max-w-xs hidden xl:block animate-fade-in" style={{ animationDelay: '1s' }}>
+      <div className="absolute top-1/2 -translate-y-1/2 right-20 max-w-xs hidden xl:block animate-fade-in" style={{ animationDelay: '1s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-secondary/50">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl group-hover:scale-110 transition-transform">📝</span>
@@ -282,7 +282,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 7 - Top Center Left */}
-      <div className="absolute top-8 left-1/4 max-w-xs hidden 2xl:block animate-fade-in" style={{ animationDelay: '1.2s' }}>
+      <div className="absolute top-20 left-[28%] max-w-xs hidden 2xl:block animate-fade-in" style={{ animationDelay: '1.2s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-accent/50">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl group-hover:scale-110 transition-transform">🔔</span>
@@ -300,7 +300,7 @@ const Auth = () => {
       </div>
 
       {/* Description Box 8 - Bottom Center Right */}
-      <div className="absolute bottom-8 right-1/4 max-w-xs hidden 2xl:block animate-fade-in" style={{ animationDelay: '1.4s' }}>
+      <div className="absolute bottom-20 right-[28%] max-w-xs hidden 2xl:block animate-fade-in" style={{ animationDelay: '1.4s' }}>
         <div className="group bg-card/80 backdrop-blur-sm border border-border rounded-xl p-4 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-accent/50">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl group-hover:scale-110 transition-transform">🎓</span>

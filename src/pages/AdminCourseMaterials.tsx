@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Search, Play } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import {
   DndContext,
@@ -227,15 +227,29 @@ const AdminCourseMaterials = () => {
   };
 
   const extractVideoId = (url: string): string | null => {
+    // Remove whitespace
+    const cleanUrl = url.trim();
+    
+    // Match various YouTube URL formats
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
-      /youtube\.com\/embed\/([^&\s]+)/,
+      /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+      /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+      /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
     ];
     
     for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
+      const match = cleanUrl.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
     }
+    
+    // If no pattern matches, check if it's just a video ID (11 characters)
+    if (/^[a-zA-Z0-9_-]{11}$/.test(cleanUrl)) {
+      return cleanUrl;
+    }
+    
     return null;
   };
 
@@ -1128,10 +1142,10 @@ const AdminCourseMaterials = () => {
             </TabsList>
 
             {/* Search Tab */}
-            <div data-state="active" className="space-y-4 data-[state=inactive]:hidden" data-value="search">
+            <TabsContent value="search" className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Search YouTube..."
+                  placeholder="Search YouTube videos..."
                   value={youtubeSearchQuery}
                   onChange={(e) => setYoutubeSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchYouTube()}
@@ -1175,10 +1189,10 @@ const AdminCourseMaterials = () => {
                   No results found. Try a different search term.
                 </div>
               )}
-            </div>
+            </TabsContent>
 
             {/* URL Tab */}
-            <div data-state="inactive" className="space-y-4 data-[state=inactive]:hidden" data-value="url">
+            <TabsContent value="url" className="space-y-4">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="video-title">Video Title</Label>
@@ -1188,19 +1202,20 @@ const AdminCourseMaterials = () => {
                     value={manualVideoTitle}
                     onChange={(e) => setManualVideoTitle(e.target.value)}
                     className="mt-1"
+                    maxLength={200}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="video-url">YouTube URL</Label>
+                  <Label htmlFor="video-url">YouTube URL or Video ID</Label>
                   <Input
                     id="video-url"
-                    placeholder="https://www.youtube.com/watch?v=..."
+                    placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ or dQw4w9WgXcQ"
                     value={manualVideoUrl}
                     onChange={(e) => setManualVideoUrl(e.target.value)}
                     className="mt-1"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Paste a YouTube video URL (e.g., youtube.com/watch?v=... or youtu.be/...)
+                    Supports: youtube.com/watch?v=..., youtu.be/..., or just the 11-character video ID
                   </p>
                 </div>
                 <Button 
@@ -1211,7 +1226,7 @@ const AdminCourseMaterials = () => {
                   {addingManualVideo ? 'Adding Video...' : 'Add Video'}
                 </Button>
               </div>
-            </div>
+            </TabsContent>
           </Tabs>
         </DialogContent>
       </Dialog>

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Loader2, Plus } from 'lucide-react';
+import { Play, Loader2, Plus, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,7 @@ interface ModuleVideosDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   module: {
+    id: string;
     heading: string;
     topic: string;
   } | null;
@@ -41,6 +42,8 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [addedVideos, setAddedVideos] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const [addToSpaceOpen, setAddToSpaceOpen] = useState(false);
@@ -55,58 +58,88 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
   const topics = module?.topic ? module.topic.split(/[–\-\n]/).map(t => t.trim()).filter(t => t.length > 10) : [];
 
   useEffect(() => {
-    if (selectedTopic) {
+    const checkAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+      setIsAdmin(data || false);
+    };
+    checkAdmin();
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedTopic && module?.id) {
       fetchVideos(selectedTopic);
     }
-  }, [selectedTopic]);
+  }, [selectedTopic, module?.id]);
 
   const fetchVideos = async (topic: string) => {
     setLoading(true);
     setVideos([]);
     setSelectedVideo(null);
+    setAddedVideos(new Set());
     
     try {
-      // Check cache first (24 hour expiry)
-      const cacheKey = `youtube_videos_${topic}`;
-      const cached = localStorage.getItem(cacheKey);
-      
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        const isExpired = Date.now() - timestamp > 24 * 60 * 60 * 1000; // 24 hours
+      if (isAdmin) {
+        // Admin: Fetch from YouTube API with cache
+        const cacheKey = `youtube_videos_${topic}`;
+        const cached = localStorage.getItem(cacheKey);
         
-        if (!isExpired) {
-          setVideos(data);
-          setLoading(false);
-          return;
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          const isExpired = Date.now() - timestamp > 24 * 60 * 60 * 1000;
+          
+          if (!isExpired) {
+            setVideos(data);
+            await checkAddedVideos(topic, data);
+            setLoading(false);
+            return;
+          }
         }
+        
+        const searchQuery = topic;
+        const response = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=4&order=viewCount&relevanceLanguage=en&videoDuration=medium&key=${YOUTUBE_API_KEY}`
+        );
+        
+        if (!response.ok) throw new Error('Failed to fetch videos');
+        
+        const data = await response.json();
+        const videoResults: Video[] = data.items.map((item: any) => ({
+          id: item.id.videoId,
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails.medium.url,
+          channelTitle: item.snippet.channelTitle,
+        }));
+        
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: videoResults,
+          timestamp: Date.now()
+        }));
+        
+        setVideos(videoResults);
+        await checkAddedVideos(topic, videoResults);
+      } else {
+        // Student: Fetch from database
+        const { data, error } = await supabase
+          .from('module_topic_videos')
+          .select('*')
+          .eq('module_id', module?.id)
+          .eq('topic_name', topic);
+        
+        if (error) throw error;
+        
+        const videoResults: Video[] = (data || []).map((item: any) => ({
+          id: item.video_id,
+          title: item.video_title,
+          thumbnail: item.video_thumbnail,
+          channelTitle: item.channel_title,
+        }));
+        
+        setVideos(videoResults);
       }
-      
-      // Use exact topic name for precise search results
-      const searchQuery = topic;
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=4&order=relevance&relevanceLanguage=en&videoDuration=medium&key=${YOUTUBE_API_KEY}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch videos');
-      }
-      
-      const data = await response.json();
-      
-      const videoResults: Video[] = data.items.map((item: any) => ({
-        id: item.id.videoId,
-        title: item.snippet.title,
-        thumbnail: item.snippet.thumbnails.medium.url,
-        channelTitle: item.snippet.channelTitle,
-      }));
-      
-      // Cache the results
-      localStorage.setItem(cacheKey, JSON.stringify({
-        data: videoResults,
-        timestamp: Date.now()
-      }));
-      
-      setVideos(videoResults);
     } catch (error) {
       console.error('Error fetching videos:', error);
       toast({
@@ -116,6 +149,53 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkAddedVideos = async (topic: string, videos: Video[]) => {
+    if (!module?.id) return;
+    
+    const { data } = await supabase
+      .from('module_topic_videos')
+      .select('video_id')
+      .eq('module_id', module.id)
+      .eq('topic_name', topic);
+    
+    if (data) {
+      setAddedVideos(new Set(data.map(v => v.video_id)));
+    }
+  };
+
+  const handleAddVideoToTopic = async (video: Video) => {
+    if (!module?.id || !selectedTopic) return;
+    
+    try {
+      const { error } = await supabase
+        .from('module_topic_videos')
+        .insert({
+          module_id: module.id,
+          topic_name: selectedTopic,
+          video_id: video.id,
+          video_title: video.title,
+          video_thumbnail: video.thumbnail,
+          channel_title: video.channelTitle,
+        });
+      
+      if (error) throw error;
+      
+      setAddedVideos(prev => new Set([...prev, video.id]));
+      
+      toast({
+        title: 'Success',
+        description: 'Video added to topic successfully!',
+      });
+    } catch (error) {
+      console.error('Error adding video:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add video. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -312,15 +392,43 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
                           <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
                         </CardContent>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        onClick={(e) => handleAddToSpace(video, e)}
-                        title="Add to My Space"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      {isAdmin ? (
+                        <Button
+                          size="sm"
+                          variant={addedVideos.has(video.id) ? "secondary" : "default"}
+                          className="absolute top-2 right-2 h-8 px-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!addedVideos.has(video.id)) {
+                              handleAddVideoToTopic(video);
+                            }
+                          }}
+                          disabled={addedVideos.has(video.id)}
+                          title={addedVideos.has(video.id) ? "Already added" : "Add to Topic"}
+                        >
+                          {addedVideos.has(video.id) ? (
+                            <>
+                              <Check className="h-3 w-3 mr-1" />
+                              Added
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          onClick={(e) => handleAddToSpace(video, e)}
+                          title="Add to My Space"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      )}
                     </Card>
                   ))}
                 </div>

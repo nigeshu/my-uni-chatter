@@ -117,6 +117,9 @@ const AdminCourseMaterials = () => {
   const [youtubeSearchQuery, setYoutubeSearchQuery] = useState('');
   const [youtubeResults, setYoutubeResults] = useState<YouTubeVideo[]>([]);
   const [searchingYoutube, setSearchingYoutube] = useState(false);
+  const [manualVideoUrl, setManualVideoUrl] = useState('');
+  const [manualVideoTitle, setManualVideoTitle] = useState('');
+  const [addingManualVideo, setAddingManualVideo] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -220,6 +223,57 @@ const AdminCourseMaterials = () => {
       });
     } finally {
       setSearchingYoutube(false);
+    }
+  };
+
+  const extractVideoId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
+      /youtube\.com\/embed\/([^&\s]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  const handleAddManualVideo = async () => {
+    if (!manualVideoUrl.trim() || !manualVideoTitle.trim() || !selectedCategoryForVideos) {
+      toast({ title: 'Error', description: 'Please fill all fields', variant: 'destructive' });
+      return;
+    }
+
+    const videoId = extractVideoId(manualVideoUrl);
+    if (!videoId) {
+      toast({ title: 'Error', description: 'Invalid YouTube URL', variant: 'destructive' });
+      return;
+    }
+
+    setAddingManualVideo(true);
+    try {
+      const categoryVideos = courseVideos.filter(v => v.category_id === selectedCategoryForVideos);
+      
+      const { error } = await supabase.from('course_videos').insert({
+        category_id: selectedCategoryForVideos,
+        video_id: videoId,
+        video_title: manualVideoTitle,
+        video_thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+        channel_title: 'Manual Entry',
+        order_index: categoryVideos.length,
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Success', description: 'Video added successfully' });
+      setManualVideoUrl('');
+      setManualVideoTitle('');
+      fetchCourseVideos();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to add video', variant: 'destructive' });
+    } finally {
+      setAddingManualVideo(false);
     }
   };
 
@@ -1064,57 +1118,101 @@ const AdminCourseMaterials = () => {
       <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>Add Videos from YouTube</DialogTitle>
+            <DialogTitle>Add Videos</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Search YouTube..."
-                value={youtubeSearchQuery}
-                onChange={(e) => setYoutubeSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchYouTube()}
-              />
-              <Button onClick={searchYouTube} disabled={searchingYoutube}>
-                <Search className="h-4 w-4 mr-2" />
-                {searchingYoutube ? 'Searching...' : 'Search'}
-              </Button>
+          <Tabs defaultValue="search" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="search">Search YouTube</TabsTrigger>
+              <TabsTrigger value="url">Add URL</TabsTrigger>
+            </TabsList>
+
+            {/* Search Tab */}
+            <div data-state="active" className="space-y-4 data-[state=inactive]:hidden" data-value="search">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Search YouTube..."
+                  value={youtubeSearchQuery}
+                  onChange={(e) => setYoutubeSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchYouTube()}
+                />
+                <Button onClick={searchYouTube} disabled={searchingYoutube}>
+                  <Search className="h-4 w-4 mr-2" />
+                  {searchingYoutube ? 'Searching...' : 'Search'}
+                </Button>
+              </div>
+
+              {youtubeResults.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  {youtubeResults.map((video) => (
+                    <Card key={video.videoId} className="hover:shadow-lg transition-all duration-300">
+                      <div className="relative aspect-video">
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover rounded-t-lg"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h4>
+                        <p className="text-xs text-muted-foreground mb-3">{video.channelTitle}</p>
+                        <Button
+                          size="sm"
+                          className="w-full bg-gradient-accent hover:opacity-90"
+                          onClick={() => handleAddVideoToCategory(video)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add to Category
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {youtubeResults.length === 0 && youtubeSearchQuery && !searchingYoutube && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No results found. Try a different search term.
+                </div>
+              )}
             </div>
 
-            {youtubeResults.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                {youtubeResults.map((video) => (
-                  <Card key={video.videoId} className="hover:shadow-lg transition-all duration-300">
-                    <div className="relative aspect-video">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover rounded-t-lg"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h4 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h4>
-                      <p className="text-xs text-muted-foreground mb-3">{video.channelTitle}</p>
-                      <Button
-                        size="sm"
-                        className="w-full bg-gradient-accent hover:opacity-90"
-                        onClick={() => handleAddVideoToCategory(video)}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add to Category
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
+            {/* URL Tab */}
+            <div data-state="inactive" className="space-y-4 data-[state=inactive]:hidden" data-value="url">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="video-title">Video Title</Label>
+                  <Input
+                    id="video-title"
+                    placeholder="Enter video title..."
+                    value={manualVideoTitle}
+                    onChange={(e) => setManualVideoTitle(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="video-url">YouTube URL</Label>
+                  <Input
+                    id="video-url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={manualVideoUrl}
+                    onChange={(e) => setManualVideoUrl(e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Paste a YouTube video URL (e.g., youtube.com/watch?v=... or youtu.be/...)
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleAddManualVideo} 
+                  disabled={addingManualVideo || !manualVideoUrl.trim() || !manualVideoTitle.trim()}
+                  className="w-full bg-gradient-accent hover:opacity-90"
+                >
+                  {addingManualVideo ? 'Adding Video...' : 'Add Video'}
+                </Button>
               </div>
-            )}
-
-            {youtubeResults.length === 0 && youtubeSearchQuery && !searchingYoutube && (
-              <div className="text-center py-8 text-muted-foreground">
-                No results found. Try a different search term.
-              </div>
-            )}
-          </div>
+            </div>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

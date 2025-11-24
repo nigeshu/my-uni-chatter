@@ -66,10 +66,25 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
     setSelectedVideo(null);
     
     try {
+      // Check cache first (24 hour expiry)
+      const cacheKey = `youtube_videos_${topic}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (!isExpired) {
+          setVideos(data);
+          setLoading(false);
+          return;
+        }
+      }
+      
       // Use exact topic name for precise search results
       const searchQuery = topic;
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=10&order=relevance&relevanceLanguage=en&key=${YOUTUBE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=4&order=relevance&relevanceLanguage=en&videoDuration=medium&key=${YOUTUBE_API_KEY}`
       );
       
       if (!response.ok) {
@@ -83,6 +98,12 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
         title: item.snippet.title,
         thumbnail: item.snippet.thumbnails.medium.url,
         channelTitle: item.snippet.channelTitle,
+      }));
+      
+      // Cache the results
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data: videoResults,
+        timestamp: Date.now()
       }));
       
       setVideos(videoResults);

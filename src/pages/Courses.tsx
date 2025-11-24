@@ -116,6 +116,24 @@ const Courses = () => {
     }
   };
 
+  const getCourseTypeGradient = (courseType: string | null | undefined) => {
+    if (courseType?.toLowerCase() === 'theory') {
+      return 'from-blue-500 via-blue-600 to-indigo-600';
+    } else if (courseType?.toLowerCase() === 'lab') {
+      return 'from-green-500 via-emerald-600 to-teal-600';
+    }
+    return 'from-primary via-purple-500 to-accent';
+  };
+
+  const getCourseTypeBadgeStyle = (courseType: string | null | undefined) => {
+    if (courseType?.toLowerCase() === 'theory') {
+      return 'border-blue-400/50 shadow-blue-500/20';
+    } else if (courseType?.toLowerCase() === 'lab') {
+      return 'border-green-400/50 shadow-green-500/20';
+    }
+    return 'border-primary/30';
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 animate-fade-in">
       {/* Header */}
@@ -161,12 +179,18 @@ const Courses = () => {
               }
             }}
           >
-            <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
+            <div className={`h-48 bg-gradient-to-br ${getCourseTypeGradient(course.course_type)} relative overflow-hidden`}>
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
               <div className="absolute top-4 left-4">
                 {course.course_type && (
-                  <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-lg border-2 border-primary/30 shadow-lg">
-                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  <div className={`px-4 py-2 bg-background/95 backdrop-blur-md rounded-lg border-2 ${getCourseTypeBadgeStyle(course.course_type)} shadow-lg`}>
+                    <span className={`text-lg font-bold uppercase tracking-wide ${
+                      course.course_type.toLowerCase() === 'theory' 
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
+                        : course.course_type.toLowerCase() === 'lab'
+                        ? 'bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent'
+                        : 'bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent'
+                    }`}>
                       {course.course_type}
                     </span>
                   </div>

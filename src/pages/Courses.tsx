@@ -172,7 +172,15 @@ const Courses = () => {
             className="group hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden cursor-pointer"
             onClick={() => {
               if (course.isEnrolled) {
-                navigate(`/dashboard/courses/${course.id}/materials`);
+                if (course.course_type?.toLowerCase() === 'lab') {
+                  toast({
+                    title: 'No Materials Available',
+                    description: 'No Materials Available For Labs',
+                    variant: 'destructive',
+                  });
+                } else {
+                  navigate(`/dashboard/courses/${course.id}/materials`);
+                }
               } else {
                 setSelectedCourse(course);
                 setShowDetailDialog(true);

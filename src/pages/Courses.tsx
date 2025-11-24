@@ -20,6 +20,7 @@ interface Course {
   credits?: number;
   class_days?: string[];
   thumbnail_url: string | null;
+  course_type?: string | null;
   instructor: {
     full_name: string;
   };
@@ -162,6 +163,13 @@ const Courses = () => {
           >
             <div className="h-48 bg-gradient-to-br from-primary via-purple-500 to-accent relative overflow-hidden">
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
+              <div className="absolute top-4 left-4">
+                {course.course_type && (
+                  <Badge className="bg-background/90 text-foreground border-border backdrop-blur-sm font-semibold">
+                    {course.course_type}
+                  </Badge>
+                )}
+              </div>
               <div className="absolute top-4 right-4">
                 <Badge className={getDifficultyColor(course.difficulty || 'beginner')}>
                   {course.difficulty || 'Beginner'}

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Video, Plus } from 'lucide-react';
+import { Play, Loader2, Plus, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -44,6 +44,7 @@ interface ModuleVideosDialogProps {
 
 const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogProps) => {
   const { user } = useAuth();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<VideoCategory[]>([]);
   const [videos, setVideos] = useState<CourseVideo[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -55,46 +56,72 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
   const [subjects, setSubjects] = useState<any[]>([]);
   const [spaceCategories, setSpaceCategories] = useState<any[]>([]);
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSpaceCategory, setSelectedSpaceCategory] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategory, setShowNewCategory] = useState(false);
 
   useEffect(() => {
     if (open && module?.id) {
-      fetchCategoriesAndVideos();
+      fetchCategories();
+    } else {
+      setSelectedCategory(null);
+      setVideos([]);
+      setSelectedVideo(null);
     }
   }, [open, module?.id]);
 
-  const fetchCategoriesAndVideos = async () => {
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchVideos(selectedCategory);
+    }
+  }, [selectedCategory]);
+
+  const fetchCategories = async () => {
     if (!module?.id) return;
     
     setLoading(true);
     try {
-      // Fetch categories for this module
-      const { data: categoriesData, error: categoriesError } = await supabase
+      const { data, error } = await supabase
         .from('course_video_categories')
         .select('*')
         .eq('module_id', module.id)
         .order('order_index');
 
-      if (categoriesError) throw categoriesError;
+      if (error) throw error;
 
-      setCategories(categoriesData || []);
-
-      // Fetch all videos for these categories
-      if (categoriesData && categoriesData.length > 0) {
-        const categoryIds = categoriesData.map(c => c.id);
-        const { data: videosData, error: videosError } = await supabase
-          .from('course_videos')
-          .select('*')
-          .in('category_id', categoryIds)
-          .order('order_index');
-
-        if (videosError) throw videosError;
-        setVideos(videosData || []);
-      } else {
-        setVideos([]);
+      setCategories(data || []);
+      
+      // Auto-select first category if available
+      if (data && data.length > 0) {
+        setSelectedCategory(data[0].id);
       }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load video categories',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchVideos = async (categoryId: string) => {
+    setLoading(true);
+    setVideos([]);
+    setSelectedVideo(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('course_videos')
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('order_index');
+      
+      if (error) throw error;
+      
+      setVideos(data || []);
     } catch (error) {
       console.error('Error fetching videos:', error);
       toast({
@@ -108,6 +135,8 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
   };
 
   const handleClose = () => {
+    setSelectedCategory(null);
+    setVideos([]);
     setSelectedVideo(null);
     onOpenChange(false);
   };
@@ -140,7 +169,7 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
 
   const handleSubjectChange = (value: string) => {
     setSelectedSubject(value);
-    setSelectedCategory('');
+    setSelectedSpaceCategory('');
     if (value) {
       fetchSpaceCategories(value);
     }
@@ -149,7 +178,7 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
   const saveToSpace = async () => {
     if (!selectedVideoToAdd) return;
 
-    let categoryId = selectedCategory;
+    let categoryId = selectedSpaceCategory;
 
     // Create new category if needed
     if (showNewCategory && newCategoryName.trim()) {
@@ -209,13 +238,9 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
     setAddToSpaceOpen(false);
     setSelectedVideoToAdd(null);
     setSelectedSubject('');
-    setSelectedCategory('');
+    setSelectedSpaceCategory('');
     setNewCategoryName('');
     setShowNewCategory(false);
-  };
-
-  const getCategoryVideos = (categoryId: string) => {
-    return videos.filter(v => v.category_id === categoryId);
   };
 
   return (
@@ -227,106 +252,115 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
           </DialogTitle>
         </DialogHeader>
         
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Video className="h-12 w-12 animate-pulse text-primary mx-auto mb-2" />
-              <p className="text-muted-foreground">Loading videos...</p>
-            </div>
+        <div className="flex gap-4 h-full overflow-hidden">
+          {/* Categories Sidebar */}
+          <div className="w-1/3 border-r pr-4">
+            <h3 className="text-lg font-semibold mb-4">Categories</h3>
+            <ScrollArea className="h-[calc(80vh-120px)]">
+              {loading && categories.length === 0 ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="text-center py-8">
+                  <Video className="h-12 w-12 text-muted-foreground/50 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No categories available</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <Button
+                      key={category.id}
+                      variant={selectedCategory === category.id ? "default" : "outline"}
+                      className="w-full justify-start text-left h-auto py-3 px-4"
+                      onClick={() => setSelectedCategory(category.id)}
+                    >
+                      <span className="line-clamp-2">{category.name}</span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
           </div>
-        ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Video className="h-20 w-20 text-muted-foreground/50 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Videos Available</h3>
-              <p className="text-muted-foreground">
-                Videos for this module haven't been added yet.
-              </p>
-            </div>
+
+          {/* Videos Section */}
+          <div className="flex-1 overflow-hidden">
+            {!selectedCategory ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Select a category to view videos
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : selectedVideo ? (
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${selectedVideo}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <Button variant="outline" onClick={() => setSelectedVideo(null)}>
+                  Back to video list
+                </Button>
+              </div>
+            ) : videos.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <div className="text-center">
+                  <Video className="h-12 w-12 text-muted-foreground/50 mx-auto mb-2" />
+                  <p>No videos in this category</p>
+                </div>
+              </div>
+            ) : (
+              <ScrollArea className="h-full">
+                <div className="grid grid-cols-2 gap-4 pr-4">
+                  {videos.map((video) => (
+                    <Card
+                      key={video.id}
+                      className="cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40 relative group"
+                    >
+                      <div onClick={() => setSelectedVideo(video.video_id)}>
+                        <CardHeader className="p-0">
+                          <div className="relative aspect-video">
+                            <img
+                              src={video.video_thumbnail}
+                              alt={video.video_title}
+                              className="w-full h-full object-cover rounded-t-lg"
+                            />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Play className="h-12 w-12 text-white" />
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <CardTitle className="text-sm line-clamp-2 mb-1">
+                            {video.video_title}
+                          </CardTitle>
+                          <p className="text-xs text-muted-foreground">{video.channel_title}</p>
+                        </CardContent>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        onClick={(e) => handleAddToSpace(video, e)}
+                        title="Add to My Space"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
-        ) : selectedVideo ? (
-          <div className="space-y-4 h-full flex flex-col">
-            <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
-              <iframe
-                width="100%"
-                height="100%"
-                src={`https://www.youtube.com/embed/${selectedVideo}`}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            <Button variant="outline" onClick={() => setSelectedVideo(null)}>
-              Back to video list
-            </Button>
-          </div>
-        ) : (
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-6">
-              {categories.map((category) => {
-                const categoryVideos = getCategoryVideos(category.id);
-                
-                return (
-                  <Card key={category.id} className="overflow-hidden">
-                    <CardHeader className="bg-accent/5 border-b">
-                      <CardTitle className="text-lg">{category.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {categoryVideos.length} {categoryVideos.length === 1 ? 'video' : 'videos'}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                      {categoryVideos.length === 0 ? (
-                        <p className="text-center text-muted-foreground py-8">
-                          No videos in this category yet
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                          {categoryVideos.map((video) => (
-                            <Card
-                              key={video.id}
-                              className="cursor-pointer hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40 relative group"
-                            >
-                              <div onClick={() => setSelectedVideo(video.video_id)}>
-                                <CardHeader className="p-0">
-                                  <div className="relative aspect-video">
-                                    <img
-                                      src={video.video_thumbnail}
-                                      alt={video.video_title}
-                                      className="w-full h-full object-cover rounded-t-lg"
-                                    />
-                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <Play className="h-12 w-12 text-white" />
-                                    </div>
-                                  </div>
-                                </CardHeader>
-                                <CardContent className="p-3">
-                                  <CardTitle className="text-sm line-clamp-2 mb-1">
-                                    {video.video_title}
-                                  </CardTitle>
-                                  <p className="text-xs text-muted-foreground">{video.channel_title}</p>
-                                </CardContent>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                onClick={(e) => handleAddToSpace(video, e)}
-                                title="Add to My Space"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        )}
+        </div>
       </DialogContent>
 
       {/* Add to Space Dialog */}
@@ -360,9 +394,9 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
               <div className="space-y-2">
                 <Label>Select Category</Label>
                 <Select
-                  value={selectedCategory}
+                  value={selectedSpaceCategory}
                   onValueChange={(value) => {
-                    setSelectedCategory(value);
+                    setSelectedSpaceCategory(value);
                     setShowNewCategory(value === 'new');
                   }}
                 >
@@ -395,7 +429,7 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
             <div className="flex gap-2 pt-4">
               <Button
                 onClick={saveToSpace}
-                disabled={!selectedSubject || (!selectedCategory && !showNewCategory)}
+                disabled={!selectedSubject || (!selectedSpaceCategory && !showNewCategory)}
                 className="flex-1"
               >
                 Add to Space

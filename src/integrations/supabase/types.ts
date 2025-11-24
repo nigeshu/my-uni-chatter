@@ -338,6 +338,95 @@ export type Database = {
           },
         ]
       }
+      course_video_categories: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          module_id: string | null
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          module_id?: string | null
+          name: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          module_id?: string | null
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_video_categories_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_video_categories_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_videos: {
+        Row: {
+          category_id: string
+          channel_title: string
+          created_at: string
+          id: string
+          order_index: number
+          updated_at: string
+          video_id: string
+          video_thumbnail: string
+          video_title: string
+        }
+        Insert: {
+          category_id: string
+          channel_title: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          updated_at?: string
+          video_id: string
+          video_thumbnail: string
+          video_title: string
+        }
+        Update: {
+          category_id?: string
+          channel_title?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          updated_at?: string
+          video_id?: string
+          video_thumbnail?: string
+          video_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_videos_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "course_video_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           class_days: string[] | null

@@ -176,11 +176,12 @@ const CourseMaterials = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="content" className="w-full">
+      <Tabs value="content" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger 
             value="course" 
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               setSelectedCourse(course);
               setShowDetailDialog(true);
             }}

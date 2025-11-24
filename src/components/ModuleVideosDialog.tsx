@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Loader2, Plus, Check } from 'lucide-react';
+import { Play, Loader2, Plus, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
@@ -194,6 +194,39 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
       toast({
         title: 'Error',
         description: 'Failed to add video. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRemoveVideoFromTopic = async (video: Video) => {
+    if (!module?.id || !selectedTopic) return;
+    
+    try {
+      const { error } = await supabase
+        .from('module_topic_videos')
+        .delete()
+        .eq('module_id', module.id)
+        .eq('topic_name', selectedTopic)
+        .eq('video_id', video.id);
+      
+      if (error) throw error;
+      
+      setAddedVideos(prev => {
+        const updated = new Set(prev);
+        updated.delete(video.id);
+        return updated;
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Video removed from topic successfully!',
+      });
+    } catch (error) {
+      console.error('Error removing video:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to remove video. Please try again.',
         variant: 'destructive',
       });
     }
@@ -393,31 +426,47 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
                         </CardContent>
                       </div>
                       {isAdmin ? (
-                        <Button
-                          size="sm"
-                          variant={addedVideos.has(video.id) ? "secondary" : "default"}
-                          className="absolute top-2 right-2 h-8 px-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!addedVideos.has(video.id)) {
-                              handleAddVideoToTopic(video);
-                            }
-                          }}
-                          disabled={addedVideos.has(video.id)}
-                          title={addedVideos.has(video.id) ? "Already added" : "Add to Topic"}
-                        >
+                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                           {addedVideos.has(video.id) ? (
                             <>
-                              <Check className="h-3 w-3 mr-1" />
-                              Added
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-8 w-8 p-0 rounded-full shadow-lg"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveVideoFromTopic(video);
+                                }}
+                                title="Remove from Topic"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-8 px-3 rounded-full shadow-lg"
+                                disabled
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Added
+                              </Button>
                             </>
                           ) : (
-                            <>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="h-8 px-3 rounded-full shadow-lg"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddVideoToTopic(video);
+                              }}
+                              title="Add to Topic"
+                            >
                               <Plus className="h-3 w-3 mr-1" />
                               Add
-                            </>
+                            </Button>
                           )}
-                        </Button>
+                        </div>
                       ) : (
                         <Button
                           size="sm"

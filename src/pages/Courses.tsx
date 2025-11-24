@@ -118,9 +118,9 @@ const Courses = () => {
 
   const getCourseTypeGradient = (courseType: string | null | undefined) => {
     if (courseType?.toLowerCase() === 'theory') {
-      return 'from-blue-500 via-blue-600 to-indigo-600';
+      return 'from-blue-400 via-blue-600 to-indigo-700';
     } else if (courseType?.toLowerCase() === 'lab') {
-      return 'from-green-500 via-emerald-600 to-teal-600';
+      return 'from-green-400 via-emerald-600 to-teal-700';
     }
     return 'from-primary via-purple-500 to-accent';
   };
@@ -179,8 +179,9 @@ const Courses = () => {
               }
             }}
           >
-            <div className={`h-48 bg-gradient-to-br ${getCourseTypeGradient(course.course_type)} relative overflow-hidden`}>
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
+            <div className={`h-48 bg-gradient-to-br ${getCourseTypeGradient(course.course_type)} relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}>
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/10 group-hover:from-black/30 transition-colors" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
               <div className="absolute top-4 left-4">
                 {course.course_type && (
                   <div className={`px-4 py-2 bg-background/95 backdrop-blur-md rounded-lg border-2 ${getCourseTypeBadgeStyle(course.course_type)} shadow-lg`}>

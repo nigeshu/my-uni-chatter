@@ -696,6 +696,50 @@ export type Database = {
           },
         ]
       }
+      module_topic_videos: {
+        Row: {
+          channel_title: string
+          created_at: string | null
+          id: string
+          module_id: string
+          topic_name: string
+          updated_at: string | null
+          video_id: string
+          video_thumbnail: string
+          video_title: string
+        }
+        Insert: {
+          channel_title: string
+          created_at?: string | null
+          id?: string
+          module_id: string
+          topic_name: string
+          updated_at?: string | null
+          video_id: string
+          video_thumbnail: string
+          video_title: string
+        }
+        Update: {
+          channel_title?: string
+          created_at?: string | null
+          id?: string
+          module_id?: string
+          topic_name?: string
+          updated_at?: string | null
+          video_id?: string
+          video_thumbnail?: string
+          video_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_topic_videos_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

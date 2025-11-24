@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Search, Play } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import {
@@ -58,6 +58,31 @@ interface Course {
   class_days?: string[];
 }
 
+interface VideoCategory {
+  id: string;
+  course_id: string;
+  module_id: string | null;
+  name: string;
+  order_index: number;
+}
+
+interface CourseVideo {
+  id: string;
+  category_id: string;
+  video_id: string;
+  video_title: string;
+  video_thumbnail: string;
+  channel_title: string;
+  order_index: number;
+}
+
+interface YouTubeVideo {
+  videoId: string;
+  title: string;
+  thumbnail: string;
+  channelTitle: string;
+}
+
 const AdminCourseMaterials = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -75,6 +100,23 @@ const AdminCourseMaterials = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  
+  // Video management state
+  const [videoCategories, setVideoCategories] = useState<VideoCategory[]>([]);
+  const [courseVideos, setCourseVideos] = useState<CourseVideo[]>([]);
+  const [showVideoCategoryDialog, setShowVideoCategoryDialog] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [editingVideoCategory, setEditingVideoCategory] = useState<VideoCategory | null>(null);
+  const [selectedCategoryForVideos, setSelectedCategoryForVideos] = useState<string | null>(null);
+  const [videoCategoryFormData, setVideoCategoryFormData] = useState({
+    name: '',
+    module_id: 'none',
+  });
+  
+  // YouTube search state
+  const [youtubeSearchQuery, setYoutubeSearchQuery] = useState('');
+  const [youtubeResults, setYoutubeResults] = useState<YouTubeVideo[]>([]);
+  const [searchingYoutube, setSearchingYoutube] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -104,6 +146,8 @@ const AdminCourseMaterials = () => {
       fetchCourse();
       fetchMaterials();
       fetchModules();
+      fetchVideoCategories();
+      fetchCourseVideos();
     }
   }, [courseId]);
 
@@ -135,6 +179,149 @@ const AdminCourseMaterials = () => {
       .eq('course_id', courseId)
       .order('order_index');
     if (data) setModules(data);
+  };
+
+  const fetchVideoCategories = async () => {
+    const { data } = await supabase
+      .from('course_video_categories')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('order_index');
+    if (data) setVideoCategories(data);
+  };
+
+  const fetchCourseVideos = async () => {
+    const { data } = await supabase
+      .from('course_videos')
+      .select('*')
+      .order('order_index');
+    if (data) setCourseVideos(data);
+  };
+
+  const searchYouTube = async () => {
+    if (!youtubeSearchQuery.trim()) {
+      toast({ title: 'Error', description: 'Please enter a search query', variant: 'destructive' });
+      return;
+    }
+
+    setSearchingYoutube(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-search', {
+        body: { query: youtubeSearchQuery }
+      });
+
+      if (error) throw error;
+      setYoutubeResults(data.videos || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to search YouTube',
+        variant: 'destructive',
+      });
+    } finally {
+      setSearchingYoutube(false);
+    }
+  };
+
+  const handleAddVideoToCategory = async (video: YouTubeVideo) => {
+    if (!selectedCategoryForVideos) {
+      toast({ title: 'Error', description: 'Please select a category first', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const categoryVideos = courseVideos.filter(v => v.category_id === selectedCategoryForVideos);
+      
+      const { error } = await supabase.from('course_videos').insert({
+        category_id: selectedCategoryForVideos,
+        video_id: video.videoId,
+        video_title: video.title,
+        video_thumbnail: video.thumbnail,
+        channel_title: video.channelTitle,
+        order_index: categoryVideos.length,
+      });
+
+      if (error) throw error;
+      
+      toast({ title: 'Success', description: 'Video added to category' });
+      fetchCourseVideos();
+      setYoutubeSearchQuery('');
+      setYoutubeResults([]);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add video',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleVideoCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (editingVideoCategory) {
+        const { error } = await supabase
+          .from('course_video_categories')
+          .update({
+            name: videoCategoryFormData.name,
+            module_id: videoCategoryFormData.module_id === 'none' ? null : videoCategoryFormData.module_id,
+          })
+          .eq('id', editingVideoCategory.id);
+        if (error) throw error;
+        toast({ title: 'Success', description: 'Category updated successfully' });
+      } else {
+        const { error } = await supabase.from('course_video_categories').insert({
+          course_id: courseId,
+          name: videoCategoryFormData.name,
+          module_id: videoCategoryFormData.module_id === 'none' ? null : videoCategoryFormData.module_id,
+          order_index: videoCategories.length,
+        });
+        if (error) throw error;
+        toast({ title: 'Success', description: 'Category created successfully' });
+      }
+
+      setShowVideoCategoryDialog(false);
+      setEditingVideoCategory(null);
+      setVideoCategoryFormData({ name: '', module_id: 'none' });
+      fetchVideoCategories();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save category',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteVideoCategory = async (categoryId: string) => {
+    if (!confirm('Are you sure? This will delete all videos in this category.')) return;
+
+    const { error } = await supabase.from('course_video_categories').delete().eq('id', categoryId);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to delete category', variant: 'destructive' });
+    } else {
+      toast({ title: 'Success', description: 'Category deleted successfully' });
+      fetchVideoCategories();
+      fetchCourseVideos();
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string) => {
+    if (!confirm('Are you sure you want to delete this video?')) return;
+
+    const { error } = await supabase.from('course_videos').delete().eq('id', videoId);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to delete video', variant: 'destructive' });
+    } else {
+      toast({ title: 'Success', description: 'Video deleted successfully' });
+      fetchCourseVideos();
+    }
   };
 
   const handleFileUpload = async (file: File) => {
@@ -705,6 +892,231 @@ const AdminCourseMaterials = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Video Management Section */}
+      <Card className="mb-8">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Video className="h-6 w-6 text-primary" />
+              Video Categories
+            </CardTitle>
+            <Dialog open={showVideoCategoryDialog} onOpenChange={setShowVideoCategoryDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-gradient-accent hover:opacity-90"
+                  onClick={() => {
+                    setEditingVideoCategory(null);
+                    setVideoCategoryFormData({ name: '', module_id: 'none' });
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>{editingVideoCategory ? 'Edit Category' : 'Add Video Category'}</DialogTitle>
+                </DialogHeader>
+
+                <form onSubmit={handleVideoCategorySubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="categoryName">Category Name *</Label>
+                    <Input
+                      id="categoryName"
+                      placeholder="e.g., Introduction Videos, Advanced Topics"
+                      value={videoCategoryFormData.name}
+                      onChange={(e) => setVideoCategoryFormData({ ...videoCategoryFormData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="categoryModule">Link to Module (Optional)</Label>
+                    <Select
+                      value={videoCategoryFormData.module_id}
+                      onValueChange={(value) => setVideoCategoryFormData({ ...videoCategoryFormData, module_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a module" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Module</SelectItem>
+                        {modules.map((module) => (
+                          <SelectItem key={module.id} value={module.id}>
+                            {module.heading ? `${module.heading} - ` : ''}{module.serial_no}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button type="submit" disabled={loading} className="flex-1 bg-gradient-accent hover:opacity-90">
+                      {loading ? 'Saving...' : editingVideoCategory ? 'Update Category' : 'Add Category'}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setShowVideoCategoryDialog(false)} disabled={loading}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-6">
+          {videoCategories.length > 0 ? (
+            <div className="space-y-6">
+              {videoCategories.map((category) => {
+                const categoryVideos = courseVideos.filter(v => v.category_id === category.id);
+                const isSelected = selectedCategoryForVideos === category.id;
+                
+                return (
+                  <Card key={category.id} className="overflow-hidden">
+                    <CardHeader className="border-b bg-accent/5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold">{category.name}</h3>
+                          <p className="text-sm text-muted-foreground">{categoryVideos.length} videos</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={isSelected ? "default" : "outline"}
+                            onClick={() => {
+                              setSelectedCategoryForVideos(category.id);
+                              setShowVideoDialog(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Videos
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteVideoCategory(category.id)}
+                            className="text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    {categoryVideos.length > 0 && (
+                      <CardContent className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {categoryVideos.map((video) => (
+                            <Card key={video.id} className="hover:shadow-lg transition-all duration-300">
+                              <div className="relative aspect-video">
+                                <img
+                                  src={video.video_thumbnail}
+                                  alt={video.video_title}
+                                  className="w-full h-full object-cover rounded-t-lg"
+                                />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                  <a
+                                    href={`https://www.youtube.com/watch?v=${video.video_id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
+                                  >
+                                    <Play className="h-6 w-6 text-primary" />
+                                  </a>
+                                </div>
+                              </div>
+                              <div className="p-3">
+                                <h4 className="font-semibold text-sm line-clamp-2 mb-1">{video.video_title}</h4>
+                                <p className="text-xs text-muted-foreground">{video.channel_title}</p>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteVideo(video.id)}
+                                  className="w-full mt-3 text-destructive hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-2" />
+                                  Remove
+                                </Button>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
+                <Video className="h-20 w-20 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No video categories yet</h3>
+              <p className="text-muted-foreground mb-6">Create categories to organize videos</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* YouTube Search Dialog */}
+      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Add Videos from YouTube</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Search YouTube..."
+                value={youtubeSearchQuery}
+                onChange={(e) => setYoutubeSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && searchYouTube()}
+              />
+              <Button onClick={searchYouTube} disabled={searchingYoutube}>
+                <Search className="h-4 w-4 mr-2" />
+                {searchingYoutube ? 'Searching...' : 'Search'}
+              </Button>
+            </div>
+
+            {youtubeResults.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {youtubeResults.map((video) => (
+                  <Card key={video.videoId} className="hover:shadow-lg transition-all duration-300">
+                    <div className="relative aspect-video">
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover rounded-t-lg"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h4>
+                      <p className="text-xs text-muted-foreground mb-3">{video.channelTitle}</p>
+                      <Button
+                        size="sm"
+                        className="w-full bg-gradient-accent hover:opacity-90"
+                        onClick={() => handleAddVideoToCategory(video)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add to Category
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {youtubeResults.length === 0 && youtubeSearchQuery && !searchingYoutube && (
+              <div className="text-center py-8 text-muted-foreground">
+                No results found. Try a different search term.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-[900px]">

@@ -176,7 +176,7 @@ const CourseMaterials = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="course" className="w-full">
+      <Tabs defaultValue="content" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger 
             value="course" 

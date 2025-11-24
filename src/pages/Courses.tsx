@@ -118,20 +118,29 @@ const Courses = () => {
 
   const getCourseTypeGradient = (courseType: string | null | undefined) => {
     if (courseType?.toLowerCase() === 'theory') {
-      return 'from-blue-400 via-blue-600 to-indigo-700';
+      return 'from-[#60a5fa] via-[#3b82f6] to-[#4338ca]';
     } else if (courseType?.toLowerCase() === 'lab') {
-      return 'from-green-400 via-emerald-600 to-teal-700';
+      return 'from-[#4ade80] via-[#10b981] to-[#14b8a6]';
     }
-    return 'from-primary via-purple-500 to-accent';
+    return 'from-primary via-[#a855f7] to-accent';
   };
 
   const getCourseTypeBadgeStyle = (courseType: string | null | undefined) => {
     if (courseType?.toLowerCase() === 'theory') {
-      return 'border-blue-400/50 shadow-blue-500/20';
+      return 'border-[#60a5fa]/50 shadow-[#3b82f6]/20';
     } else if (courseType?.toLowerCase() === 'lab') {
-      return 'border-green-400/50 shadow-green-500/20';
+      return 'border-[#4ade80]/50 shadow-[#10b981]/20';
     }
     return 'border-primary/30';
+  };
+
+  const getCourseTypeTextGradient = (courseType: string | null | undefined) => {
+    if (courseType?.toLowerCase() === 'theory') {
+      return 'from-[#2563eb] to-[#4338ca]';
+    } else if (courseType?.toLowerCase() === 'lab') {
+      return 'from-[#059669] to-[#0d9488]';
+    }
+    return 'from-primary to-accent';
   };
 
   return (
@@ -193,13 +202,7 @@ const Courses = () => {
               <div className="absolute top-4 left-4">
                 {course.course_type && (
                   <div className={`px-4 py-2 bg-background/95 backdrop-blur-md rounded-lg border-2 ${getCourseTypeBadgeStyle(course.course_type)} shadow-lg`}>
-                    <span className={`text-lg font-bold uppercase tracking-wide ${
-                      course.course_type.toLowerCase() === 'theory' 
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'
-                        : course.course_type.toLowerCase() === 'lab'
-                        ? 'bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent'
-                        : 'bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent'
-                    }`}>
+                    <span className={`text-lg font-bold uppercase tracking-wide bg-gradient-to-r ${getCourseTypeTextGradient(course.course_type)} bg-clip-text text-transparent`}>
                       {course.course_type}
                     </span>
                   </div>

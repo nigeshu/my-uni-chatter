@@ -165,9 +165,11 @@ const Courses = () => {
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
               <div className="absolute top-4 left-4">
                 {course.course_type && (
-                  <Badge className="bg-background/90 text-foreground border-border backdrop-blur-sm font-semibold">
-                    {course.course_type}
-                  </Badge>
+                  <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-lg border-2 border-primary/30 shadow-lg">
+                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      {course.course_type}
+                    </span>
+                  </div>
                 )}
               </div>
               <div className="absolute top-4 right-4">

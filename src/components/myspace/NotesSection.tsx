@@ -426,8 +426,8 @@ export const NotesSection = () => {
         </TabsContent>
 
         <TabsContent value="videos" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Categories</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Video Categories</h3>
             <Dialog open={newCategoryOpen && categoryType === 'videos'} onOpenChange={setNewCategoryOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2" onClick={() => setCategoryType('videos')}>
@@ -456,35 +456,41 @@ export const NotesSection = () => {
             </Dialog>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {categories.filter(c => c.category_type === 'videos').map((category) => (
-              <Card
-                key={category.id}
-                className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
-                onClick={() => setSelectedCategory(category)}
-              >
-                <div className="flex items-center gap-2">
-                  <Video className="h-5 w-5 text-primary" />
-                  <span className="font-medium">{category.name}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {selectedCategory && selectedCategory.category_type === 'videos' && (
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-lg font-semibold">{selectedCategory.name}</h4>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  Close
-                </Button>
+          <div className="flex gap-4 min-h-[500px]">
+            {/* Categories Sidebar */}
+            <div className="w-1/3 border-r pr-4">
+              <div className="space-y-2">
+                {categories.filter(c => c.category_type === 'videos').map((category) => (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory?.id === category.id ? "default" : "outline"}
+                    className="w-full justify-start text-left h-auto py-3 px-4"
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    <Video className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="line-clamp-2">{category.name}</span>
+                  </Button>
+                ))}
+                
+                {categories.filter(c => c.category_type === 'videos').length === 0 && (
+                  <div className="text-center py-8">
+                    <Video className="h-12 w-12 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No categories yet</p>
+                  </div>
+                )}
               </div>
-              
-              {items.length === 0 && (
+            </div>
+
+            {/* Videos Section */}
+            <div className="flex-1">
+              {!selectedCategory ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <div className="text-center">
+                    <Video className="h-12 w-12 text-muted-foreground/50 mx-auto mb-2" />
+                    <p>Select a category to view videos</p>
+                  </div>
+                </div>
+              ) : items.length === 0 ? (
                 <Card className="p-6 bg-muted/50">
                   <div className="flex items-start gap-3">
                     <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -496,39 +502,56 @@ export const NotesSection = () => {
                     </div>
                   </div>
                 </Card>
-              )}
-
-              <div className="grid gap-4">
-                {items.map((item) => (
-                  <Card key={item.id} className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h5 className="font-semibold">{item.title}</h5>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {items.map((item) => (
+                    <Card
+                      key={item.id}
+                      className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40 relative group overflow-hidden"
+                    >
+                      <div className="relative aspect-video bg-black">
                         {item.youtube_url && (
-                          <a
-                            href={item.youtube_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline mt-2 inline-block"
-                          >
-                            Watch on YouTube
-                          </a>
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${item.youtube_url.split('v=')[1] || item.youtube_url.split('/').pop()}`}
+                            title={item.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full"
+                          />
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:text-destructive"
-                        onClick={() => deleteItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                      <div className="p-3">
+                        <h5 className="font-semibold text-sm line-clamp-2 mb-2">{item.title}</h5>
+                        <div className="flex items-center justify-between">
+                          {item.youtube_url && (
+                            <a
+                              href={item.youtube_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Watch on YouTube
+                            </a>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="hover:text-destructive h-8 w-8 p-0"
+                            onClick={() => deleteItem(item.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

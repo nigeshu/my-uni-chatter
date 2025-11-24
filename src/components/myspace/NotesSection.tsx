@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, FileText, Video, Trash2, FolderPlus, Info } from 'lucide-react';
+import { Plus, BookOpen, FileText, Video, Trash2, FolderPlus, Info, Play } from 'lucide-react';
 
 interface Subject {
   id: string;
@@ -504,50 +504,67 @@ export const NotesSection = () => {
                 </Card>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  {items.map((item) => (
-                    <Card
-                      key={item.id}
-                      className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40 relative group overflow-hidden"
-                    >
-                      <div className="relative aspect-video bg-black">
-                        {item.youtube_url && (
-                          <iframe
-                            width="100%"
-                            height="100%"
-                            src={`https://www.youtube.com/embed/${item.youtube_url.split('v=')[1] || item.youtube_url.split('/').pop()}`}
-                            title={item.title}
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="w-full h-full"
-                          />
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <h5 className="font-semibold text-sm line-clamp-2 mb-2">{item.title}</h5>
-                        <div className="flex items-center justify-between">
-                          {item.youtube_url && (
+                  {items.map((item) => {
+                    // Extract video ID from YouTube URL
+                    const videoId = item.youtube_url?.includes('v=') 
+                      ? item.youtube_url.split('v=')[1]?.split('&')[0]
+                      : item.youtube_url?.split('/').pop();
+                    
+                    const thumbnailUrl = videoId 
+                      ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+                      : '';
+                    
+                    return (
+                      <Card
+                        key={item.id}
+                        className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-accent/40 relative group overflow-hidden"
+                      >
+                        <div className="relative aspect-video bg-black cursor-pointer">
+                          {thumbnailUrl && (
+                            <>
+                              <img
+                                src={thumbnailUrl}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a
+                                  href={`https://www.youtube.com/watch?v=${videoId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Play className="h-6 w-6 text-primary" />
+                                </a>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h5 className="font-semibold text-sm line-clamp-2 mb-2">{item.title}</h5>
+                          <div className="flex items-center justify-between">
                             <a
-                              href={item.youtube_url}
+                              href={`https://www.youtube.com/watch?v=${videoId}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-primary hover:underline"
                             >
                               Watch on YouTube
                             </a>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="hover:text-destructive h-8 w-8 p-0"
-                            onClick={() => deleteItem(item.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="hover:text-destructive h-8 w-8 p-0"
+                              onClick={() => deleteItem(item.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </div>

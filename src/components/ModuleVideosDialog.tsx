@@ -66,9 +66,10 @@ const ModuleVideosDialog = ({ open, onOpenChange, module }: ModuleVideosDialogPr
     setSelectedVideo(null);
     
     try {
-      const searchQuery = `${module?.heading} ${topic}`;
+      // Use exact topic name for precise search results
+      const searchQuery = topic;
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=10&key=${YOUTUBE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=10&order=relevance&relevanceLanguage=en&key=${YOUTUBE_API_KEY}`
       );
       
       if (!response.ok) {

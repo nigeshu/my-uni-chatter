@@ -22,6 +22,13 @@ interface Material {
   module_id: string | null;
 }
 
+interface PYQ {
+  id: string;
+  title: string;
+  file_url: string;
+  created_at: string;
+}
+
 interface Module {
   id: string;
   serial_no: string;
@@ -70,11 +77,16 @@ const CourseMaterials = () => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [pyqs, setPyqs] = useState<PYQ[]>([]);
+  const [currentTab, setCurrentTab] = useState<'content' | 'pyqs'>('content');
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [uploadingPyq, setUploadingPyq] = useState(false);
 
   useEffect(() => {
     if (courseId) {
       fetchCourse();
       checkEnrollment();
+      fetchUserRole();
     }
   }, [courseId]);
 
@@ -93,6 +105,19 @@ const CourseMaterials = () => {
       setCourse(data);
       setSelectedCourse(data);
     }
+  };
+
+  const fetchUserRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (data) setUserRole(data.role);
   };
 
   const checkEnrollment = async () => {
@@ -131,6 +156,7 @@ const CourseMaterials = () => {
       setEnrollment(data);
       fetchMaterials();
       fetchModules();
+      fetchPyqs();
     }
     setLoading(false);
   };
@@ -162,6 +188,110 @@ const CourseMaterials = () => {
     }
     
     if (data) setMaterials(data);
+  };
+
+  const fetchPyqs = async () => {
+    const { data, error } = await supabase
+      .from('course_pyqs')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching PYQs:', error);
+      return;
+    }
+    
+    if (data) setPyqs(data);
+  };
+
+  const handlePyqUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: 'Error',
+        description: 'Only PDF files are allowed',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingPyq(true);
+
+    try {
+      const fileExt = 'pdf';
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${courseId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course_materials')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course_materials')
+        .getPublicUrl(filePath);
+
+      const { error: insertError } = await supabase
+        .from('course_pyqs')
+        .insert({
+          course_id: courseId,
+          title: file.name.replace('.pdf', ''),
+          file_url: publicUrl,
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: 'Success',
+        description: 'PYQ uploaded successfully',
+      });
+
+      fetchPyqs();
+    } catch (error) {
+      console.error('Error uploading PYQ:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload PYQ',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingPyq(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeletePyq = async (pyqId: string, fileUrl: string) => {
+    try {
+      const filePath = fileUrl.split('/course_materials/')[1];
+      if (filePath) {
+        await supabase.storage.from('course_materials').remove([filePath]);
+      }
+
+      const { error } = await supabase
+        .from('course_pyqs')
+        .delete()
+        .eq('id', pyqId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'PYQ deleted successfully',
+      });
+
+      fetchPyqs();
+    } catch (error) {
+      console.error('Error deleting PYQ:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete PYQ',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getMaterialIcon = (type: string) => {
@@ -345,7 +475,7 @@ const CourseMaterials = () => {
         </div>
       </div>
 
-      <Tabs value="content" className="w-full">
+      <Tabs value={currentTab} onValueChange={(v) => setCurrentTab(v as 'content' | 'pyqs')} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger 
             value="course" 
@@ -358,11 +488,13 @@ const CourseMaterials = () => {
             Course Page
           </TabsTrigger>
           <TabsTrigger value="content">Course Content</TabsTrigger>
+          <TabsTrigger value="pyqs">PYQs</TabsTrigger>
         </TabsList>
       </Tabs>
 
-      <div className="space-y-6">
-        {modules.map((module) => {
+      {currentTab === 'content' && (
+        <div className="space-y-6">
+          {modules.map((module) => {
           const moduleMaterials = materials.filter(m => m.module_id === module.id);
           const isExpanded = expandedModule === module.id;
           
@@ -447,18 +579,113 @@ const CourseMaterials = () => {
           );
         })}
 
-        {modules.length === 0 && (
-          <Card>
-            <CardContent className="text-center py-16">
-              <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
-                <FileText className="h-20 w-20 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No modules available yet</h3>
-              <p className="text-muted-foreground">Check back later for course content</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+          {modules.length === 0 && (
+            <Card>
+              <CardContent className="text-center py-16">
+                <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
+                  <FileText className="h-20 w-20 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No modules available yet</h3>
+                <p className="text-muted-foreground">Check back later for course content</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {currentTab === 'pyqs' && (
+        <div className="space-y-6">
+          {userRole === 'admin' && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Upload PYQ</h3>
+                    <p className="text-sm text-muted-foreground">Add previous year question papers (PDF only)</p>
+                  </div>
+                  <Button asChild disabled={uploadingPyq}>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={handlePyqUpload}
+                        disabled={uploadingPyq}
+                      />
+                      {uploadingPyq ? 'Uploading...' : 'Upload PDF'}
+                    </label>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid gap-4">
+            {pyqs.length > 0 ? (
+              pyqs.map((pyq) => (
+                <Card key={pyq.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <FileText className="h-8 w-8 text-primary" />
+                        <div>
+                          <h4 className="font-semibold">{pyq.title}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(pyq.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setPreviewUrl(pyq.file_url);
+                            setPreviewTitle(pyq.title);
+                            setPreviewOpen(true);
+                          }}
+                        >
+                          Preview
+                        </Button>
+                        <Button
+                          size="sm"
+                          asChild
+                        >
+                          <a href={pyq.file_url} download target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </a>
+                        </Button>
+                        {userRole === 'admin' && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeletePyq(pyq.id, pyq.file_url)}
+                          >
+                            Delete
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="text-center py-16">
+                  <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl mb-4 opacity-50">
+                    <FileText className="h-20 w-20 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">No PYQs available yet</h3>
+                  <p className="text-muted-foreground">
+                    {userRole === 'admin' ? 'Upload the first PYQ using the button above' : 'Check back later for previous year questions'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-[900px]">

@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Settings } from 'lucide-react';
+import SlotManagementDialog from '@/components/SlotManagementDialog';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,8 @@ const AdminCourses = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showSlotDialog, setShowSlotDialog] = useState(false);
+  const [selectedCourseForSlots, setSelectedCourseForSlots] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -53,10 +56,8 @@ const AdminCourses = () => {
     difficulty: 'beginner',
     duration_hours: 10,
     credits: 3,
-    class_days: [] as string[],
     course_type: 'theory' as 'theory' | 'lab',
   });
-  const [classDayInput, setClassDayInput] = useState('');
 
   useEffect(() => {
     fetchCourses();
@@ -110,10 +111,8 @@ const AdminCourses = () => {
         difficulty: 'beginner',
         duration_hours: 10,
         credits: 3,
-        class_days: [],
         course_type: 'theory',
       });
-      setClassDayInput('');
       fetchCourses();
     } catch (error: any) {
       toast({
@@ -134,22 +133,9 @@ const AdminCourses = () => {
       difficulty: course.difficulty || 'beginner',
       duration_hours: course.duration_hours || 10,
       credits: course.credits || 3,
-      class_days: course.class_days || [],
       course_type: (course as any).course_type || 'theory',
     });
-    setClassDayInput('');
     setShowDialog(true);
-  };
-
-  const addClassDay = () => {
-    if (classDayInput.trim() && !formData.class_days.includes(classDayInput.trim())) {
-      setFormData({ ...formData, class_days: [...formData.class_days, classDayInput.trim()] });
-      setClassDayInput('');
-    }
-  };
-
-  const removeClassDay = (day: string) => {
-    setFormData({ ...formData, class_days: formData.class_days.filter(d => d !== day) });
   };
 
   const handleDelete = async (courseId: string) => {
@@ -229,10 +215,8 @@ const AdminCourses = () => {
                   difficulty: 'beginner',
                   duration_hours: 10,
                   credits: 3,
-                  class_days: [],
                   course_type: 'theory',
                 });
-                setClassDayInput('');
               }}
             >
               <Plus className="mr-2 h-5 w-5" />
@@ -351,42 +335,6 @@ const AdminCourses = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="class_days">Class Days</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="class_days"
-                    placeholder="e.g., Monday, Wednesday, Friday"
-                    value={classDayInput}
-                    onChange={(e) => setClassDayInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addClassDay();
-                      }
-                    }}
-                  />
-                  <Button type="button" variant="outline" onClick={addClassDay}>
-                    Add
-                  </Button>
-                </div>
-                {formData.class_days.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.class_days.map((day, index) => (
-                      <Badge key={index} variant="secondary" className="px-3 py-1">
-                        {day}
-                        <button
-                          type="button"
-                          onClick={() => removeClassDay(day)}
-                          className="ml-2 text-xs hover:text-destructive"
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               <div className="flex gap-3 pt-4">
                 <Button type="submit" disabled={loading} className="flex-1 bg-gradient-accent hover:opacity-90">
@@ -457,6 +405,20 @@ const AdminCourses = () => {
                     </>
                   )}
                 </Button>
+                {(course as any).course_type?.toLowerCase() === 'theory' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCourseForSlots(course.id);
+                      setShowSlotDialog(true);
+                    }}
+                    title="Manage Slots"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -494,6 +456,15 @@ const AdminCourses = () => {
             Create your first course to get started
           </p>
         </div>
+      )}
+
+      {/* Slot Management Dialog */}
+      {selectedCourseForSlots && (
+        <SlotManagementDialog
+          courseId={selectedCourseForSlots}
+          open={showSlotDialog}
+          onOpenChange={setShowSlotDialog}
+        />
       )}
     </div>
   );

@@ -338,6 +338,41 @@ export type Database = {
           },
         ]
       }
+      course_slots: {
+        Row: {
+          course_id: string
+          created_at: string
+          days: string[]
+          id: string
+          slot_name: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          days: string[]
+          id?: string
+          slot_name: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          days?: string[]
+          id?: string
+          slot_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_slots_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_video_categories: {
         Row: {
           course_id: string
@@ -514,6 +549,8 @@ export type Database = {
           enrolled_at: string
           id: string
           progress: number | null
+          selected_lab_days: string[] | null
+          selected_slot_id: string | null
           student_id: string
         }
         Insert: {
@@ -522,6 +559,8 @@ export type Database = {
           enrolled_at?: string
           id?: string
           progress?: number | null
+          selected_lab_days?: string[] | null
+          selected_slot_id?: string | null
           student_id: string
         }
         Update: {
@@ -530,6 +569,8 @@ export type Database = {
           enrolled_at?: string
           id?: string
           progress?: number | null
+          selected_lab_days?: string[] | null
+          selected_slot_id?: string | null
           student_id?: string
         }
         Relationships: [
@@ -538,6 +579,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_selected_slot_id_fkey"
+            columns: ["selected_slot_id"]
+            isOneToOne: false
+            referencedRelation: "course_slots"
             referencedColumns: ["id"]
           },
           {

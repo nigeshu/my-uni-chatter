@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/supabase';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths, isBefore, isAfter, isSameMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths, isBefore, isAfter, isSameMonth, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -180,9 +180,11 @@ const Calendar = () => {
     const isHoliday = dayStatuses[dateStr] || false;
     const isCurrentMonth = isSameMonth(date, currentMonth);
     const inRange = isDateInRange(date);
+    const isToday = isSameDay(date, new Date());
     
     return cn(
       'aspect-square p-2 rounded-xl transition-all duration-300 border-2 flex flex-col items-center justify-center relative overflow-hidden',
+      isToday && 'ring-4 ring-blue-500 ring-offset-2 ring-offset-background',
       inRange && isHoliday 
         ? 'bg-gradient-to-br from-emerald-500/30 to-green-600/30 border-emerald-400/60 shadow-md' 
         : inRange && !isHoliday

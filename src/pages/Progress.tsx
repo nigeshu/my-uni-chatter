@@ -468,6 +468,30 @@ const Progress = () => {
     return cat1 + cat2 + da1 + da2 + da3;
   };
 
+  const getTheoryStatus = (mark: Partial<CourseMark>) => {
+    const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark);
+    const fatMark = mark.theory_fat || 0;
+    const total = calculateTheoryTotal(mark);
+
+    // Failed If Total < 50 Or FAT Marks Between (1-39)
+    if (total < 50 || (fatMark >= 1 && fatMark < 40)) {
+      return { status: 'Failed', color: 'bg-red-500/10 border-red-500/20', textColor: 'text-red-600 dark:text-red-400' };
+    }
+    
+    // FAT Pass Needed If Marks Out Of 60 Excluding FAT And FAT Mark is 0 or Not Entered
+    if (totalExcludingFAT >= 50 && fatMark === 0) {
+      return { status: 'FAT Pass Needed', color: 'bg-yellow-500/10 border-yellow-500/20', textColor: 'text-yellow-600 dark:text-yellow-400' };
+    }
+    
+    // Passed If (Marks Out Of 60 Excluding FAT + Fat Marks) >= 50 AND Fat Marks > 40
+    if (total >= 50 && fatMark > 40) {
+      return { status: 'Passed', color: 'bg-green-500/10 border-green-500/20', textColor: 'text-green-600 dark:text-green-400' };
+    }
+
+    // Default case - show pending or in progress
+    return { status: 'Pending', color: 'bg-gray-500/10 border-gray-500/20', textColor: 'text-gray-600 dark:text-gray-400' };
+  };
+
   const preventNegative = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === '-' || e.key === 'e' || e.key === 'E') {
       e.preventDefault();
@@ -955,45 +979,18 @@ const Progress = () => {
                               </div>
                             </div>
                             {(() => {
-                              const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark || {});
-                              const fatMark = mark?.theory_fat || 0;
-                              const total = calculateTheoryTotal(mark || {});
+                              const theoryStatus = getTheoryStatus(mark || {});
                               
-                              // If internals >= 50 but FAT not yet 40
-                              if (totalExcludingFAT >= 50 && fatMark < 40) {
-                                return (
-                                  <>
-                                    <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                                      <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-                                        ⚠️ Status: FAT Pass Needed
-                                      </p>
-                                    </div>
-                                    <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                                      <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-                                        You just need 40 out of 100 in FAT to get passed
-                                      </p>
-                                    </div>
-                                  </>
-                                );
-                              }
-                              
-                              // If total < 50
-                              if (total < 50) {
-                                return (
-                                  <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                                    <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                      ⚠️ Failed! You need {getMarksNeededToPass(total, false)} more marks to pass (minimum 50/100 required)
-                                    </p>
-                                  </div>
-                                );
-                              }
-                              
-                              // If passed (total >= 50 and FAT >= 40)
                               return (
-                                <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                    ✓ Passed! Great work!
+                                <div className={`p-3 rounded-lg border ${theoryStatus.color}`}>
+                                  <p className={`text-sm font-medium ${theoryStatus.textColor}`}>
+                                    ⚠️ Status: {theoryStatus.status}
                                   </p>
+                                  {theoryStatus.status === 'FAT Pass Needed' && (
+                                    <p className={`text-xs mt-1 ${theoryStatus.textColor}`}>
+                                      You just need 40 out of 100 in FAT to get passed
+                                    </p>
+                                  )}
                                 </div>
                               );
                             })()}
@@ -1083,6 +1080,7 @@ const Progress = () => {
                           const course = enrollment.course;
                           const mark = courseMarks[course.id];
                           const total = calculateTheoryTotal(mark || {});
+                          const theoryStatus = getTheoryStatus(mark || {});
 
                           return (
                             <tr key={enrollment.id} className="border-b hover:bg-muted/50 transition-colors">
@@ -1095,15 +1093,9 @@ const Progress = () => {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                {total < 50 ? (
-                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium">
-                                    ⚠️ Need {getMarksNeededToPass(total, false)} more to pass
-                                  </div>
-                                ) : (
-                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium">
-                                    ✓ Passed
-                                  </div>
-                                )}
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theoryStatus.color} ${theoryStatus.textColor} text-sm font-medium`}>
+                                  {theoryStatus.status === 'Passed' && '✓'} {theoryStatus.status}
+                                </div>
                               </td>
                             </tr>
                           );

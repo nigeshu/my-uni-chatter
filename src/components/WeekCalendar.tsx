@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, isSameDay } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { ArrowDown } from 'lucide-react';
 
 interface WeekCalendarProps {
   isAdmin: boolean;
@@ -103,20 +104,27 @@ export const WeekCalendar = ({ isAdmin }: WeekCalendarProps) => {
       </CardHeader>
       <CardContent className="pb-6">
         <div className="grid grid-cols-7 gap-2">
-          {dates.map((date) => (
-            <div
-              key={date.toISOString()}
-              onClick={() => isAdmin && toggleDayStatus(date)}
-              className={getDayClassName(date)}
-            >
-              <span className="text-xs font-medium mb-1">
-                {format(date, 'EEE')}
-              </span>
-              <span className="text-lg font-bold">
-                {format(date, 'd')}
-              </span>
-            </div>
-          ))}
+          {dates.map((date) => {
+            const isToday = isSameDay(date, today);
+            return (
+              <div key={date.toISOString()} className="flex flex-col items-center">
+                {isToday && (
+                  <ArrowDown className="h-4 w-4 text-primary animate-bounce mb-1" />
+                )}
+                <div
+                  onClick={() => isAdmin && toggleDayStatus(date)}
+                  className={`${getDayClassName(date)} ${isToday ? 'ring-2 ring-primary' : ''}`}
+                >
+                  <span className="text-xs font-medium mb-1">
+                    {format(date, 'EEE')}
+                  </span>
+                  <span className="text-lg font-bold">
+                    {format(date, 'd')}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
         <p className="text-xs text-muted-foreground text-center mt-4">
           {isAdmin 

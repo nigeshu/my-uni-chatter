@@ -528,24 +528,50 @@ const Progress = () => {
                     <Label>Credits</Label>
                     <Input
                       type="number"
-                      step="0.1"
-                      min="0"
+                      step="0.5"
+                      min="0.5"
                       value={newSemester.credits}
                       onKeyDown={preventNegative}
-                      onChange={(e) => setNewSemester({ ...newSemester, credits: e.target.value })}
-                      placeholder="e.g., 20"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNewSemester({ ...newSemester, credits: value });
+                      }}
+                      onBlur={(e) => {
+                        const value = parseFloat(e.target.value);
+                        // Round to nearest 0.5 on blur if invalid
+                        if (isNaN(value) || value < 0.5) {
+                          setNewSemester({ ...newSemester, credits: '0.5' });
+                        } else if (value % 0.5 !== 0) {
+                          const rounded = Math.round(value * 2) / 2;
+                          setNewSemester({ ...newSemester, credits: rounded.toString() });
+                        }
+                      }}
+                      placeholder="e.g., 3 or 3.5"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Graded Credits</Label>
                     <Input
                       type="number"
-                      step="0.1"
+                      step="0.5"
                       min="0"
                       value={newSemester.gradedCredits}
                       onKeyDown={preventNegative}
-                      onChange={(e) => setNewSemester({ ...newSemester, gradedCredits: e.target.value })}
-                      placeholder="e.g., 18"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNewSemester({ ...newSemester, gradedCredits: value });
+                      }}
+                      onBlur={(e) => {
+                        const value = parseFloat(e.target.value);
+                        // Round to nearest 0.5 on blur if invalid
+                        if (isNaN(value) || value < 0) {
+                          setNewSemester({ ...newSemester, gradedCredits: '0' });
+                        } else if (value % 0.5 !== 0) {
+                          const rounded = Math.round(value * 2) / 2;
+                          setNewSemester({ ...newSemester, gradedCredits: rounded.toString() });
+                        }
+                      }}
+                      placeholder="e.g., 3 or 3.5"
                     />
                   </div>
                   <div className="space-y-2">
@@ -634,24 +660,52 @@ const Progress = () => {
                     <Label>Credits</Label>
                     <Input
                       type="number"
-                      step="0.1"
-                      min="0"
+                      step="0.5"
+                      min="0.5"
                       value={editingSemester.credits}
                       onKeyDown={preventNegative}
-                      onChange={(e) => setEditingSemester({ ...editingSemester, credits: ensurePositive(e.target.value) })}
-                      placeholder="e.g., 20"
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (!isNaN(value)) {
+                          setEditingSemester({ ...editingSemester, credits: value });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const value = parseFloat(e.target.value);
+                        // Round to nearest 0.5 on blur if invalid
+                        if (isNaN(value) || value < 0.5) {
+                          setEditingSemester({ ...editingSemester, credits: 0.5 });
+                        } else if (value % 0.5 !== 0) {
+                          setEditingSemester({ ...editingSemester, credits: Math.round(value * 2) / 2 });
+                        }
+                      }}
+                      placeholder="e.g., 3 or 3.5"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Graded Credits</Label>
                     <Input
                       type="number"
-                      step="0.1"
+                      step="0.5"
                       min="0"
                       value={editingSemester.graded_credits}
                       onKeyDown={preventNegative}
-                      onChange={(e) => setEditingSemester({ ...editingSemester, graded_credits: ensurePositive(e.target.value) })}
-                      placeholder="e.g., 18"
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (!isNaN(value) && value >= 0) {
+                          setEditingSemester({ ...editingSemester, graded_credits: value });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const value = parseFloat(e.target.value);
+                        // Round to nearest 0.5 on blur if invalid
+                        if (isNaN(value) || value < 0) {
+                          setEditingSemester({ ...editingSemester, graded_credits: 0 });
+                        } else if (value % 0.5 !== 0) {
+                          setEditingSemester({ ...editingSemester, graded_credits: Math.round(value * 2) / 2 });
+                        }
+                      }}
+                      placeholder="e.g., 3 or 3.5"
                     />
                   </div>
                   <div className="space-y-2">

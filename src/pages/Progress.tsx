@@ -1075,9 +1075,10 @@ const Progress = () => {
                               </div>
                             </div>
 
-                            {/* Marks Needed if total < 50 */}
+                            {/* Marks Needed if total < 50, Status if >= 50 */}
                             {(() => {
                               const total = calculateTheoryTotal(mark || {});
+                              
                               if (total < 50) {
                                 const marksNeeded = 50 - total;
                                 return (
@@ -1088,10 +1089,8 @@ const Progress = () => {
                                   </div>
                                 );
                               }
-                              return null;
-                            })()}
-
-                            {(() => {
+                              
+                              // Only show status if total >= 50
                               const theoryStatus = getTheoryStatus(mark || {});
                               
                               return (
@@ -1206,9 +1205,15 @@ const Progress = () => {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theoryStatus.color} ${theoryStatus.textColor} text-sm font-medium`}>
-                                  {theoryStatus.status === 'Passed' && '✓'} {theoryStatus.status}
-                                </div>
+                                {total < 50 ? (
+                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium border border-purple-500/20">
+                                    Marks Needed: {(50 - total).toFixed(2)}
+                                  </div>
+                                ) : (
+                                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theoryStatus.color} ${theoryStatus.textColor} text-sm font-medium`}>
+                                    {theoryStatus.status === 'Passed' && '✓'} {theoryStatus.status}
+                                  </div>
+                                )}
                               </td>
                             </tr>
                           );

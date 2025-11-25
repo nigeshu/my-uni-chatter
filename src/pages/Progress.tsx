@@ -900,7 +900,7 @@ const Progress = () => {
                             ) : (
                               <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                                 <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                  ✓ Passed! You just need 40 out of 100 in FAT to get passed
+                                  ✓ Passed!
                                 </p>
                               </div>
                             )}

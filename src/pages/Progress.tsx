@@ -459,6 +459,15 @@ const Progress = () => {
     return cat1 + cat2 + da1 + da2 + da3 + fat;
   };
 
+  const calculateTheoryTotalExcludingFAT = (mark: Partial<CourseMark>) => {
+    const cat1 = ((mark.cat1_mark || 0) / 50) * 15;
+    const cat2 = ((mark.cat2_mark || 0) / 50) * 15;
+    const da1 = mark.da1_mark || 0;
+    const da2 = mark.da2_mark || 0;
+    const da3 = mark.da3_mark || 0;
+    return cat1 + cat2 + da1 + da2 + da3;
+  };
+
   const preventNegative = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === '-' || e.key === 'e' || e.key === 'E') {
       e.preventDefault();
@@ -945,19 +954,49 @@ const Progress = () => {
                                 <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
                               </div>
                             </div>
-                            {calculateTheoryTotal(mark || {}) < 50 ? (
-                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateTheoryTotal(mark || {}), false)} more marks to pass (minimum 50/100 required)
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                  ✓ Passed! You just need 40 out of 100 in FAT to get passed
-                                </p>
-                              </div>
-                            )}
+                            {(() => {
+                              const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark || {});
+                              const fatMark = mark?.theory_fat || 0;
+                              const total = calculateTheoryTotal(mark || {});
+                              
+                              // If internals >= 50 but FAT not yet 40
+                              if (totalExcludingFAT >= 50 && fatMark < 40) {
+                                return (
+                                  <>
+                                    <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                                      <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                                        ⚠️ Status: FAT Pass Needed
+                                      </p>
+                                    </div>
+                                    <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                                      <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                                        You just need 40 out of 100 in FAT to get passed
+                                      </p>
+                                    </div>
+                                  </>
+                                );
+                              }
+                              
+                              // If total < 50
+                              if (total < 50) {
+                                return (
+                                  <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                    <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                      ⚠️ Failed! You need {getMarksNeededToPass(total, false)} more marks to pass (minimum 50/100 required)
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              
+                              // If passed (total >= 50 and FAT >= 40)
+                              return (
+                                <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                    ✓ Passed! Great work!
+                                  </p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

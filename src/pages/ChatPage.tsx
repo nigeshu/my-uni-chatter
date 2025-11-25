@@ -6,7 +6,8 @@ import FriendsList from '@/components/FriendsList';
 import ChatWindow from '@/components/ChatWindow';
 import AddFriendDialog from '@/components/AddFriendDialog';
 import { Button } from '@/components/ui/button';
-import { UserPlus, MessageSquare } from 'lucide-react';
+import { UserPlus, MessageSquare, Menu, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Profile {
   id: string;
@@ -17,9 +18,11 @@ interface Profile {
 
 const ChatPage = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
   const [showAddFriend, setShowAddFriend] = useState(false);
+  const [showFriendsList, setShowFriendsList] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -38,9 +41,21 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="h-full flex animate-fade-in">
+    <div className="h-full flex animate-fade-in relative">
+      {/* Mobile Toggle Button */}
+      {isMobile && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-50 md:hidden"
+          onClick={() => setShowFriendsList(!showFriendsList)}
+        >
+          {showFriendsList ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+      )}
+
       {/* Friends Sidebar */}
-      <div className="w-80 border-r border-border flex flex-col bg-card">
+      <div className={`${isMobile ? (showFriendsList ? 'absolute inset-y-0 left-0 z-40' : 'hidden') : ''} w-80 border-r border-border flex flex-col bg-card`}>
         {/* Header */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-4">

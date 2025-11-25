@@ -543,8 +543,13 @@ const DashboardHome = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-gradient-accent">
+                  <div className="p-2 rounded-lg bg-gradient-accent relative">
                     <MessageSquare className="h-5 w-5 text-white" />
+                    {alerts.messages.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        {alerts.messages.length}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <div className="text-xl font-bold">Admin Messages</div>

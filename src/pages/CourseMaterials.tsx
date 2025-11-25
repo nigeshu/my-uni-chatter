@@ -78,6 +78,11 @@ const CourseMaterials = () => {
     }
   }, [courseId]);
 
+  const sortDays = (days: string[]): string[] => {
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return [...days].sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+  };
+
   const fetchCourse = async () => {
     const { data } = await supabase
       .from('courses')
@@ -114,6 +119,15 @@ const CourseMaterials = () => {
 
     if (data) {
       setIsEnrolled(true);
+      
+      // Sort days before setting enrollment
+      if (data.course_slots && (data.course_slots as any).days) {
+        (data.course_slots as any).days = sortDays((data.course_slots as any).days);
+      }
+      if (data.selected_lab_days) {
+        data.selected_lab_days = sortDays(data.selected_lab_days);
+      }
+      
       setEnrollment(data);
       fetchMaterials();
       fetchModules();

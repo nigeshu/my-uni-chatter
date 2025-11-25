@@ -112,32 +112,33 @@ const Query = () => {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
             Query
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
             Ask questions and get help from admin
           </p>
         </div>
         
-        <Button onClick={() => setShowNewQueryDialog(true)} className="gap-2">
+        <Button onClick={() => setShowNewQueryDialog(true)} className="gap-2 w-full sm:w-auto">
           <Plus className="h-4 w-4" />
-          Request New Query
+          <span className="hidden sm:inline">Request New Query</span>
+          <span className="sm:hidden">New Query</span>
         </Button>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {queries.length === 0 ? (
           <Card className="border-0 shadow-lg">
-            <CardContent className="py-16 text-center">
-              <div className="p-8 bg-gradient-primary rounded-full inline-block shadow-xl mb-6">
-                <MessageSquare className="h-20 w-20 text-white" />
+            <CardContent className="py-12 sm:py-16 text-center px-4">
+              <div className="p-6 sm:p-8 bg-gradient-primary rounded-full inline-block shadow-xl mb-4 sm:mb-6">
+                <MessageSquare className="h-16 sm:h-20 w-16 sm:w-20 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">No Queries Yet</h2>
-              <p className="text-muted-foreground text-lg mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-2">No Queries Yet</h2>
+              <p className="text-muted-foreground text-base sm:text-lg mb-4 sm:mb-6">
                 Submit your first query to get help from admin
               </p>
               <Button onClick={() => setShowNewQueryDialog(true)} className="gap-2">

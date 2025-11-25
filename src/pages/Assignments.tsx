@@ -341,13 +341,14 @@ const Assignments = () => {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
             Assignments
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
             {isAdmin ? 'Manage course assignments' : 'View and complete your assignments'}
           </p>
         </div>
@@ -361,7 +362,7 @@ const Assignments = () => {
                   Post Assignment
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
+              <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create New Assignment</DialogTitle>
                   <DialogDescription>
@@ -427,37 +428,38 @@ const Assignments = () => {
               </DialogContent>
             </Dialog>
           ) : (
-            <Button onClick={() => setShowRequestDialog(true)} variant="outline" className="gap-2">
+            <Button onClick={() => setShowRequestDialog(true)} variant="outline" className="gap-2 w-full sm:w-auto">
               <FileText className="h-4 w-4" />
-              New Assignment Info
+              <span className="hidden sm:inline">New Assignment Info</span>
+              <span className="sm:hidden">New Info</span>
             </Button>
           )}
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-32">
+        <div className="flex items-center justify-center py-16 sm:py-32">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
             <p className="text-muted-foreground">Loading assignments...</p>
           </div>
         </div>
       ) : assignments.length === 0 ? (
-        <div className="flex items-center justify-center py-32">
+        <div className="flex items-center justify-center py-16 sm:py-32">
           <div className="text-center space-y-4">
-            <div className="p-8 bg-gradient-accent rounded-full inline-block shadow-xl">
-              <BookOpen className="h-20 w-20 text-white" />
+            <div className="p-6 sm:p-8 bg-gradient-accent rounded-full inline-block shadow-xl">
+              <BookOpen className="h-16 sm:h-20 w-16 sm:w-20 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold mb-2">No Assignments Yet</h2>
-              <p className="text-muted-foreground text-lg">
+              <h2 className="text-xl sm:text-2xl font-bold mb-2">No Assignments Yet</h2>
+              <p className="text-muted-foreground text-base sm:text-lg px-4">
                 {isAdmin ? 'Create your first assignment to get started' : 'No assignments have been posted yet'}
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {assignments.map((assignment) => {
             const daysUntilDue = getDaysUntilDue(assignment.due_date);
             const isCompleted = isAssignmentCompleted(assignment);

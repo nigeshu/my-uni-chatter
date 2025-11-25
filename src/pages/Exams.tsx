@@ -92,50 +92,54 @@ const Exams = () => {
   };
 
   const renderExamTable = (categoryExams: Exam[], categoryName: string) => (
-    <Card key={categoryName} className="p-6 hover:shadow-lg transition-shadow animate-fade-in">
-      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent w-fit px-2 py-1">
+    <Card key={categoryName} className="p-4 sm:p-6 hover:shadow-lg transition-shadow animate-fade-in">
+      <h3 className="text-base sm:text-lg font-semibold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent w-fit px-2 py-1">
         {categoryName}
       </h3>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Course Name</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Exam Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {categoryExams.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
-                No exams scheduled
-              </TableCell>
-            </TableRow>
-          ) : (
-            categoryExams.map((exam) => (
-              <TableRow
-                key={exam.id}
-                className="cursor-pointer hover:bg-accent/50 transition-colors"
-                onClick={() => setSelectedExam(exam)}
-              >
-                <TableCell className="font-medium">{exam.course_name}</TableCell>
-                <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      isPast(new Date(exam.exam_date))
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    }`}
-                  >
-                    {getExamStatus(exam.exam_date)}
-                  </span>
-                </TableCell>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="whitespace-nowrap">Course Name</TableHead>
+                <TableHead className="whitespace-nowrap">Date</TableHead>
+                <TableHead className="whitespace-nowrap">Exam Status</TableHead>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {categoryExams.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                    No exams scheduled
+                  </TableCell>
+                </TableRow>
+              ) : (
+                categoryExams.map((exam) => (
+                  <TableRow
+                    key={exam.id}
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setSelectedExam(exam)}
+                  >
+                    <TableCell className="font-medium whitespace-nowrap">{exam.course_name}</TableCell>
+                    <TableCell className="whitespace-nowrap">{format(new Date(exam.exam_date), "PPP")}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap inline-block ${
+                          isPast(new Date(exam.exam_date))
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        }`}
+                      >
+                        {getExamStatus(exam.exam_date)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </Card>
   );
 
@@ -190,14 +194,16 @@ const Exams = () => {
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Exams</h1>
-        <p className="text-muted-foreground">View your upcoming exams and portions</p>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Exams</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">View your upcoming exams and portions</p>
+        </div>
       </div>
 
       {/* Tab Switcher with Liquid Hover */}
-      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit relative">
+      <div className="flex gap-1 sm:gap-2 p-1 bg-muted rounded-lg w-full sm:w-fit relative overflow-x-auto">
         <div 
           className="absolute top-1 bottom-1 bg-primary rounded-md transition-all duration-300 ease-in-out"
           style={{

@@ -752,124 +752,123 @@ const AdminCourseMaterials = () => {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogTrigger asChild>
-            <Button
-              size="lg"
-              className="bg-gradient-accent hover:opacity-90"
-              onClick={() => {
-                setEditingMaterial(null);
-                setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: 'none' });
-              }}
-            >
-              <Plus className="mr-2 h-5 w-5" />
-              Add Material
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>{editingMaterial ? 'Edit Material' : 'Add New Material'}</DialogTitle>
-            </DialogHeader>
+        <DialogTrigger asChild>
+          <Button
+            size="lg"
+            className="bg-gradient-accent hover:opacity-90"
+            onClick={() => {
+              setEditingMaterial(null);
+              setFormData({ title: '', description: '', file_url: '', material_type: 'document', module_id: 'none' });
+            }}
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Add Material
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{editingMaterial ? 'Edit Material' : 'Add New Material'}</DialogTitle>
+          </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  placeholder="Material title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                placeholder="Material title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Material description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Material description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type">Material Type</Label>
-                <Select
-                  value={formData.material_type}
-                  onValueChange={(value) => setFormData({ ...formData, material_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="document">Document</SelectItem>
-                    <SelectItem value="file">File</SelectItem>
-                    <SelectItem value="link">Link</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Material Type</Label>
+              <Select
+                value={formData.material_type}
+                onValueChange={(value) => setFormData({ ...formData, material_type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="file">File</SelectItem>
+                  <SelectItem value="link">Link</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="file">Upload File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedFile(file);
-                    }
-                  }}
-                />
-                {selectedFile && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Selected: {selectedFile.name}
-                  </p>
-                )}
-                <div className="text-sm text-muted-foreground mt-2">Or</div>
-                <Label htmlFor="file_url">File URL</Label>
-                <Input
-                  id="file_url"
-                  placeholder="https://..."
-                  value={formData.file_url}
-                  onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="file">Upload File</Label>
+              <Input
+                id="file"
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                  }
+                }}
+              />
+              {selectedFile && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Selected: {selectedFile.name}
+                </p>
+              )}
+              <div className="text-sm text-muted-foreground mt-2">Or</div>
+              <Label htmlFor="file_url">File URL</Label>
+              <Input
+                id="file_url"
+                placeholder="https://..."
+                value={formData.file_url}
+                onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="module">Module (Optional)</Label>
-                <Select
-                  value={formData.module_id}
-                  onValueChange={(value) => setFormData({ ...formData, module_id: value === 'none' ? '' : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a module" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No Module</SelectItem>
-                    {modules.map((module) => (
-                      <SelectItem key={module.id} value={module.id}>
-                        {module.heading ? `${module.heading} - ` : ''}{module.serial_no} - {module.topic}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="module">Module (Optional)</Label>
+              <Select
+                value={formData.module_id}
+                onValueChange={(value) => setFormData({ ...formData, module_id: value === 'none' ? '' : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a module" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Module</SelectItem>
+                  {modules.map((module) => (
+                    <SelectItem key={module.id} value={module.id}>
+                      {module.heading ? `${module.heading} - ` : ''}{module.serial_no} - {module.topic}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={loading || uploadingFile} className="flex-1 bg-gradient-accent hover:opacity-90">
-                  {uploadingFile ? 'Uploading...' : loading ? 'Saving...' : editingMaterial ? 'Update Material' : 'Add Material'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setShowDialog(false)} disabled={loading}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            <div className="flex gap-3 pt-4">
+              <Button type="submit" disabled={loading || uploadingFile} className="flex-1 bg-gradient-accent hover:opacity-90">
+                {uploadingFile ? 'Uploading...' : loading ? 'Saving...' : editingMaterial ? 'Update Material' : 'Add Material'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)} disabled={loading}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="course" className="w-full">
         <TabsList className="mb-6">
@@ -898,10 +897,10 @@ const AdminCourseMaterials = () => {
               <DialogTrigger asChild>
                 <Button
                   className="bg-gradient-accent hover:opacity-90"
-                onClick={() => {
-                  setEditingModule(null);
-                  setModuleFormData({ serial_no: '', topic: '', heading: '' });
-                }}
+                  onClick={() => {
+                    setEditingModule(null);
+                    setModuleFormData({ serial_no: '', topic: '', heading: '' });
+                  }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Module

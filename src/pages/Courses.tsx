@@ -37,6 +37,7 @@ interface Course {
   isCompleted?: boolean;
   enrollmentId?: string;
   enrollmentDays?: string[];
+  slotName?: string;
 }
 
 const Courses = () => {
@@ -86,6 +87,7 @@ const Courses = () => {
           selected_slot_id,
           selected_lab_days,
           course_slots!enrollments_selected_slot_id_fkey (
+            slot_name,
             days
           )
         `)
@@ -99,9 +101,11 @@ const Courses = () => {
       const coursesWithEnrollment = publishedCourses.map(course => {
         const enrollment = enrollments?.find(e => e.course_id === course.id);
         let enrollmentDays: string[] = [];
+        let slotName: string | undefined;
         
         if (enrollment && enrollment.course_slots) {
           enrollmentDays = (enrollment.course_slots as any).days || [];
+          slotName = (enrollment.course_slots as any).slot_name;
         }
         
         return {
@@ -110,6 +114,7 @@ const Courses = () => {
           isCompleted: completedIds.has(course.id),
           enrollmentId: enrollment?.id,
           enrollmentDays,
+          slotName,
         };
       });
 
@@ -293,6 +298,12 @@ const Courses = () => {
                     <span className={`text-lg font-bold uppercase tracking-wide bg-gradient-to-r ${getCourseTypeTextGradient(course.course_type)} bg-clip-text text-transparent`}>
                       {course.course_type}
                     </span>
+                  </div>
+                )}
+                {/* Slot Name Badge */}
+                {course.slotName && (
+                  <div className="px-3 py-1.5 rounded-full bg-background/95 backdrop-blur-md border border-border shadow-md">
+                    <span className="text-xs font-semibold">{course.slotName}</span>
                   </div>
                 )}
                 {/* Credits Circle Badge */}

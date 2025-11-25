@@ -164,6 +164,7 @@ const DashboardHome = () => {
         *,
         course:courses(*),
         course_slots!enrollments_selected_slot_id_fkey (
+          slot_name,
           days
         )
       `)
@@ -172,17 +173,20 @@ const DashboardHome = () => {
       .limit(3);
 
     if (data) {
-      // Add enrollment days to each course
+      // Add enrollment days and slot name to each course
       const coursesWithDays = data.map(enrollment => {
         let enrollmentDays: string[] = [];
+        let slotName: string | undefined;
         
         if (enrollment.course_slots) {
           enrollmentDays = (enrollment.course_slots as any).days || [];
+          slotName = (enrollment.course_slots as any).slot_name;
         }
         
         return {
           ...enrollment,
           enrollmentDays,
+          slotName,
         };
       });
       

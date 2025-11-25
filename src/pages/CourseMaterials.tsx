@@ -163,15 +163,47 @@ const CourseMaterials = () => {
 
   return (
     <div className="p-8 space-y-8 animate-fade-in">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/courses')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-4xl font-bold">
-            {course?.title}
-          </h1>
-          <p className="text-muted-foreground text-lg">Course Content</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/courses')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-4xl font-bold">
+              {course?.title}
+            </h1>
+            <p className="text-muted-foreground text-lg">Course Content</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          {course?.credits && (
+            <div className="px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-muted-foreground">Credits:</span>
+                <span className="text-lg font-bold text-primary">{course.credits}</span>
+              </div>
+            </div>
+          )}
+          
+          {course?.class_days && course.class_days.length > 0 && (
+            <div className="px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-muted-foreground">Class Days:</span>
+                <div className="flex gap-1.5">
+                  {course.class_days.map((day, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-0.5 bg-primary/10 rounded-full text-xs font-semibold text-primary border border-primary/20"
+                    >
+                      {day}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

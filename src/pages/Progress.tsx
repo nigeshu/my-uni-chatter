@@ -775,7 +775,7 @@ const Progress = () => {
             </TabsList>
 
             <TabsContent value="lab">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {enrolledCourses
                   .filter((enrollment) => enrollment.course.course_type === 'lab')
                   .map((enrollment) => {
@@ -856,7 +856,7 @@ const Progress = () => {
             </TabsContent>
 
             <TabsContent value="theory">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {enrolledCourses
                   .filter((enrollment) => enrollment.course.course_type === 'theory')
                   .map((enrollment) => {

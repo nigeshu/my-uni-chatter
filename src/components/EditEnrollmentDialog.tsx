@@ -47,12 +47,8 @@ const EditEnrollmentDialog = ({ enrollment, open, onOpenChange, onSuccess }: Edi
 
   useEffect(() => {
     if (open && enrollment) {
-      if (enrollment.course.course_type?.toLowerCase() === 'theory') {
-        fetchSlots();
-        setSelectedSlotId(enrollment.selected_slot_id || '');
-      } else if (enrollment.course.course_type?.toLowerCase() === 'lab') {
-        setSelectedLabDays(enrollment.selected_lab_days || []);
-      }
+      fetchSlots();
+      setSelectedSlotId(enrollment.selected_slot_id || '');
     }
   }, [open, enrollment]);
 
@@ -71,22 +67,10 @@ const EditEnrollmentDialog = ({ enrollment, open, onOpenChange, onSuccess }: Edi
   const handleSave = async () => {
     if (!enrollment) return;
 
-    const isTheory = enrollment.course.course_type?.toLowerCase() === 'theory';
-    const isLab = enrollment.course.course_type?.toLowerCase() === 'lab';
-
-    if (isTheory && !selectedSlotId) {
+    if (!selectedSlotId) {
       toast({
         title: 'Error',
         description: 'Please select a slot',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (isLab && selectedLabDays.length === 0) {
-      toast({
-        title: 'Error',
-        description: 'Please select at least one lab day',
         variant: 'destructive',
       });
       return;
@@ -96,8 +80,8 @@ const EditEnrollmentDialog = ({ enrollment, open, onOpenChange, onSuccess }: Edi
     const { error } = await supabase
       .from('enrollments')
       .update({
-        selected_slot_id: isTheory ? selectedSlotId : null,
-        selected_lab_days: isLab ? selectedLabDays : null,
+        selected_slot_id: selectedSlotId,
+        selected_lab_days: null,
       })
       .eq('id', enrollment.id);
 
@@ -118,14 +102,6 @@ const EditEnrollmentDialog = ({ enrollment, open, onOpenChange, onSuccess }: Edi
     setLoading(false);
   };
 
-  const toggleLabDay = (day: string) => {
-    setSelectedLabDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const isTheory = enrollment?.course.course_type?.toLowerCase() === 'theory';
-  const isLab = enrollment?.course.course_type?.toLowerCase() === 'lab';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,69 +109,44 @@ const EditEnrollmentDialog = ({ enrollment, open, onOpenChange, onSuccess }: Edi
         <DialogHeader>
           <DialogTitle>Edit Enrollment - {enrollment?.course.title}</DialogTitle>
           <DialogDescription>
-            {isTheory && 'Update your slot selection'}
-            {isLab && 'Update your lab days'}
+            Update your slot selection
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {isTheory && (
-            <>
-              {slots.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No slots available
-                </p>
-              ) : (
-                <RadioGroup value={selectedSlotId} onValueChange={setSelectedSlotId}>
-                  <div className="space-y-3">
-                    {slots.map((slot) => (
-                      <div key={slot.id} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <RadioGroupItem value={slot.id} id={slot.id} />
-                        <Label htmlFor={slot.id} className="flex-1 cursor-pointer">
-                          <div className="space-y-1">
-                            <p className="font-semibold">{slot.slot_name}</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {slot.days.map((day, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {day}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </Label>
+          {slots.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No slots available
+            </p>
+          ) : (
+            <RadioGroup value={selectedSlotId} onValueChange={setSelectedSlotId}>
+              <div className="space-y-3">
+                {slots.map((slot) => (
+                  <div key={slot.id} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <RadioGroupItem value={slot.id} id={slot.id} />
+                    <Label htmlFor={slot.id} className="flex-1 cursor-pointer">
+                      <div className="space-y-1">
+                        <p className="font-semibold">{slot.slot_name}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {slot.days.map((day, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {day}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </RadioGroup>
-              )}
-            </>
-          )}
-
-          {isLab && (
-            <div className="space-y-3">
-              <Label>Select Lab Days</Label>
-              <div className="space-y-2">
-                {WEEKDAYS.map((day) => (
-                  <div key={day} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <Checkbox
-                      id={`lab-${day}`}
-                      checked={selectedLabDays.includes(day)}
-                      onCheckedChange={() => toggleLabDay(day)}
-                    />
-                    <Label htmlFor={`lab-${day}`} className="cursor-pointer flex-1">
-                      {day}
                     </Label>
                   </div>
                 ))}
               </div>
-            </div>
+            </RadioGroup>
           )}
         </div>
 
         <div className="flex gap-3">
           <Button
             onClick={handleSave}
-            disabled={loading || (isTheory && !selectedSlotId) || (isLab && selectedLabDays.length === 0)}
+            disabled={loading || !selectedSlotId}
             className="flex-1"
           >
             {loading ? 'Saving...' : 'Save Changes'}

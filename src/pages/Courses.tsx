@@ -100,12 +100,8 @@ const Courses = () => {
         const enrollment = enrollments?.find(e => e.course_id === course.id);
         let enrollmentDays: string[] = [];
         
-        if (enrollment) {
-          if (course.course_type?.toLowerCase() === 'theory' && enrollment.course_slots) {
-            enrollmentDays = (enrollment.course_slots as any).days || [];
-          } else if (course.course_type?.toLowerCase() === 'lab') {
-            enrollmentDays = enrollment.selected_lab_days || [];
-          }
+        if (enrollment && enrollment.course_slots) {
+          enrollmentDays = (enrollment.course_slots as any).days || [];
         }
         
         return {

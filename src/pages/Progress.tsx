@@ -468,6 +468,36 @@ const Progress = () => {
     return cat1 + cat2 + da1 + da2 + da3;
   };
 
+  const getTheoryMarksLost = (mark: Partial<CourseMark>) => {
+    const total = calculateTheoryTotal(mark);
+    return 100 - total;
+  };
+
+  const getTheoryMaximumPossible = (mark: Partial<CourseMark>) => {
+    const currentTotal = calculateTheoryTotal(mark);
+    
+    // Calculate what's already earned from each component
+    const cat1Earned = ((mark.cat1_mark || 0) / 50) * 15;
+    const cat2Earned = ((mark.cat2_mark || 0) / 50) * 15;
+    const da1Earned = mark.da1_mark || 0;
+    const da2Earned = mark.da2_mark || 0;
+    const da3Earned = mark.da3_mark || 0;
+    const fatEarned = ((mark.theory_fat || 0) / 100) * 40;
+
+    // Calculate remaining potential from incomplete components
+    let remainingPotential = 0;
+    
+    // If component is 0, assume it's not done yet and can get full marks
+    if ((mark.cat1_mark || 0) === 0) remainingPotential += 15;
+    if ((mark.cat2_mark || 0) === 0) remainingPotential += 15;
+    if ((mark.da1_mark || 0) === 0) remainingPotential += 10;
+    if ((mark.da2_mark || 0) === 0) remainingPotential += 10;
+    if ((mark.da3_mark || 0) === 0) remainingPotential += 10;
+    if ((mark.theory_fat || 0) === 0) remainingPotential += 40;
+
+    return currentTotal + remainingPotential;
+  };
+
   const getTheoryStatus = (mark: Partial<CourseMark>) => {
     const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark);
     const fatMark = mark.theory_fat || 0;
@@ -978,6 +1008,23 @@ const Progress = () => {
                                 <span className="text-xl font-bold">{calculateTheoryTotal(mark || {}).toFixed(2)}</span>
                               </div>
                             </div>
+                            
+                            {/* Marks Lost and Maximum Possible */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mb-1">Marks Lost</p>
+                                <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                                  {getTheoryMarksLost(mark || {}).toFixed(2)}
+                                </p>
+                              </div>
+                              <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Max Possible</p>
+                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                  {getTheoryMaximumPossible(mark || {}).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
                             {(() => {
                               const theoryStatus = getTheoryStatus(mark || {});
                               

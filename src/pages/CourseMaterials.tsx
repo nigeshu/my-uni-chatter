@@ -38,6 +38,17 @@ interface Course {
   duration_hours: number;
   credits?: number;
   class_days?: string[];
+  course_type?: string;
+}
+
+interface Enrollment {
+  id: string;
+  selected_slot_id: string | null;
+  selected_lab_days: string[] | null;
+  course_slots?: {
+    slot_name: string;
+    days: string[];
+  };
 }
 
 const CourseMaterials = () => {
@@ -48,6 +59,7 @@ const CourseMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -69,7 +81,7 @@ const CourseMaterials = () => {
   const fetchCourse = async () => {
     const { data } = await supabase
       .from('courses')
-      .select('*')
+      .select('*, course_type')
       .eq('id', courseId)
       .single();
     if (data) {
@@ -87,13 +99,22 @@ const CourseMaterials = () => {
 
     const { data } = await supabase
       .from('enrollments')
-      .select('id')
+      .select(`
+        id,
+        selected_slot_id,
+        selected_lab_days,
+        course_slots (
+          slot_name,
+          days
+        )
+      `)
       .eq('course_id', courseId)
       .eq('student_id', user.id)
       .single();
 
     if (data) {
       setIsEnrolled(true);
+      setEnrollment(data);
       fetchMaterials();
       fetchModules();
     }
@@ -230,7 +251,7 @@ const CourseMaterials = () => {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-wrap">
           {course?.credits && (
             <div className="w-full sm:w-auto px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
               <div className="flex items-center gap-2">
@@ -241,7 +262,56 @@ const CourseMaterials = () => {
             </div>
           )}
           
-          {course?.class_days && course.class_days.length > 0 && (
+          {/* Display slot name for Theory courses */}
+          {course?.course_type === 'theory' && enrollment?.course_slots?.slot_name && (
+            <div className="w-full sm:w-auto px-4 py-2 bg-primary/10 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-muted-foreground">Slot:</span>
+                <span className="text-sm font-bold text-primary">{enrollment.course_slots.slot_name}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Display slot days for Theory courses */}
+          {course?.course_type === 'theory' && enrollment?.course_slots?.days && enrollment.course_slots.days.length > 0 && (
+            <div className="w-full sm:w-auto px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">Class Days:</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {enrollment.course_slots.days.map((day, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-0.5 bg-primary/10 rounded-full text-xs font-semibold text-primary border border-primary/20"
+                    >
+                      {day}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Display selected lab days for Lab courses */}
+          {course?.course_type === 'lab' && enrollment?.selected_lab_days && enrollment.selected_lab_days.length > 0 && (
+            <div className="w-full sm:w-auto px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">Lab Days:</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {enrollment.selected_lab_days.map((day, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-0.5 bg-primary/10 rounded-full text-xs font-semibold text-primary border border-primary/20"
+                    >
+                      {day}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fallback: Display course class_days if no enrollment-specific days */}
+          {!enrollment?.course_slots?.days && !enrollment?.selected_lab_days && course?.class_days && course.class_days.length > 0 && (
             <div className="w-full sm:w-auto px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">Class Days:</span>

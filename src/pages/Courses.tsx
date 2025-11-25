@@ -199,11 +199,19 @@ const Courses = () => {
             <div className={`h-48 bg-gradient-to-br ${getCourseTypeGradient(course.course_type)} relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}>
               <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/10 group-hover:from-black/30 transition-colors" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-              <div className="absolute top-4 left-4">
+              <div className="absolute top-4 left-4 flex items-center gap-2">
                 {course.course_type && (
                   <div className={`px-4 py-2 bg-background/95 backdrop-blur-md rounded-lg border-2 ${getCourseTypeBadgeStyle(course.course_type)} shadow-lg`}>
                     <span className={`text-lg font-bold uppercase tracking-wide bg-gradient-to-r ${getCourseTypeTextGradient(course.course_type)} bg-clip-text text-transparent`}>
                       {course.course_type}
+                    </span>
+                  </div>
+                )}
+                {/* Credits Circle Badge */}
+                {course.credits && (
+                  <div className="w-12 h-12 rounded-full bg-background/95 backdrop-blur-md border-2 border-primary/30 shadow-lg flex items-center justify-center">
+                    <span className="text-sm font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      {course.credits}C
                     </span>
                   </div>
                 )}
@@ -212,19 +220,6 @@ const Courses = () => {
                 <Badge className={getDifficultyColor(course.difficulty || 'beginner')}>
                   {course.difficulty || 'Beginner'}
                 </Badge>
-              </div>
-              
-              {/* Credits - Bottom Left */}
-              <div className="absolute bottom-4 left-4">
-                <div className="px-3 py-2 bg-background/95 backdrop-blur-md rounded-lg border border-primary/30 shadow-lg">
-                  <div className="flex items-center gap-1.5">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                      {course.credits || 0}
-                    </span>
-                    <span className="text-xs font-semibold text-muted-foreground">Credits</span>
-                  </div>
-                </div>
               </div>
               
               {/* Class Days - Bottom Right */}

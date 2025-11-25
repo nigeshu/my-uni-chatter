@@ -374,16 +374,18 @@ const Progress = () => {
     
     if (!course) return;
 
-    // Clamp values to their maximum limits
+    // Clamp values to their maximum limits (skip clamping for -1 which means absent)
     let clampedValue = value;
-    if (field === 'lab_internals' && value > 60) clampedValue = 60;
-    if (field === 'lab_fat' && value > 50) clampedValue = 50;
-    if (field === 'cat1_mark' && value > 50) clampedValue = 50;
-    if (field === 'cat2_mark' && value > 50) clampedValue = 50;
-    if (field === 'da1_mark' && value > 10) clampedValue = 10;
-    if (field === 'da2_mark' && value > 10) clampedValue = 10;
-    if (field === 'da3_mark' && value > 10) clampedValue = 10;
-    if (field === 'theory_fat' && value > 100) clampedValue = 100;
+    if (value !== -1) {
+      if (field === 'lab_internals' && value > 60) clampedValue = 60;
+      if (field === 'lab_fat' && value > 50) clampedValue = 50;
+      if (field === 'cat1_mark' && value > 50) clampedValue = 50;
+      if (field === 'cat2_mark' && value > 50) clampedValue = 50;
+      if (field === 'da1_mark' && value > 10) clampedValue = 10;
+      if (field === 'da2_mark' && value > 10) clampedValue = 10;
+      if (field === 'da3_mark' && value > 10) clampedValue = 10;
+      if (field === 'theory_fat' && value > 100) clampedValue = 100;
+    }
 
     const updatedMark = {
       ...(currentMark || {}),
@@ -420,8 +422,9 @@ const Progress = () => {
   };
 
   const calculateLabTotal = (mark: Partial<CourseMark>) => {
-    const internals = mark.lab_internals || 0;
-    const fat = mark.lab_fat || 0;
+    // Treat -1 (absent) as 0
+    const internals = mark.lab_internals === -1 ? 0 : (mark.lab_internals || 0);
+    const fat = mark.lab_fat === -1 ? 0 : (mark.lab_fat || 0);
     const fatWeighted = (fat / 50) * 40;
     return internals + fatWeighted;
   };
@@ -450,61 +453,70 @@ const Progress = () => {
   };
 
   const calculateTheoryTotal = (mark: Partial<CourseMark>) => {
-    const cat1 = ((mark.cat1_mark || 0) / 50) * 15;
-    const cat2 = ((mark.cat2_mark || 0) / 50) * 15;
-    const da1 = mark.da1_mark || 0;
-    const da2 = mark.da2_mark || 0;
-    const da3 = mark.da3_mark || 0;
-    const fat = ((mark.theory_fat || 0) / 100) * 40;
-    return cat1 + cat2 + da1 + da2 + da3 + fat;
+    // Treat -1 (absent) as 0
+    const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
+    const cat2 = mark.cat2_mark === -1 ? 0 : (mark.cat2_mark || 0);
+    const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
+    const da2 = mark.da2_mark === -1 ? 0 : (mark.da2_mark || 0);
+    const da3 = mark.da3_mark === -1 ? 0 : (mark.da3_mark || 0);
+    const fat = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
+    
+    const cat1Weighted = (cat1 / 50) * 15;
+    const cat2Weighted = (cat2 / 50) * 15;
+    const fatWeighted = (fat / 100) * 40;
+    return cat1Weighted + cat2Weighted + da1 + da2 + da3 + fatWeighted;
   };
 
   const calculateTheoryTotalExcludingFAT = (mark: Partial<CourseMark>) => {
-    const cat1 = ((mark.cat1_mark || 0) / 50) * 15;
-    const cat2 = ((mark.cat2_mark || 0) / 50) * 15;
-    const da1 = mark.da1_mark || 0;
-    const da2 = mark.da2_mark || 0;
-    const da3 = mark.da3_mark || 0;
-    return cat1 + cat2 + da1 + da2 + da3;
+    // Treat -1 (absent) as 0
+    const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
+    const cat2 = mark.cat2_mark === -1 ? 0 : (mark.cat2_mark || 0);
+    const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
+    const da2 = mark.da2_mark === -1 ? 0 : (mark.da2_mark || 0);
+    const da3 = mark.da3_mark === -1 ? 0 : (mark.da3_mark || 0);
+    
+    const cat1Weighted = (cat1 / 50) * 15;
+    const cat2Weighted = (cat2 / 50) * 15;
+    return cat1Weighted + cat2Weighted + da1 + da2 + da3;
   };
 
   const getTheoryMarksLost = (mark: Partial<CourseMark>) => {
     let marksLost = 0;
     
-    // Only calculate marks lost from ENTERED components (non-zero values)
+    // Only calculate marks lost from ENTERED components (non-zero values and not absent)
     // For each entered component, calculate: (max weightage) - (earned weightage)
     
-    if ((mark.cat1_mark || 0) > 0) {
+    if ((mark.cat1_mark || 0) > 0 && mark.cat1_mark !== -1) {
       const maxWeightage = 15;
       const earnedWeightage = ((mark.cat1_mark || 0) / 50) * 15;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.cat2_mark || 0) > 0) {
+    if ((mark.cat2_mark || 0) > 0 && mark.cat2_mark !== -1) {
       const maxWeightage = 15;
       const earnedWeightage = ((mark.cat2_mark || 0) / 50) * 15;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.da1_mark || 0) > 0) {
+    if ((mark.da1_mark || 0) > 0 && mark.da1_mark !== -1) {
       const maxWeightage = 10;
       const earnedWeightage = mark.da1_mark || 0;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.da2_mark || 0) > 0) {
+    if ((mark.da2_mark || 0) > 0 && mark.da2_mark !== -1) {
       const maxWeightage = 10;
       const earnedWeightage = mark.da2_mark || 0;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.da3_mark || 0) > 0) {
+    if ((mark.da3_mark || 0) > 0 && mark.da3_mark !== -1) {
       const maxWeightage = 10;
       const earnedWeightage = mark.da3_mark || 0;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.theory_fat || 0) > 0) {
+    if ((mark.theory_fat || 0) > 0 && mark.theory_fat !== -1) {
       const maxWeightage = 40;
       const earnedWeightage = ((mark.theory_fat || 0) / 100) * 40;
       marksLost += (maxWeightage - earnedWeightage);
@@ -516,31 +528,38 @@ const Progress = () => {
   const getTheoryMaximumPossible = (mark: Partial<CourseMark>) => {
     const currentTotal = calculateTheoryTotal(mark);
     
-    // Calculate what's already earned from each component
-    const cat1Earned = ((mark.cat1_mark || 0) / 50) * 15;
-    const cat2Earned = ((mark.cat2_mark || 0) / 50) * 15;
-    const da1Earned = mark.da1_mark || 0;
-    const da2Earned = mark.da2_mark || 0;
-    const da3Earned = mark.da3_mark || 0;
-    const fatEarned = ((mark.theory_fat || 0) / 100) * 40;
+    // Calculate what's already earned from each component (treat -1 as 0)
+    const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
+    const cat2 = mark.cat2_mark === -1 ? 0 : (mark.cat2_mark || 0);
+    const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
+    const da2 = mark.da2_mark === -1 ? 0 : (mark.da2_mark || 0);
+    const da3 = mark.da3_mark === -1 ? 0 : (mark.da3_mark || 0);
+    const fat = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
+    
+    const cat1Earned = (cat1 / 50) * 15;
+    const cat2Earned = (cat2 / 50) * 15;
+    const da1Earned = da1;
+    const da2Earned = da2;
+    const da3Earned = da3;
+    const fatEarned = (fat / 100) * 40;
 
     // Calculate remaining potential from incomplete components
     let remainingPotential = 0;
     
-    // If component is 0, assume it's not done yet and can get full marks
-    if ((mark.cat1_mark || 0) === 0) remainingPotential += 15;
-    if ((mark.cat2_mark || 0) === 0) remainingPotential += 15;
-    if ((mark.da1_mark || 0) === 0) remainingPotential += 10;
-    if ((mark.da2_mark || 0) === 0) remainingPotential += 10;
-    if ((mark.da3_mark || 0) === 0) remainingPotential += 10;
-    if ((mark.theory_fat || 0) === 0) remainingPotential += 40;
+    // If component is 0 or absent, assume it's not done yet and can get full marks
+    if (cat1 === 0) remainingPotential += 15;
+    if (cat2 === 0) remainingPotential += 15;
+    if (da1 === 0) remainingPotential += 10;
+    if (da2 === 0) remainingPotential += 10;
+    if (da3 === 0) remainingPotential += 10;
+    if (fat === 0) remainingPotential += 40;
 
     return currentTotal + remainingPotential;
   };
 
   const getTheoryStatus = (mark: Partial<CourseMark>) => {
     const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark);
-    const fatMark = mark.theory_fat || 0;
+    const fatMark = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
     const total = calculateTheoryTotal(mark);
 
     // If FAT not entered yet (0) and current total < 50, show how much needed in FAT
@@ -903,28 +922,58 @@ const Progress = () => {
                             Lab
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>Internals (out of 60)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="60"
-                              value={mark?.lab_internals || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'lab_internals', clampValue(e.target.value, 60))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="60"
+                                value={mark?.lab_internals === -1 ? '' : (mark?.lab_internals || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'lab_internals', clampValue(e.target.value, 60))}
+                                placeholder={mark?.lab_internals === -1 ? 'Absent' : ''}
+                                className={mark?.lab_internals === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'lab_internals', mark?.lab_internals === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.lab_internals === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label>FAT (out of 50)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="50"
-                              value={mark?.lab_fat || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', clampValue(e.target.value, 50))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="50"
+                                value={mark?.lab_fat === -1 ? '' : (mark?.lab_fat || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'lab_fat', clampValue(e.target.value, 50))}
+                                placeholder={mark?.lab_fat === -1 ? 'Absent' : ''}
+                                className={mark?.lab_fat === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'lab_fat', mark?.lab_fat === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.lab_fat === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="col-span-2 space-y-3">
                             <div className="p-3 bg-muted/50 rounded-lg border">
@@ -987,69 +1036,159 @@ const Progress = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>CAT 1 (out of 50)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="50"
-                              value={mark?.cat1_mark || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'cat1_mark', clampValue(e.target.value, 50))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="50"
+                                value={mark?.cat1_mark === -1 ? '' : (mark?.cat1_mark || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'cat1_mark', clampValue(e.target.value, 50))}
+                                placeholder={mark?.cat1_mark === -1 ? 'Absent' : ''}
+                                className={mark?.cat1_mark === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'cat1_mark', mark?.cat1_mark === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.cat1_mark === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label>CAT 2 (out of 50)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="50"
-                              value={mark?.cat2_mark || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'cat2_mark', clampValue(e.target.value, 50))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="50"
+                                value={mark?.cat2_mark === -1 ? '' : (mark?.cat2_mark || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'cat2_mark', clampValue(e.target.value, 50))}
+                                placeholder={mark?.cat2_mark === -1 ? 'Absent' : ''}
+                                className={mark?.cat2_mark === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'cat2_mark', mark?.cat2_mark === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.cat2_mark === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label>DA 1 (out of 10)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="10"
-                              value={mark?.da1_mark || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'da1_mark', clampValue(e.target.value, 10))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="10"
+                                value={mark?.da1_mark === -1 ? '' : (mark?.da1_mark || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'da1_mark', clampValue(e.target.value, 10))}
+                                placeholder={mark?.da1_mark === -1 ? 'Absent' : ''}
+                                className={mark?.da1_mark === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'da1_mark', mark?.da1_mark === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.da1_mark === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label>DA 2 (out of 10)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="10"
-                              value={mark?.da2_mark || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'da2_mark', clampValue(e.target.value, 10))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="10"
+                                value={mark?.da2_mark === -1 ? '' : (mark?.da2_mark || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'da2_mark', clampValue(e.target.value, 10))}
+                                placeholder={mark?.da2_mark === -1 ? 'Absent' : ''}
+                                className={mark?.da2_mark === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'da2_mark', mark?.da2_mark === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.da2_mark === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label>DA 3 (out of 10)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="10"
-                              value={mark?.da3_mark || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'da3_mark', clampValue(e.target.value, 10))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="10"
+                                value={mark?.da3_mark === -1 ? '' : (mark?.da3_mark || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'da3_mark', clampValue(e.target.value, 10))}
+                                placeholder={mark?.da3_mark === -1 ? 'Absent' : ''}
+                                className={mark?.da3_mark === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'da3_mark', mark?.da3_mark === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.da3_mark === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <Label>FAT (out of 100)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={mark?.theory_fat || ''}
-                              onKeyDown={preventNegative}
-                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', clampValue(e.target.value, 100))}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={mark?.theory_fat === -1 ? '' : (mark?.theory_fat || '')}
+                                onKeyDown={preventNegative}
+                                onChange={(e) => handleMarkChange(course.id, 'theory_fat', clampValue(e.target.value, 100))}
+                                placeholder={mark?.theory_fat === -1 ? 'Absent' : ''}
+                                className={mark?.theory_fat === -1 ? 'pr-10' : ''}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMarkChange(course.id, 'theory_fat', mark?.theory_fat === -1 ? 0 : -1)}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                  mark?.theory_fat === -1 
+                                    ? 'bg-red-500 text-white' 
+                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
+                                }`}
+                              >
+                                A
+                              </button>
+                            </div>
                           </div>
                           <div className="col-span-2 space-y-3">
                             <div className="p-3 bg-muted/50 rounded-lg border">

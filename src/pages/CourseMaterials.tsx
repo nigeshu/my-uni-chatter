@@ -176,9 +176,9 @@ const CourseMaterials = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           {course?.credits && (
-            <div className="px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+            <div className="w-full sm:w-auto px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold text-muted-foreground">Credits:</span>
@@ -188,10 +188,10 @@ const CourseMaterials = () => {
           )}
           
           {course?.class_days && course.class_days.length > 0 && (
-            <div className="px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-muted-foreground">Class Days:</span>
-                <div className="flex gap-1.5">
+            <div className="w-full sm:w-auto px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">Class Days:</span>
+                <div className="flex gap-1.5 flex-wrap">
                   {course.class_days.map((day, index) => (
                     <span
                       key={index}

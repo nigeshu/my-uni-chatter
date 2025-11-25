@@ -422,9 +422,9 @@ const Progress = () => {
   };
 
   const calculateLabTotal = (mark: Partial<CourseMark>) => {
-    // Treat -1 (absent) as 0
+    // Treat -1 (absent) as 0 for lab_internals only
     const internals = mark.lab_internals === -1 ? 0 : (mark.lab_internals || 0);
-    const fat = mark.lab_fat === -1 ? 0 : (mark.lab_fat || 0);
+    const fat = mark.lab_fat || 0;
     const fatWeighted = (fat / 50) * 40;
     return internals + fatWeighted;
   };
@@ -453,13 +453,13 @@ const Progress = () => {
   };
 
   const calculateTheoryTotal = (mark: Partial<CourseMark>) => {
-    // Treat -1 (absent) as 0
+    // Treat -1 (absent) as 0 for non-FAT components only
     const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
     const cat2 = mark.cat2_mark === -1 ? 0 : (mark.cat2_mark || 0);
     const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
     const da2 = mark.da2_mark === -1 ? 0 : (mark.da2_mark || 0);
     const da3 = mark.da3_mark === -1 ? 0 : (mark.da3_mark || 0);
-    const fat = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
+    const fat = mark.theory_fat || 0;
     
     const cat1Weighted = (cat1 / 50) * 15;
     const cat2Weighted = (cat2 / 50) * 15;
@@ -468,7 +468,7 @@ const Progress = () => {
   };
 
   const calculateTheoryTotalExcludingFAT = (mark: Partial<CourseMark>) => {
-    // Treat -1 (absent) as 0
+    // Treat -1 (absent) as 0 for non-FAT components only
     const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
     const cat2 = mark.cat2_mark === -1 ? 0 : (mark.cat2_mark || 0);
     const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
@@ -483,7 +483,7 @@ const Progress = () => {
   const getTheoryMarksLost = (mark: Partial<CourseMark>) => {
     let marksLost = 0;
     
-    // For absent components (-1), add full weightage to marks lost
+    // For absent components (-1), add full weightage to marks lost (except FAT)
     // For entered components (>0), calculate actual marks lost
     
     if (mark.cat1_mark === -1) {
@@ -526,9 +526,8 @@ const Progress = () => {
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if (mark.theory_fat === -1) {
-      marksLost += 40; // Full weightage lost if absent
-    } else if ((mark.theory_fat || 0) > 0) {
+    // FAT: No absent option, just calculate normally
+    if ((mark.theory_fat || 0) > 0) {
       const maxWeightage = 40;
       const earnedWeightage = ((mark.theory_fat || 0) / 100) * 40;
       marksLost += (maxWeightage - earnedWeightage);
@@ -541,7 +540,7 @@ const Progress = () => {
     const currentTotal = calculateTheoryTotal(mark);
     
     // Calculate remaining potential only from components that are 0 (not entered)
-    // Absent components (-1) do NOT contribute to remaining potential
+    // Absent components (-1) do NOT contribute to remaining potential (except FAT which has no absent)
     let remainingPotential = 0;
     
     const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
@@ -549,7 +548,7 @@ const Progress = () => {
     const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
     const da2 = mark.da2_mark === -1 ? 0 : (mark.da2_mark || 0);
     const da3 = mark.da3_mark === -1 ? 0 : (mark.da3_mark || 0);
-    const fat = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
+    const fat = mark.theory_fat || 0;
     
     // Only add to remaining potential if component is truly not entered (0), not absent (-1)
     if (cat1 === 0 && mark.cat1_mark !== -1) remainingPotential += 15;
@@ -557,17 +556,13 @@ const Progress = () => {
     if (da1 === 0 && mark.da1_mark !== -1) remainingPotential += 10;
     if (da2 === 0 && mark.da2_mark !== -1) remainingPotential += 10;
     if (da3 === 0 && mark.da3_mark !== -1) remainingPotential += 10;
-    if (fat === 0 && mark.theory_fat !== -1) remainingPotential += 40;
+    // FAT has no absent option, so if it's 0, it can still get full marks
+    if (fat === 0) remainingPotential += 40;
 
     return currentTotal + remainingPotential;
   };
 
   const getTheoryStatus = (mark: Partial<CourseMark>) => {
-    // If FAT is marked as Absent, immediately return Failed
-    if (mark.theory_fat === -1) {
-      return { status: 'Failed', color: 'bg-red-500/10 border-red-500/20', textColor: 'text-red-600 dark:text-red-400' };
-    }
-    
     const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark);
     const fatMark = mark.theory_fat || 0;
     const total = calculateTheoryTotal(mark);
@@ -961,29 +956,14 @@ const Progress = () => {
                           </div>
                           <div className="space-y-2">
                             <Label>FAT (out of 50)</Label>
-                            <div className="relative">
-                              <Input
-                                type="number"
-                                min="0"
-                                max="50"
-                                value={mark?.lab_fat === -1 ? '' : (mark?.lab_fat || '')}
-                                onKeyDown={preventNegative}
-                                onChange={(e) => handleMarkChange(course.id, 'lab_fat', clampValue(e.target.value, 50))}
-                                placeholder={mark?.lab_fat === -1 ? 'Absent' : ''}
-                                className={mark?.lab_fat === -1 ? 'pr-10' : ''}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleMarkChange(course.id, 'lab_fat', mark?.lab_fat === -1 ? 0 : -1)}
-                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                                  mark?.lab_fat === -1 
-                                    ? 'bg-red-500 text-white' 
-                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
-                                }`}
-                              >
-                                A
-                              </button>
-                            </div>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="50"
+                              value={mark?.lab_fat || ''}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'lab_fat', clampValue(e.target.value, 50))}
+                            />
                           </div>
                           <div className="col-span-2 space-y-3">
                             <div className="p-3 bg-muted/50 rounded-lg border">
@@ -1176,29 +1156,14 @@ const Progress = () => {
                           </div>
                           <div className="space-y-2">
                             <Label>FAT (out of 100)</Label>
-                            <div className="relative">
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={mark?.theory_fat === -1 ? '' : (mark?.theory_fat || '')}
-                                onKeyDown={preventNegative}
-                                onChange={(e) => handleMarkChange(course.id, 'theory_fat', clampValue(e.target.value, 100))}
-                                placeholder={mark?.theory_fat === -1 ? 'Absent' : ''}
-                                className={mark?.theory_fat === -1 ? 'pr-10' : ''}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleMarkChange(course.id, 'theory_fat', mark?.theory_fat === -1 ? 0 : -1)}
-                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                                  mark?.theory_fat === -1 
-                                    ? 'bg-red-500 text-white' 
-                                    : 'bg-muted hover:bg-red-500/20 text-muted-foreground hover:text-red-500'
-                                }`}
-                              >
-                                A
-                              </button>
-                            </div>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={mark?.theory_fat || ''}
+                              onKeyDown={preventNegative}
+                              onChange={(e) => handleMarkChange(course.id, 'theory_fat', clampValue(e.target.value, 100))}
+                            />
                           </div>
                           <div className="col-span-2 space-y-3">
                             <div className="p-3 bg-muted/50 rounded-lg border">

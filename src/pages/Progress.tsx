@@ -469,8 +469,48 @@ const Progress = () => {
   };
 
   const getTheoryMarksLost = (mark: Partial<CourseMark>) => {
-    const total = calculateTheoryTotal(mark);
-    return 100 - total;
+    let marksLost = 0;
+    
+    // Only calculate marks lost from ENTERED components (non-zero values)
+    // For each entered component, calculate: (max weightage) - (earned weightage)
+    
+    if ((mark.cat1_mark || 0) > 0) {
+      const maxWeightage = 15;
+      const earnedWeightage = ((mark.cat1_mark || 0) / 50) * 15;
+      marksLost += (maxWeightage - earnedWeightage);
+    }
+    
+    if ((mark.cat2_mark || 0) > 0) {
+      const maxWeightage = 15;
+      const earnedWeightage = ((mark.cat2_mark || 0) / 50) * 15;
+      marksLost += (maxWeightage - earnedWeightage);
+    }
+    
+    if ((mark.da1_mark || 0) > 0) {
+      const maxWeightage = 10;
+      const earnedWeightage = mark.da1_mark || 0;
+      marksLost += (maxWeightage - earnedWeightage);
+    }
+    
+    if ((mark.da2_mark || 0) > 0) {
+      const maxWeightage = 10;
+      const earnedWeightage = mark.da2_mark || 0;
+      marksLost += (maxWeightage - earnedWeightage);
+    }
+    
+    if ((mark.da3_mark || 0) > 0) {
+      const maxWeightage = 10;
+      const earnedWeightage = mark.da3_mark || 0;
+      marksLost += (maxWeightage - earnedWeightage);
+    }
+    
+    if ((mark.theory_fat || 0) > 0) {
+      const maxWeightage = 40;
+      const earnedWeightage = ((mark.theory_fat || 0) / 100) * 40;
+      marksLost += (maxWeightage - earnedWeightage);
+    }
+    
+    return marksLost;
   };
 
   const getTheoryMaximumPossible = (mark: Partial<CourseMark>) => {
@@ -1034,6 +1074,22 @@ const Progress = () => {
                                 </p>
                               </div>
                             </div>
+
+                            {/* Marks Needed if total < 50 */}
+                            {(() => {
+                              const total = calculateTheoryTotal(mark || {});
+                              if (total < 50) {
+                                const marksNeeded = 50 - total;
+                                return (
+                                  <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                                    <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                                      Marks Needed: {marksNeeded.toFixed(2)}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
 
                             {(() => {
                               const theoryStatus = getTheoryStatus(mark || {});

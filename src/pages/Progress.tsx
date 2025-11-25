@@ -503,6 +503,16 @@ const Progress = () => {
     const fatMark = mark.theory_fat || 0;
     const total = calculateTheoryTotal(mark);
 
+    // If FAT not entered yet (0) and current total < 50, show how much needed in FAT
+    if (fatMark === 0 && total < 50) {
+      const neededInFAT = ((50 - totalExcludingFAT) / 40) * 100;
+      return { 
+        status: `Need ${neededInFAT.toFixed(2)}/100 in FAT to reach 50`, 
+        color: 'bg-orange-500/10 border-orange-500/20', 
+        textColor: 'text-orange-600 dark:text-orange-400' 
+      };
+    }
+
     // Failed If Total < 50 Or FAT Marks Between (1-39)
     if (total < 50 || (fatMark >= 1 && fatMark < 40)) {
       return { status: 'Failed', color: 'bg-red-500/10 border-red-500/20', textColor: 'text-red-600 dark:text-red-400' };

@@ -216,25 +216,25 @@ const AdminExams = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Course Name</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Portions</TableHead>
-            <TableHead className="w-[120px]">Actions</TableHead>
+            <TableHead className="text-base">Course Name</TableHead>
+            <TableHead className="text-base">Date</TableHead>
+            <TableHead className="text-base">Portions</TableHead>
+            <TableHead className="w-[120px] text-base">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {categoryExams.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground">
+              <TableCell colSpan={4} className="text-center text-muted-foreground text-base">
                 No exams scheduled
               </TableCell>
             </TableRow>
           ) : (
             categoryExams.map((exam) => (
               <TableRow key={exam.id} className="hover:bg-accent/50 transition-colors">
-                <TableCell className="font-medium">{exam.course_name}</TableCell>
-                <TableCell>{format(new Date(exam.exam_date), "PPP")}</TableCell>
-                <TableCell className="max-w-md truncate">{exam.portions}</TableCell>
+                <TableCell className="font-medium text-base">{exam.course_name}</TableCell>
+                <TableCell className="text-base">{format(new Date(exam.exam_date), "PPP")}</TableCell>
+                <TableCell className="max-w-md truncate text-base">{exam.portions}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button

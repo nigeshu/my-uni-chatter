@@ -216,13 +216,13 @@ const Courses = () => {
               
               {/* Credits - Bottom Left */}
               <div className="absolute bottom-4 left-4">
-                <div className="px-5 py-3 bg-background/95 backdrop-blur-md rounded-xl border-2 border-primary/30 shadow-lg">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <div className="px-3 py-2 bg-background/95 backdrop-blur-md rounded-lg border border-primary/30 shadow-lg">
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                       {course.credits || 0}
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">Credits</span>
+                    <span className="text-xs font-semibold text-muted-foreground">Credits</span>
                   </div>
                 </div>
               </div>

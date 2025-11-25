@@ -7,9 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, TrendingUp, Search, Upload } from 'lucide-react';
+import { BookOpen, TrendingUp, Search, Upload, Filter } from 'lucide-react';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import ShareDocumentDialog from '@/components/ShareDocumentDialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Course {
   id: string;
@@ -38,6 +45,15 @@ const Courses = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [filterDay, setFilterDay] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
+
+  // Get unique class days from all courses
+  const allClassDays = Array.from(
+    new Set(
+      courses.flatMap(course => course.class_days || [])
+    )
+  ).sort();
 
   useEffect(() => {
     fetchCourses();
@@ -98,10 +114,21 @@ const Courses = () => {
     setLoading(false);
   };
 
-  const filteredCourses = courses.filter(course =>
-    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCourses = courses.filter(course => {
+    // Search filter
+    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Day filter
+    const matchesDay = filterDay === 'all' || 
+      (course.class_days && course.class_days.includes(filterDay));
+    
+    // Type filter
+    const matchesType = filterType === 'all' || 
+      course.course_type?.toLowerCase() === filterType.toLowerCase();
+    
+    return matchesSearch && matchesDay && matchesType;
+  });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -162,15 +189,44 @@ const Courses = () => {
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input
-          placeholder="Search courses..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 h-11 sm:h-12"
-        />
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Search courses..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-11 sm:h-12"
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={filterDay} onValueChange={setFilterDay}>
+            <SelectTrigger className="w-[150px] h-11 sm:h-12 bg-background z-50">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter by Day" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border border-border z-[100]">
+              <SelectItem value="all">All Days</SelectItem>
+              {allClassDays.map(day => (
+                <SelectItem key={day} value={day}>{day}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-[150px] h-11 sm:h-12 bg-background z-50">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter by Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border border-border z-[100]">
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="theory">Theory</SelectItem>
+              <SelectItem value="lab">Lab</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Courses Grid */}

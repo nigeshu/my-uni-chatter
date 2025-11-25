@@ -483,40 +483,52 @@ const Progress = () => {
   const getTheoryMarksLost = (mark: Partial<CourseMark>) => {
     let marksLost = 0;
     
-    // Only calculate marks lost from ENTERED components (non-zero values and not absent)
-    // For each entered component, calculate: (max weightage) - (earned weightage)
+    // For absent components (-1), add full weightage to marks lost
+    // For entered components (>0), calculate actual marks lost
     
-    if ((mark.cat1_mark || 0) > 0 && mark.cat1_mark !== -1) {
+    if (mark.cat1_mark === -1) {
+      marksLost += 15; // Full weightage lost if absent
+    } else if ((mark.cat1_mark || 0) > 0) {
       const maxWeightage = 15;
       const earnedWeightage = ((mark.cat1_mark || 0) / 50) * 15;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.cat2_mark || 0) > 0 && mark.cat2_mark !== -1) {
+    if (mark.cat2_mark === -1) {
+      marksLost += 15; // Full weightage lost if absent
+    } else if ((mark.cat2_mark || 0) > 0) {
       const maxWeightage = 15;
       const earnedWeightage = ((mark.cat2_mark || 0) / 50) * 15;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.da1_mark || 0) > 0 && mark.da1_mark !== -1) {
+    if (mark.da1_mark === -1) {
+      marksLost += 10; // Full weightage lost if absent
+    } else if ((mark.da1_mark || 0) > 0) {
       const maxWeightage = 10;
       const earnedWeightage = mark.da1_mark || 0;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.da2_mark || 0) > 0 && mark.da2_mark !== -1) {
+    if (mark.da2_mark === -1) {
+      marksLost += 10; // Full weightage lost if absent
+    } else if ((mark.da2_mark || 0) > 0) {
       const maxWeightage = 10;
       const earnedWeightage = mark.da2_mark || 0;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.da3_mark || 0) > 0 && mark.da3_mark !== -1) {
+    if (mark.da3_mark === -1) {
+      marksLost += 10; // Full weightage lost if absent
+    } else if ((mark.da3_mark || 0) > 0) {
       const maxWeightage = 10;
       const earnedWeightage = mark.da3_mark || 0;
       marksLost += (maxWeightage - earnedWeightage);
     }
     
-    if ((mark.theory_fat || 0) > 0 && mark.theory_fat !== -1) {
+    if (mark.theory_fat === -1) {
+      marksLost += 40; // Full weightage lost if absent
+    } else if ((mark.theory_fat || 0) > 0) {
       const maxWeightage = 40;
       const earnedWeightage = ((mark.theory_fat || 0) / 100) * 40;
       marksLost += (maxWeightage - earnedWeightage);
@@ -528,7 +540,10 @@ const Progress = () => {
   const getTheoryMaximumPossible = (mark: Partial<CourseMark>) => {
     const currentTotal = calculateTheoryTotal(mark);
     
-    // Calculate what's already earned from each component (treat -1 as 0)
+    // Calculate remaining potential only from components that are 0 (not entered)
+    // Absent components (-1) do NOT contribute to remaining potential
+    let remainingPotential = 0;
+    
     const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
     const cat2 = mark.cat2_mark === -1 ? 0 : (mark.cat2_mark || 0);
     const da1 = mark.da1_mark === -1 ? 0 : (mark.da1_mark || 0);
@@ -536,23 +551,13 @@ const Progress = () => {
     const da3 = mark.da3_mark === -1 ? 0 : (mark.da3_mark || 0);
     const fat = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
     
-    const cat1Earned = (cat1 / 50) * 15;
-    const cat2Earned = (cat2 / 50) * 15;
-    const da1Earned = da1;
-    const da2Earned = da2;
-    const da3Earned = da3;
-    const fatEarned = (fat / 100) * 40;
-
-    // Calculate remaining potential from incomplete components
-    let remainingPotential = 0;
-    
-    // If component is 0 or absent, assume it's not done yet and can get full marks
-    if (cat1 === 0) remainingPotential += 15;
-    if (cat2 === 0) remainingPotential += 15;
-    if (da1 === 0) remainingPotential += 10;
-    if (da2 === 0) remainingPotential += 10;
-    if (da3 === 0) remainingPotential += 10;
-    if (fat === 0) remainingPotential += 40;
+    // Only add to remaining potential if component is truly not entered (0), not absent (-1)
+    if (cat1 === 0 && mark.cat1_mark !== -1) remainingPotential += 15;
+    if (cat2 === 0 && mark.cat2_mark !== -1) remainingPotential += 15;
+    if (da1 === 0 && mark.da1_mark !== -1) remainingPotential += 10;
+    if (da2 === 0 && mark.da2_mark !== -1) remainingPotential += 10;
+    if (da3 === 0 && mark.da3_mark !== -1) remainingPotential += 10;
+    if (fat === 0 && mark.theory_fat !== -1) remainingPotential += 40;
 
     return currentTotal + remainingPotential;
   };

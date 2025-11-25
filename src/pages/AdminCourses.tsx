@@ -311,11 +311,25 @@ const AdminCourses = () => {
                   <Input
                     id="credits"
                     type="number"
-                    min="1"
+                    min="0.5"
+                    step="0.5"
                     value={formData.credits}
-                    onChange={(e) =>
-                      setFormData({ ...formData, credits: parseInt(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      // Only allow whole numbers and .5 increments
+                      if (!isNaN(value) && (value % 0.5 === 0)) {
+                        setFormData({ ...formData, credits: value });
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = parseFloat(e.target.value);
+                      // Round to nearest 0.5 on blur if invalid
+                      if (isNaN(value) || value < 0.5) {
+                        setFormData({ ...formData, credits: 0.5 });
+                      } else if (value % 0.5 !== 0) {
+                        setFormData({ ...formData, credits: Math.round(value * 2) / 2 });
+                      }
+                    }}
                     required
                   />
                 </div>

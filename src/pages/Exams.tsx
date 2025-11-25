@@ -200,6 +200,9 @@ const Exams = () => {
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Exams</h1>
           <p className="text-muted-foreground text-sm sm:text-base">View your upcoming exams and portions</p>
         </div>
+        <div className="text-sm sm:text-base text-muted-foreground italic">
+          Click To View Portions
+        </div>
       </div>
 
       {/* Tab Switcher with Liquid Hover */}

@@ -452,6 +452,27 @@ const Progress = () => {
     return (passingMark - currentTotal).toFixed(2);
   };
 
+  const areAllTheoryComponentsFilled = (mark: Partial<CourseMark>) => {
+    // Check if all theory components are either filled with a value or marked absent
+    // A component is "filled" if it's > 0 OR === -1 (absent)
+    const cat1Filled = (mark.cat1_mark !== undefined && mark.cat1_mark !== null && (mark.cat1_mark > 0 || mark.cat1_mark === -1));
+    const cat2Filled = (mark.cat2_mark !== undefined && mark.cat2_mark !== null && (mark.cat2_mark > 0 || mark.cat2_mark === -1));
+    const da1Filled = (mark.da1_mark !== undefined && mark.da1_mark !== null && (mark.da1_mark > 0 || mark.da1_mark === -1));
+    const da2Filled = (mark.da2_mark !== undefined && mark.da2_mark !== null && (mark.da2_mark > 0 || mark.da2_mark === -1));
+    const da3Filled = (mark.da3_mark !== undefined && mark.da3_mark !== null && (mark.da3_mark > 0 || mark.da3_mark === -1));
+    const fatFilled = (mark.theory_fat !== undefined && mark.theory_fat !== null && mark.theory_fat > 0);
+    
+    return cat1Filled && cat2Filled && da1Filled && da2Filled && da3Filled && fatFilled;
+  };
+
+  const areAllLabComponentsFilled = (mark: Partial<CourseMark>) => {
+    // Check if all lab components are either filled with a value or marked absent
+    const internalsFilled = (mark.lab_internals !== undefined && mark.lab_internals !== null && (mark.lab_internals > 0 || mark.lab_internals === -1));
+    const fatFilled = (mark.lab_fat !== undefined && mark.lab_fat !== null && mark.lab_fat > 0);
+    
+    return internalsFilled && fatFilled;
+  };
+
   const calculateTheoryTotal = (mark: Partial<CourseMark>) => {
     // Treat -1 (absent) as 0 for non-FAT components only
     const cat1 = mark.cat1_mark === -1 ? 0 : (mark.cat1_mark || 0);
@@ -982,8 +1003,20 @@ const Progress = () => {
                             </div>
                             {(() => {
                               const total = calculateLabTotal(mark || {});
+                              const allFilled = areAllLabComponentsFilled(mark || {});
                               
                               if (total < 50) {
+                                // If all components filled and still < 50, show Failed
+                                if (allFilled) {
+                                  return (
+                                    <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                      <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                        ⚠️ Failed
+                                      </p>
+                                    </div>
+                                  );
+                                }
+                                // Otherwise show Marks Needed
                                 const marksNeeded = 50 - total;
                                 return (
                                   <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
@@ -1202,8 +1235,20 @@ const Progress = () => {
                             {/* Marks Needed if total < 50, Status if >= 50 */}
                             {(() => {
                               const total = calculateTheoryTotal(mark || {});
+                              const allFilled = areAllTheoryComponentsFilled(mark || {});
                               
                               if (total < 50) {
+                                // If all components filled and still < 50, show Failed
+                                if (allFilled) {
+                                  return (
+                                    <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                      <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                        ⚠️ Failed
+                                      </p>
+                                    </div>
+                                  );
+                                }
+                                // Otherwise show Marks Needed
                                 const marksNeeded = 50 - total;
                                 return (
                                   <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
@@ -1329,15 +1374,32 @@ const Progress = () => {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                {total < 50 ? (
-                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium border border-purple-500/20">
-                                    Marks Needed: {(50 - total).toFixed(2)}
-                                  </div>
-                                ) : (
-                                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theoryStatus.color} ${theoryStatus.textColor} text-sm font-medium`}>
-                                    {theoryStatus.status === 'Passed' && '✓'} {theoryStatus.status}
-                                  </div>
-                                )}
+                                {(() => {
+                                  const allFilled = areAllTheoryComponentsFilled(mark || {});
+                                  
+                                  if (total < 50) {
+                                    // If all components filled and still < 50, show Failed
+                                    if (allFilled) {
+                                      return (
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium border border-red-500/20">
+                                          ⚠️ Failed
+                                        </div>
+                                      );
+                                    }
+                                    // Otherwise show Marks Needed
+                                    return (
+                                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium border border-purple-500/20">
+                                        Marks Needed: {(50 - total).toFixed(2)}
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  return (
+                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${theoryStatus.color} ${theoryStatus.textColor} text-sm font-medium`}>
+                                      {theoryStatus.status === 'Passed' && '✓'} {theoryStatus.status}
+                                    </div>
+                                  );
+                                })()}
                               </td>
                             </tr>
                           );
@@ -1389,15 +1451,32 @@ const Progress = () => {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                {total < 50 ? (
-                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium">
-                                    ⚠️ Need {getMarksNeededToPass(total, true)} more to pass
-                                  </div>
-                                ) : (
-                                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium">
-                                    ✓ Passed
-                                  </div>
-                                )}
+                                {(() => {
+                                  const allFilled = areAllLabComponentsFilled(mark || {});
+                                  
+                                  if (total < 50) {
+                                    // If all components filled and still < 50, show Failed
+                                    if (allFilled) {
+                                      return (
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium border border-red-500/20">
+                                          ⚠️ Failed
+                                        </div>
+                                      );
+                                    }
+                                    // Otherwise show Marks Needed
+                                    return (
+                                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium border border-purple-500/20">
+                                        Marks Needed: {(50 - total).toFixed(2)}
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  return (
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm font-medium border border-green-500/20">
+                                      ✓ Passed
+                                    </div>
+                                  );
+                                })()}
                               </td>
                             </tr>
                           );

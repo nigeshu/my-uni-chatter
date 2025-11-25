@@ -980,19 +980,29 @@ const Progress = () => {
                                 </span>
                               </div>
                             </div>
-                            {calculateLabTotal(mark || {}) < 50 ? (
-                              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                  ⚠️ Failed! You need {getMarksNeededToPass(calculateLabTotal(mark || {}), true)} more marks to pass (minimum 50/100 required)
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                  ✓ Passed!
-                                </p>
-                              </div>
-                            )}
+                            {(() => {
+                              const total = calculateLabTotal(mark || {});
+                              
+                              if (total < 50) {
+                                const marksNeeded = 50 - total;
+                                return (
+                                  <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                                    <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                                      Marks Needed: {marksNeeded.toFixed(2)}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              
+                              // Only show status if total >= 50
+                              return (
+                                <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                    ✓ Passed!
+                                  </p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

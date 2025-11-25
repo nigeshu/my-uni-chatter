@@ -4,9 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, FileText, Link, Video, File, Download, Play } from 'lucide-react';
+import { ArrowLeft, FileText, Link, Video, File, Download, Play, Menu, ChevronRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import ModuleVideosDialog from '@/components/ModuleVideosDialog';
 
@@ -55,6 +57,7 @@ const CourseMaterials = () => {
   const [videosDialogOpen, setVideosDialogOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (courseId) {
@@ -162,17 +165,68 @@ const CourseMaterials = () => {
   }
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
+    <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/courses')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          
+          {/* Mobile Navigation Trigger */}
+          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="lg:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[350px]">
+              <SheetHeader>
+                <SheetTitle>Course Modules</SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="h-[calc(100vh-8rem)] mt-6">
+                <div className="space-y-2 pr-4">
+                  {modules.map((module) => {
+                    const moduleMaterials = materials.filter(m => m.module_id === module.id);
+                    return (
+                      <Button
+                        key={module.id}
+                        variant={expandedModule === module.id ? "secondary" : "ghost"}
+                        className="w-full justify-start h-auto py-3 px-3"
+                        onClick={() => {
+                          setExpandedModule(module.id);
+                          setMobileNavOpen(false);
+                          // Scroll to the module
+                          const element = document.getElementById(`module-${module.id}`);
+                          element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                      >
+                        <div className="flex items-start gap-3 w-full text-left">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-accent flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+                            {module.serial_no}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {module.heading && (
+                              <p className="font-semibold text-sm line-clamp-2">{module.heading}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {moduleMaterials.length} materials
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 flex-shrink-0 mt-1" />
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
+          
           <div>
-            <h1 className="text-4xl font-bold">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
               {course?.title}
             </h1>
-            <p className="text-muted-foreground text-lg">Course Content</p>
+            <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Course Content</p>
           </div>
         </div>
         
@@ -229,7 +283,7 @@ const CourseMaterials = () => {
           const isExpanded = expandedModule === module.id;
           
           return (
-            <Card key={module.id} className="overflow-hidden">
+            <Card key={module.id} id={`module-${module.id}`} className="overflow-hidden scroll-mt-8">
               <CardContent className="p-0">
                 <div 
                   className="flex items-center gap-3 p-6 cursor-pointer hover:bg-accent/5 transition-colors"

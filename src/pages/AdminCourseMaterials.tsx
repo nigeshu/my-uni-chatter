@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Search, Play } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Search, Play, ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import {
   DndContext,
@@ -120,6 +122,8 @@ const AdminCourseMaterials = () => {
   const [manualVideoUrl, setManualVideoUrl] = useState('');
   const [manualVideoTitle, setManualVideoTitle] = useState('');
   const [addingManualVideo, setAddingManualVideo] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState<YouTubeVideo[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -322,6 +326,71 @@ const AdminCourseMaterials = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleAddMultipleVideos = async () => {
+    if (!selectedCategoryForVideos) {
+      toast({ title: 'Error', description: 'Please select a category first', variant: 'destructive' });
+      return;
+    }
+
+    if (selectedVideos.length === 0) {
+      toast({ title: 'Error', description: 'Please select at least one video', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const categoryVideos = courseVideos.filter(v => v.category_id === selectedCategoryForVideos);
+      let currentIndex = categoryVideos.length;
+
+      const videosToInsert = selectedVideos.map((video) => ({
+        category_id: selectedCategoryForVideos,
+        video_id: video.videoId,
+        video_title: video.title,
+        video_thumbnail: video.thumbnail,
+        channel_title: video.channelTitle,
+        order_index: currentIndex++,
+      }));
+
+      const { error } = await supabase.from('course_videos').insert(videosToInsert);
+
+      if (error) throw error;
+      
+      toast({ title: 'Success', description: `${selectedVideos.length} videos added to category` });
+      fetchCourseVideos();
+      setYoutubeSearchQuery('');
+      setYoutubeResults([]);
+      setSelectedVideos([]);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add videos',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const toggleVideoSelection = (video: YouTubeVideo) => {
+    setSelectedVideos(prev => {
+      const isSelected = prev.some(v => v.videoId === video.videoId);
+      if (isSelected) {
+        return prev.filter(v => v.videoId !== video.videoId);
+      } else {
+        return [...prev, video];
+      }
+    });
+  };
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
   };
 
   const handleVideoCategorySubmit = async (e: React.FormEvent) => {
@@ -1035,84 +1104,99 @@ const AdminCourseMaterials = () => {
 
         <CardContent className="pt-6">
           {videoCategories.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {videoCategories.map((category) => {
                 const categoryVideos = courseVideos.filter(v => v.category_id === category.id);
-                const isSelected = selectedCategoryForVideos === category.id;
+                const isExpanded = expandedCategories.has(category.id);
                 
                 return (
-                  <Card key={category.id} className="overflow-hidden">
-                    <CardHeader className="border-b bg-accent/5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold">{category.name}</h3>
-                          <p className="text-sm text-muted-foreground">{categoryVideos.length} videos</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant={isSelected ? "default" : "outline"}
-                            onClick={() => {
-                              setSelectedCategoryForVideos(category.id);
-                              setShowVideoDialog(true);
-                            }}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Videos
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteVideoCategory(category.id)}
-                            className="text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    {categoryVideos.length > 0 && (
-                      <CardContent className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {categoryVideos.map((video) => (
-                            <Card key={video.id} className="hover:shadow-lg transition-all duration-300">
-                              <div className="relative aspect-video">
-                                <img
-                                  src={video.video_thumbnail}
-                                  alt={video.video_title}
-                                  className="w-full h-full object-cover rounded-t-lg"
-                                />
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                  <a
-                                    href={`https://www.youtube.com/watch?v=${video.video_id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
-                                  >
-                                    <Play className="h-6 w-6 text-primary" />
-                                  </a>
-                                </div>
+                  <Collapsible
+                    key={category.id}
+                    open={isExpanded}
+                    onOpenChange={() => toggleCategoryExpansion(category.id)}
+                  >
+                    <Card className="overflow-hidden">
+                      <CollapsibleTrigger className="w-full">
+                        <CardHeader className="border-b bg-accent/5 hover:bg-accent/10 transition-colors cursor-pointer">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 flex-1">
+                              <ChevronDown 
+                                className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                              />
+                              <div className="text-left">
+                                <h3 className="text-lg font-semibold">{category.name}</h3>
+                                <p className="text-sm text-muted-foreground">{categoryVideos.length} videos</p>
                               </div>
-                              <div className="p-3">
-                                <h4 className="font-semibold text-sm line-clamp-2 mb-1">{video.video_title}</h4>
-                                <p className="text-xs text-muted-foreground">{video.channel_title}</p>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDeleteVideo(video.id)}
-                                  className="w-full mt-3 text-destructive hover:bg-destructive/10"
-                                >
-                                  <Trash2 className="h-3 w-3 mr-2" />
-                                  Remove
-                                </Button>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
+                            </div>
+                            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedCategoryForVideos(category.id);
+                                  setShowVideoDialog(true);
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Videos
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteVideoCategory(category.id)}
+                                className="text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent>
+                        {categoryVideos.length > 0 && (
+                          <CardContent className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {categoryVideos.map((video) => (
+                                <Card key={video.id} className="hover:shadow-lg transition-all duration-300">
+                                  <div className="relative aspect-video">
+                                    <img
+                                      src={video.video_thumbnail}
+                                      alt={video.video_title}
+                                      className="w-full h-full object-cover rounded-t-lg"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                      <a
+                                        href={`https://www.youtube.com/watch?v=${video.video_id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
+                                      >
+                                        <Play className="h-6 w-6 text-primary" />
+                                      </a>
+                                    </div>
+                                  </div>
+                                  <div className="p-3">
+                                    <h4 className="font-semibold text-sm line-clamp-2 mb-1">{video.video_title}</h4>
+                                    <p className="text-xs text-muted-foreground">{video.channel_title}</p>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDeleteVideo(video.id)}
+                                      className="w-full mt-3 text-destructive hover:bg-destructive/10"
+                                    >
+                                      <Trash2 className="h-3 w-3 mr-2" />
+                                      Remove
+                                    </Button>
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          </CardContent>
+                        )}
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
                 );
               })}
             </div>
@@ -1157,30 +1241,60 @@ const AdminCourseMaterials = () => {
               </div>
 
               {youtubeResults.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                  {youtubeResults.map((video) => (
-                    <Card key={video.videoId} className="hover:shadow-lg transition-all duration-300">
-                      <div className="relative aspect-video">
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className="w-full h-full object-cover rounded-t-lg"
-                        />
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h4>
-                        <p className="text-xs text-muted-foreground mb-3">{video.channelTitle}</p>
-                        <Button
-                          size="sm"
-                          className="w-full bg-gradient-accent hover:opacity-90"
-                          onClick={() => handleAddVideoToCategory(video)}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-accent/5 rounded-lg">
+                    <p className="text-sm font-medium">
+                      {selectedVideos.length} video{selectedVideos.length !== 1 ? 's' : ''} selected
+                    </p>
+                    {selectedVideos.length > 0 && (
+                      <Button
+                        size="sm"
+                        className="bg-gradient-accent hover:opacity-90"
+                        onClick={handleAddMultipleVideos}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Selected Videos
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {youtubeResults.map((video) => {
+                      const isSelected = selectedVideos.some(v => v.videoId === video.videoId);
+                      return (
+                        <Card 
+                          key={video.videoId} 
+                          className={`hover:shadow-lg transition-all duration-300 ${isSelected ? 'ring-2 ring-primary' : ''}`}
                         >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add to Category
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                          <div className="relative aspect-video">
+                            <img
+                              src={video.thumbnail}
+                              alt={video.title}
+                              className="w-full h-full object-cover rounded-t-lg"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleVideoSelection(video)}
+                                className="h-6 w-6 bg-white border-2"
+                              />
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <h4 className="font-semibold text-sm line-clamp-2 mb-2">{video.title}</h4>
+                            <p className="text-xs text-muted-foreground mb-3">{video.channelTitle}</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                              onClick={() => toggleVideoSelection(video)}
+                            >
+                              {isSelected ? 'Deselect' : 'Select'}
+                            </Button>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

@@ -483,8 +483,8 @@ const Progress = () => {
       return { status: 'FAT Pass Needed', color: 'bg-yellow-500/10 border-yellow-500/20', textColor: 'text-yellow-600 dark:text-yellow-400' };
     }
     
-    // Passed If (Marks Out Of 60 Excluding FAT + Fat Marks) >= 50 AND Fat Marks > 40
-    if (total >= 50 && fatMark > 40) {
+    // Passed If (Marks Out Of 60 Excluding FAT + Fat Marks) >= 50 AND Fat Marks >= 40
+    if (total >= 50 && fatMark >= 40) {
       return { status: 'Passed', color: 'bg-green-500/10 border-green-500/20', textColor: 'text-green-600 dark:text-green-400' };
     }
 

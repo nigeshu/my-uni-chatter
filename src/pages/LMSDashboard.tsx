@@ -74,6 +74,18 @@ const LMSDashboard = () => {
   }, [user, loading, navigate]);
 
   const checkMaintenanceMode = async () => {
+    // Check if user is admin first
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user?.id)
+      .single();
+    
+    // Admins can bypass maintenance mode
+    if (profileData?.role === 'admin') {
+      return;
+    }
+    
     const { data } = await supabase
       .from('semester_settings')
       .select('maintenance_mode_enabled')
@@ -94,9 +106,19 @@ const LMSDashboard = () => {
           schema: 'public',
           table: 'semester_settings',
         },
-        (payload: any) => {
+        async (payload: any) => {
           if (payload.new.maintenance_mode_enabled) {
-            navigate('/maintenance', { replace: true });
+            // Check if user is admin
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user?.id)
+              .single();
+            
+            // Only redirect students, not admins
+            if (profileData?.role !== 'admin') {
+              navigate('/maintenance', { replace: true });
+            }
           }
         }
       )

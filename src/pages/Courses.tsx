@@ -213,6 +213,35 @@ const Courses = () => {
                   {course.difficulty || 'Beginner'}
                 </Badge>
               </div>
+              
+              {/* Credits - Bottom Left */}
+              <div className="absolute bottom-4 left-4">
+                <div className="px-5 py-3 bg-background/95 backdrop-blur-md rounded-xl border-2 border-primary/30 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                      {course.credits || 0}
+                    </span>
+                    <span className="text-sm font-semibold text-muted-foreground">Credits</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Class Days - Bottom Right */}
+              {course.class_days && course.class_days.length > 0 && (
+                <div className="absolute bottom-4 right-4 flex gap-1.5">
+                  {course.class_days.map((day, index) => (
+                    <div
+                      key={index}
+                      className="px-3 py-1.5 bg-background/95 backdrop-blur-md rounded-full border border-primary/20 shadow-md"
+                    >
+                      <span className="text-xs font-semibold text-foreground">
+                        {day}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             <CardContent className="p-6 space-y-4">

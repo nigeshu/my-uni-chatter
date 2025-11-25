@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Search, Play, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, FileText, Link, Video, File, List, Download, GripVertical, Search, Play, ChevronDown, BookOpen } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -58,6 +58,7 @@ interface Course {
   duration_hours: number;
   credits?: number;
   class_days?: string[];
+  course_type?: string | null;
 }
 
 interface VideoCategory {
@@ -189,7 +190,7 @@ const AdminCourseMaterials = () => {
   };
 
   const fetchVideoCategories = async () => {
-    const { data } = await supabase
+    const { data} = await supabase
       .from('course_video_categories')
       .select('*')
       .eq('course_id', courseId)
@@ -231,10 +232,8 @@ const AdminCourseMaterials = () => {
   };
 
   const extractVideoId = (url: string): string | null => {
-    // Remove whitespace
     const cleanUrl = url.trim();
     
-    // Match various YouTube URL formats
     const patterns = [
       /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
       /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
@@ -249,7 +248,6 @@ const AdminCourseMaterials = () => {
       }
     }
     
-    // If no pattern matches, check if it's just a video ID (11 characters)
     if (/^[a-zA-Z0-9_-]{11}$/.test(cleanUrl)) {
       return cleanUrl;
     }
@@ -500,7 +498,6 @@ const AdminCourseMaterials = () => {
     try {
       let fileUrl = formData.file_url;
       
-      // Upload file if selected
       if (selectedFile) {
         const uploadedUrl = await handleFileUpload(selectedFile);
         if (uploadedUrl) {
@@ -579,16 +576,22 @@ const AdminCourseMaterials = () => {
     setLoading(true);
 
     try {
+      const moduleData = {
+        serial_no: moduleFormData.serial_no,
+        topic: moduleFormData.topic,
+        heading: moduleFormData.heading || null,
+      };
+
       if (editingModule) {
         const { error } = await supabase
           .from('course_modules')
-          .update(moduleFormData)
+          .update(moduleData)
           .eq('id', editingModule.id);
         if (error) throw error;
         toast({ title: 'Success!', description: 'Module updated successfully.' });
       } else {
         const { error } = await supabase.from('course_modules').insert({
-          ...moduleFormData,
+          ...moduleData,
           course_id: courseId,
           order_index: modules.length,
         });
@@ -644,7 +647,6 @@ const AdminCourseMaterials = () => {
     const reorderedModules = arrayMove(modules, oldIndex, newIndex);
     setModules(reorderedModules);
 
-    // Update order_index in database
     const updates = reorderedModules.map((module, index) => ({
       id: module.id,
       order_index: index,
@@ -670,7 +672,6 @@ const AdminCourseMaterials = () => {
 
     const reorderedMaterials = arrayMove(moduleMaterials, oldIndex, newIndex);
 
-    // Update local state
     const otherMaterials = materials.filter((m) => m.module_id !== moduleId);
     const newMaterials = [...otherMaterials, ...reorderedMaterials].sort((a, b) => {
       if (a.module_id === b.module_id) {
@@ -680,7 +681,6 @@ const AdminCourseMaterials = () => {
     });
     setMaterials(newMaterials);
 
-    // Update order_index in database
     const updates = reorderedMaterials.map((material, index) => ({
       id: material.id,
       order_index: index,
@@ -707,7 +707,7 @@ const AdminCourseMaterials = () => {
 
   return (
     <div className="p-8 space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin/courses')}>
             <ArrowLeft className="h-5 w-5" />
@@ -719,8 +719,39 @@ const AdminCourseMaterials = () => {
             <p className="text-muted-foreground text-lg">Course Management</p>
           </div>
         </div>
+        
+        <div className="flex items-center gap-4">
+          {course?.credits && (
+            <div className="px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2">
+                <List className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-muted-foreground">Credits:</span>
+                <span className="text-lg font-bold text-primary">{course.credits}</span>
+              </div>
+            </div>
+          )}
+          
+          {course?.class_days && course.class_days.length > 0 && (
+            <div className="px-4 py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-muted-foreground">Class Days:</span>
+                <div className="flex gap-1.5">
+                  {course.class_days.map((day, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-0.5 bg-primary/10 rounded-full text-xs font-semibold text-primary border border-primary/20"
+                    >
+                      {day}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogTrigger asChild>
             <Button
               size="lg"

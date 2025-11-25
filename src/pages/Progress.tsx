@@ -558,8 +558,13 @@ const Progress = () => {
   };
 
   const getTheoryStatus = (mark: Partial<CourseMark>) => {
+    // If FAT is marked as Absent, immediately return Failed
+    if (mark.theory_fat === -1) {
+      return { status: 'Failed', color: 'bg-red-500/10 border-red-500/20', textColor: 'text-red-600 dark:text-red-400' };
+    }
+    
     const totalExcludingFAT = calculateTheoryTotalExcludingFAT(mark);
-    const fatMark = mark.theory_fat === -1 ? 0 : (mark.theory_fat || 0);
+    const fatMark = mark.theory_fat || 0;
     const total = calculateTheoryTotal(mark);
 
     // If FAT not entered yet (0) and current total < 50, show how much needed in FAT

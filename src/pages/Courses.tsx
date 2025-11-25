@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, TrendingUp, Search, Upload, Filter } from 'lucide-react';
+import { BookOpen, TrendingUp, Search, Upload, Filter, Edit } from 'lucide-react';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import ShareDocumentDialog from '@/components/ShareDocumentDialog';
+import EnrollmentDialog from '@/components/EnrollmentDialog';
+import EditEnrollmentDialog from '@/components/EditEnrollmentDialog';
 import {
   Select,
   SelectContent,
@@ -33,6 +35,8 @@ interface Course {
   };
   isEnrolled?: boolean;
   isCompleted?: boolean;
+  enrollmentId?: string;
+  enrollmentDays?: string[];
 }
 
 const Courses = () => {
@@ -47,11 +51,15 @@ const Courses = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [filterDay, setFilterDay] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
+  const [showEnrollDialog, setShowEnrollDialog] = useState(false);
+  const [courseToEnroll, setCourseToEnroll] = useState<Course | null>(null);
+  const [showEditEnrollDialog, setShowEditEnrollDialog] = useState(false);
+  const [enrollmentToEdit, setEnrollmentToEdit] = useState<any>(null);
 
-  // Get unique class days from all courses
+  // Get unique class days from enrollments
   const allClassDays = Array.from(
     new Set(
-      courses.flatMap(course => course.class_days || [])
+      courses.flatMap(course => course.enrollmentDays || [])
     )
   ).sort();
 
@@ -71,7 +79,16 @@ const Courses = () => {
     if (publishedCourses) {
       const { data: enrollments } = await supabase
         .from('enrollments')
-        .select('course_id, completed_at')
+        .select(`
+          id,
+          course_id,
+          completed_at,
+          selected_slot_id,
+          selected_lab_days,
+          course_slots!enrollments_selected_slot_id_fkey (
+            days
+          )
+        `)
         .eq('student_id', user?.id);
 
       const enrolledIds = new Set(enrollments?.map(e => e.course_id) || []);
@@ -79,39 +96,58 @@ const Courses = () => {
         enrollments?.filter(e => e.completed_at).map(e => e.course_id) || []
       );
       
-      const coursesWithEnrollment = publishedCourses.map(course => ({
-        ...course,
-        isEnrolled: enrolledIds.has(course.id),
-        isCompleted: completedIds.has(course.id),
-      }));
+      const coursesWithEnrollment = publishedCourses.map(course => {
+        const enrollment = enrollments?.find(e => e.course_id === course.id);
+        let enrollmentDays: string[] = [];
+        
+        if (enrollment) {
+          if (course.course_type?.toLowerCase() === 'theory' && enrollment.course_slots) {
+            enrollmentDays = (enrollment.course_slots as any).days || [];
+          } else if (course.course_type?.toLowerCase() === 'lab') {
+            enrollmentDays = enrollment.selected_lab_days || [];
+          }
+        }
+        
+        return {
+          ...course,
+          isEnrolled: enrolledIds.has(course.id),
+          isCompleted: completedIds.has(course.id),
+          enrollmentId: enrollment?.id,
+          enrollmentDays,
+        };
+      });
 
       setCourses(coursesWithEnrollment);
     }
   };
 
-  const handleEnroll = async (courseId: string) => {
-    setLoading(true);
-    const { error } = await supabase
-      .from('enrollments')
-      .insert({
-        student_id: user?.id,
-        course_id: courseId,
-      });
+  const handleEnrollClick = (course: Course) => {
+    setCourseToEnroll(course);
+    setShowEnrollDialog(true);
+  };
 
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to enroll in course.',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success!',
-        description: 'You have been enrolled in the course.',
-      });
-      fetchCourses();
+  const handleEditEnrollment = async (course: Course) => {
+    if (!course.enrollmentId) return;
+
+    const { data } = await supabase
+      .from('enrollments')
+      .select(`
+        id,
+        course_id,
+        selected_slot_id,
+        selected_lab_days,
+        course:courses (
+          title,
+          course_type
+        )
+      `)
+      .eq('id', course.enrollmentId)
+      .single();
+
+    if (data) {
+      setEnrollmentToEdit(data);
+      setShowEditEnrollDialog(true);
     }
-    setLoading(false);
   };
 
   const filteredCourses = courses.filter(course => {
@@ -121,7 +157,7 @@ const Courses = () => {
     
     // Day filter
     const matchesDay = filterDay === 'all' || 
-      (course.class_days && course.class_days.includes(filterDay));
+      (course.enrollmentDays && course.enrollmentDays.includes(filterDay));
     
     // Type filter
     const matchesType = filterType === 'all' || 
@@ -279,9 +315,9 @@ const Courses = () => {
               </div>
               
               {/* Class Days - Bottom Right */}
-              {course.class_days && course.class_days.length > 0 && (
+              {course.enrollmentDays && course.enrollmentDays.length > 0 && (
                 <div className="absolute bottom-4 right-4 flex gap-1.5">
-                  {course.class_days.map((day, index) => (
+                  {course.enrollmentDays.map((day, index) => (
                     <div
                       key={index}
                       className="px-3 py-1.5 bg-background/95 backdrop-blur-md rounded-full border border-primary/20 shadow-md"
@@ -317,9 +353,22 @@ const Courses = () => {
               </div>
 
               {course.isEnrolled ? (
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
-                  <BookOpen className="h-4 w-4" />
-                  <span>{course.isCompleted ? 'Completed' : 'Click to view materials'}</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
+                    <BookOpen className="h-4 w-4" />
+                    <span>{course.isCompleted ? 'Completed' : 'Click to view materials'}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditEnrollment(course);
+                    }}
+                    title="Edit slot/days"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </div>
               ) : (
                 <Button
@@ -327,7 +376,7 @@ const Courses = () => {
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleEnroll(course.id);
+                    handleEnrollClick(course);
                   }}
                   disabled={loading}
                 >
@@ -360,6 +409,23 @@ const Courses = () => {
       <ShareDocumentDialog 
         open={showShareDialog}
         onOpenChange={setShowShareDialog}
+      />
+
+      {/* Enrollment Dialog */}
+      <EnrollmentDialog
+        course={courseToEnroll}
+        open={showEnrollDialog}
+        onOpenChange={setShowEnrollDialog}
+        onSuccess={fetchCourses}
+        userId={user?.id || ''}
+      />
+
+      {/* Edit Enrollment Dialog */}
+      <EditEnrollmentDialog
+        enrollment={enrollmentToEdit}
+        open={showEditEnrollDialog}
+        onOpenChange={setShowEditEnrollDialog}
+        onSuccess={fetchCourses}
       />
     </div>
   );

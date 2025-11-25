@@ -162,14 +162,33 @@ const DashboardHome = () => {
       .from('enrollments')
       .select(`
         *,
-        course:courses(*)
+        course:courses(*),
+        course_slots!enrollments_selected_slot_id_fkey (
+          days
+        )
       `)
       .eq('student_id', user?.id)
       .order('enrolled_at', { ascending: false })
       .limit(3);
 
     if (data) {
-      setRecentCourses(data);
+      // Add enrollment days to each course
+      const coursesWithDays = data.map(enrollment => {
+        let enrollmentDays: string[] = [];
+        
+        if (enrollment.course.course_type?.toLowerCase() === 'theory' && enrollment.course_slots) {
+          enrollmentDays = (enrollment.course_slots as any).days || [];
+        } else if (enrollment.course.course_type?.toLowerCase() === 'lab') {
+          enrollmentDays = enrollment.selected_lab_days || [];
+        }
+        
+        return {
+          ...enrollment,
+          enrollmentDays,
+        };
+      });
+      
+      setRecentCourses(coursesWithDays);
     }
   };
 

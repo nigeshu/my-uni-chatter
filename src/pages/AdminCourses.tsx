@@ -405,20 +405,18 @@ const AdminCourses = () => {
                     </>
                   )}
                 </Button>
-                {(course as any).course_type?.toLowerCase() === 'theory' && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedCourseForSlots(course.id);
-                      setShowSlotDialog(true);
-                    }}
-                    title="Manage Slots"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCourseForSlots(course.id);
+                    setShowSlotDialog(true);
+                  }}
+                  title="Manage Slots"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 

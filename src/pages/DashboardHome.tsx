@@ -176,10 +176,8 @@ const DashboardHome = () => {
       const coursesWithDays = data.map(enrollment => {
         let enrollmentDays: string[] = [];
         
-        if (enrollment.course.course_type?.toLowerCase() === 'theory' && enrollment.course_slots) {
+        if (enrollment.course_slots) {
           enrollmentDays = (enrollment.course_slots as any).days || [];
-        } else if (enrollment.course.course_type?.toLowerCase() === 'lab') {
-          enrollmentDays = enrollment.selected_lab_days || [];
         }
         
         return {

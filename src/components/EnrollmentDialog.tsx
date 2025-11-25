@@ -62,6 +62,35 @@ const EnrollmentDialog = ({ course, open, onOpenChange, onSuccess, userId }: Enr
   const handleEnroll = async () => {
     if (!course) return;
 
+    // If no slots available, enroll directly without slot selection
+    if (slots.length === 0) {
+      setLoading(true);
+      const { error } = await supabase.from('enrollments').insert({
+        student_id: userId,
+        course_id: course.id,
+        selected_slot_id: null,
+        selected_lab_days: null,
+      });
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to enroll in course',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Success!',
+          description: 'You have been enrolled in the course',
+        });
+        onOpenChange(false);
+        onSuccess();
+      }
+      setLoading(false);
+      return;
+    }
+
+    // If slots available, require slot selection
     if (!selectedSlotId) {
       toast({
         title: 'Error',
@@ -112,7 +141,7 @@ const EnrollmentDialog = ({ course, open, onOpenChange, onSuccess, userId }: Enr
         <div className="space-y-4 py-4">
           {slots.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No slots available. Please contact admin.
+              No slots configured for this course. Click enroll to continue.
             </p>
           ) : (
             <RadioGroup value={selectedSlotId} onValueChange={setSelectedSlotId}>
@@ -142,7 +171,7 @@ const EnrollmentDialog = ({ course, open, onOpenChange, onSuccess, userId }: Enr
         <div className="flex gap-3">
           <Button
             onClick={handleEnroll}
-            disabled={loading || !selectedSlotId}
+            disabled={loading || (slots.length > 0 && !selectedSlotId)}
             className="flex-1"
           >
             {loading ? 'Enrolling...' : 'Enroll'}

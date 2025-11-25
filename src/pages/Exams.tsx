@@ -101,15 +101,15 @@ const Exams = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="whitespace-nowrap">Course Name</TableHead>
-                <TableHead className="whitespace-nowrap">Date</TableHead>
-                <TableHead className="whitespace-nowrap">Exam Status</TableHead>
+                <TableHead className="whitespace-nowrap text-base">Course Name</TableHead>
+                <TableHead className="whitespace-nowrap text-base">Date</TableHead>
+                <TableHead className="whitespace-nowrap text-base">Exam Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {categoryExams.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8 text-base">
                     No exams scheduled
                   </TableCell>
                 </TableRow>
@@ -120,11 +120,11 @@ const Exams = () => {
                     className="cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => setSelectedExam(exam)}
                   >
-                    <TableCell className="font-medium whitespace-nowrap">{exam.course_name}</TableCell>
-                    <TableCell className="whitespace-nowrap">{format(new Date(exam.exam_date), "PPP")}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap text-base">{exam.course_name}</TableCell>
+                    <TableCell className="whitespace-nowrap text-base">{format(new Date(exam.exam_date), "PPP")}</TableCell>
                     <TableCell>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap inline-block ${
+                        className={`px-2 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-block ${
                           isPast(new Date(exam.exam_date))
                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                             : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"

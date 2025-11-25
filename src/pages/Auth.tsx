@@ -38,7 +38,13 @@ const Auth = () => {
             .maybeSingle();
           
           if (settings?.maintenance_mode_enabled) {
-            navigate('/maintenance', { replace: true });
+            // Sign out the student and show error message
+            await supabase.auth.signOut();
+            toast({
+              title: 'Maintenance Mode',
+              description: 'The system is currently in maintenance mode. Only administrators can log in at this time.',
+              variant: 'destructive',
+            });
             return;
           }
         }
@@ -49,7 +55,7 @@ const Auth = () => {
     };
     
     checkSession();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);

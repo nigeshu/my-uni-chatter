@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText, Upload, Trash2 } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Clock, Plus, RotateCcw, FileText, Upload, Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -42,6 +42,7 @@ const Assignments = () => {
   const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
@@ -340,6 +341,46 @@ const Assignments = () => {
     return diffDays;
   };
 
+  const handleEditAssignment = async () => {
+    if (!selectedAssignment || !formData.course_id || !formData.title || !formData.due_date) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('assignments')
+      .update({
+        course_id: formData.course_id,
+        title: formData.title,
+        description: formData.description,
+        due_date: formData.due_date,
+        slot_id: formData.slot_id || null,
+      })
+      .eq('id', selectedAssignment.id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update assignment',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: 'Assignment updated successfully',
+      });
+      setEditDialogOpen(false);
+      setFormData({ course_id: '', title: '', description: '', due_date: '', slot_id: '' });
+      setSlots([]);
+      setSelectedAssignment(null);
+      fetchAssignments();
+    }
+  };
+
   const handleDeleteAssignment = async (assignmentId: string) => {
     if (!confirm('Are you sure you want to delete this assignment? This action cannot be undone.')) {
       return;
@@ -543,9 +584,15 @@ const Assignments = () => {
                   {/* Slot Badge - Left Corner */}
                   {assignment.course_slots && (
                     <div className="absolute top-4 left-4 z-10">
-                      <div className="h-12 w-12 rounded-full bg-white/95 shadow-lg flex items-center justify-center">
-                        <span className="text-xs font-bold text-primary">{assignment.course_slots.slot_name}</span>
-                      </div>
+                      {assignment.course_slots.slot_name.length <= 3 ? (
+                        <div className="h-12 w-12 rounded-full bg-white/95 shadow-lg flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary">{assignment.course_slots.slot_name}</span>
+                        </div>
+                      ) : (
+                        <div className="px-3 py-2 rounded-full bg-white/95 shadow-lg flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary">{assignment.course_slots.slot_name}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                   
@@ -589,17 +636,39 @@ const Assignments = () => {
                   </div>
 
                   {isAdmin ? (
-                    <Button
-                      className="w-full gap-2"
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteAssignment(assignment.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete Assignment
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 gap-2"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAssignment(assignment);
+                          setFormData({
+                            course_id: assignment.course_id,
+                            title: assignment.title,
+                            description: assignment.description || '',
+                            due_date: assignment.due_date.split('T')[0],
+                            slot_id: assignment.slot_id || '',
+                          });
+                          fetchSlots(assignment.course_id);
+                          setEditDialogOpen(true);
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        className="flex-1 gap-2"
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAssignment(assignment.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
                   ) : (
                     <Button
                       className="w-full gap-2"
@@ -625,6 +694,102 @@ const Assignments = () => {
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
       />
+
+      {/* Edit Assignment Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Assignment</DialogTitle>
+            <DialogDescription>
+              Update assignment details
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-course">Course Name *</Label>
+              <Select
+                value={formData.course_id}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, course_id: value, slot_id: '' });
+                  fetchSlots(value);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {slots.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-slot">Slot</Label>
+                <Select
+                  value={formData.slot_id}
+                  onValueChange={(value) => setFormData({ ...formData, slot_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a slot (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {slots.map((slot) => (
+                      <SelectItem key={slot.id} value={slot.id}>
+                        {slot.slot_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Assignment Name *</Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Enter assignment name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">What To Do</Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Enter assignment description and instructions"
+                rows={5}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-due_date">Deadline *</Label>
+              <Input
+                id="edit-due_date"
+                type="date"
+                value={formData.due_date}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setEditDialogOpen(false);
+              setFormData({ course_id: '', title: '', description: '', due_date: '', slot_id: '' });
+              setSlots([]);
+              setSelectedAssignment(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditAssignment}>
+              Update Assignment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
         <DialogContent className="max-w-2xl">

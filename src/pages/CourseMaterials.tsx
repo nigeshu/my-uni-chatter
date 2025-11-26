@@ -724,7 +724,12 @@ const CourseMaterials = () => {
       <CourseDetailDialog
         course={selectedCourse}
         open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
+        onOpenChange={(open) => {
+          setShowDetailDialog(open);
+          if (!open) {
+            setCurrentTab('content');
+          }
+        }}
       />
 
       <ModuleVideosDialog

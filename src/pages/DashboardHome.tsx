@@ -230,16 +230,22 @@ const DashboardHome = () => {
           title,
           due_date,
           course:courses!inner (title),
-          course_slots:slot_id (slot_name)
+          course_slots:slot_id (slot_name),
+          submissions!left (id, student_id)
         `)
         .in('course_id', courseIds)
         .lte('due_date', twoDaysFromNow.toISOString())
         .order('due_date', { ascending: true });
 
       if (assignments) {
+        // Filter out completed assignments (those with submissions from current user)
+        const incompleteAssignments = assignments.filter((a: any) => 
+          !a.submissions?.some((s: any) => s.student_id === user.id)
+        );
+        
         setAlerts(prev => ({
           ...prev,
-          urgentAssignments: assignments.map((a: any) => ({
+          urgentAssignments: incompleteAssignments.map((a: any) => ({
             id: a.id,
             title: a.title,
             course_title: a.course.title,
@@ -647,7 +653,13 @@ const DashboardHome = () => {
                 ) : (
                   alerts.urgentAssignments.map((assignment) => {
                     const dueDate = new Date(assignment.due_date);
-                    const isOverdue = dueDate < new Date();
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const assignmentDate = new Date(assignment.due_date);
+                    assignmentDate.setHours(0, 0, 0, 0);
+                    
+                    const isToday = assignmentDate.getTime() === today.getTime();
+                    const isOverdue = assignmentDate < today;
                     
                     return (
                       <div 
@@ -659,15 +671,23 @@ const DashboardHome = () => {
                         }`}
                         onClick={() => navigate('/dashboard/assignments')}
                       >
-                        {/* Slot Badge - Left Corner */}
+                        {/* Slot Badge - Right Top Corner */}
                         {assignment.slot_name && (
-                          <div className="absolute -top-2 -left-2 h-10 w-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-primary/20">
-                            <span className="text-xs font-bold text-primary">{assignment.slot_name}</span>
+                          <div className="absolute -top-2 -right-2">
+                            {assignment.slot_name.length <= 3 ? (
+                              <div className="h-10 w-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-primary/20">
+                                <span className="text-xs font-bold text-primary">{assignment.slot_name}</span>
+                              </div>
+                            ) : (
+                              <div className="px-3 py-2 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-primary/20">
+                                <span className="text-xs font-bold text-primary">{assignment.slot_name}</span>
+                              </div>
+                            )}
                           </div>
                         )}
                         
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 pr-8">
                             <h4 className="font-semibold text-sm mb-1 truncate">
                               {assignment.title}
                             </h4>
@@ -677,8 +697,7 @@ const DashboardHome = () => {
                             <div className="flex items-center gap-1 text-xs">
                               <Clock className={`h-3 w-3 ${isOverdue ? 'text-red-600' : 'text-orange-600'}`} />
                               <span className={`font-medium ${isOverdue ? 'text-red-600' : 'text-orange-600'}`}>
-                                {isOverdue ? 'OVERDUE: ' : 'Due: '}
-                                {format(dueDate, 'MMM dd, yyyy')}
+                                {isOverdue ? 'Overdue' : isToday ? 'Due' : `Due: ${format(dueDate, 'MMM dd, yyyy')}`}
                               </span>
                             </div>
                           </div>

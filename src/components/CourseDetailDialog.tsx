@@ -78,7 +78,7 @@ const CourseDetailDialog = ({ course, open, onOpenChange }: CourseDetailDialogPr
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-foreground leading-relaxed">{module.topic}</p>
+                        <p className="text-foreground leading-relaxed font-bold">{module.topic}</p>
                       </div>
                     </div>
                   </CardContent>

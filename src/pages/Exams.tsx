@@ -72,8 +72,8 @@ const Exams = () => {
       return "Completed";
     }
     const daysUntil = Math.ceil(differenceInDays(date, new Date()));
-    if (daysUntil === 0) return "Tomorrow";
-    if (daysUntil === 1) return "Today";
+    if (daysUntil === 0) return "Today";
+    if (daysUntil === 1) return "Coming in 1 day";
     return `Coming in ${daysUntil} days`;
   };
 

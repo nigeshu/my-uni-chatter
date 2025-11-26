@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface Module {
   id: string;
   serial_no: string;
+  heading: string | null;
   topic: string;
   order_index: number;
 }
@@ -78,7 +79,10 @@ const CourseDetailDialog = ({ course, open, onOpenChange }: CourseDetailDialogPr
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-foreground leading-relaxed font-bold">{module.topic}</p>
+                        {module.heading && (
+                          <h3 className="text-foreground font-bold text-lg mb-2">{module.heading}</h3>
+                        )}
+                        <p className="text-foreground leading-relaxed">{module.topic}</p>
                       </div>
                     </div>
                   </CardContent>

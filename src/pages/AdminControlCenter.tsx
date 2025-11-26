@@ -21,6 +21,7 @@ interface AssignmentRequest {
   assignment_title: string;
   what_to_do: string;
   deadline: string;
+  slot_name: string | null;
   status: string;
   admin_response: string | null;
   created_at: string;
@@ -338,13 +339,20 @@ const AdminControlCenter = () => {
             <Card key={request.id} className="border-l-4 border-l-primary">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{request.assignment_title}</CardTitle>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <CardTitle className="text-xl">{request.assignment_title}</CardTitle>
+                      {request.slot_name && (
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                          <span className="text-sm font-bold text-primary">{request.slot_name}</span>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground mt-1">
                       Course: {request.course_name} • By: {request.student.full_name} ({request.student.email})
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Deadline: {format(new Date(request.deadline), 'PPP')}
+                      Deadline: {format(new Date(request.deadline), 'MMM dd, yyyy')}
                     </p>
                   </div>
                 </div>

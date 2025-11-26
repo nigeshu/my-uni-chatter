@@ -17,19 +17,27 @@ interface Course {
   title: string;
 }
 
+interface Slot {
+  id: string;
+  slot_name: string;
+}
+
 interface Assignment {
   id: string;
   title: string;
   description: string;
   due_date: string;
   course_id: string;
+  slot_id?: string | null;
   courses: Course;
+  course_slots?: Slot | null;
   submissions?: Array<{ id: string; student_id: string }>;
 }
 
 const Assignments = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -44,6 +52,7 @@ const Assignments = () => {
     title: '',
     description: '',
     due_date: '',
+    slot_id: '',
   });
 
   const [requestForm, setRequestForm] = useState({
@@ -51,6 +60,7 @@ const Assignments = () => {
     assignment_title: '',
     what_to_do: '',
     deadline: '',
+    slot_name: '',
   });
   const [requestFile, setRequestFile] = useState<File | null>(null);
   const [uploadingRequest, setUploadingRequest] = useState(false);
@@ -84,6 +94,16 @@ const Assignments = () => {
     if (data) setCourses(data);
   };
 
+  const fetchSlots = async (courseId: string) => {
+    const { data } = await supabase
+      .from('course_slots')
+      .select('id, slot_name')
+      .eq('course_id', courseId);
+    
+    if (data) setSlots(data);
+    else setSlots([]);
+  };
+
   const fetchAssignments = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -101,6 +121,7 @@ const Assignments = () => {
       .select(`
         *,
         courses:course_id (id, title),
+        course_slots:slot_id (id, slot_name),
         submissions (id, student_id)
       `)
       .order('due_date', { ascending: true });
@@ -146,6 +167,7 @@ const Assignments = () => {
         title: formData.title,
         description: formData.description,
         due_date: formData.due_date,
+        slot_id: formData.slot_id || null,
       });
 
     if (error) {
@@ -160,13 +182,14 @@ const Assignments = () => {
         description: 'Assignment created successfully',
       });
       setDialogOpen(false);
-      setFormData({ course_id: '', title: '', description: '', due_date: '' });
+      setFormData({ course_id: '', title: '', description: '', due_date: '', slot_id: '' });
+      setSlots([]);
       fetchAssignments();
     }
   };
 
   const handleSubmitRequest = async () => {
-    if (!requestForm.course_name || !requestForm.assignment_title || !requestForm.what_to_do || !requestForm.deadline) {
+    if (!requestForm.course_name || !requestForm.assignment_title || !requestForm.what_to_do || !requestForm.deadline || !requestForm.slot_name) {
       toast({
         title: 'Error',
         description: 'Please fill in all fields.',
@@ -205,6 +228,7 @@ const Assignments = () => {
           assignment_title: requestForm.assignment_title,
           what_to_do: requestForm.what_to_do,
           deadline: requestForm.deadline,
+          slot_name: requestForm.slot_name,
           file_url: fileUrl,
         });
 
@@ -220,6 +244,7 @@ const Assignments = () => {
         assignment_title: '',
         what_to_do: '',
         deadline: '',
+        slot_name: '',
       });
       setRequestFile(null);
     } catch (error: any) {
@@ -374,7 +399,10 @@ const Assignments = () => {
                     <Label htmlFor="course">Course Name *</Label>
                     <Select
                       value={formData.course_id}
-                      onValueChange={(value) => setFormData({ ...formData, course_id: value })}
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, course_id: value, slot_id: '' });
+                        fetchSlots(value);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a course" />
@@ -388,6 +416,26 @@ const Assignments = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {slots.length > 0 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="slot">Slot</Label>
+                      <Select
+                        value={formData.slot_id}
+                        onValueChange={(value) => setFormData({ ...formData, slot_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a slot (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {slots.map((slot) => (
+                            <SelectItem key={slot.id} value={slot.id}>
+                              {slot.slot_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="title">Assignment Name *</Label>
                     <Input
@@ -411,7 +459,7 @@ const Assignments = () => {
                     <Label htmlFor="due_date">Deadline *</Label>
                     <Input
                       id="due_date"
-                      type="datetime-local"
+                      type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                     />
@@ -491,6 +539,16 @@ const Assignments = () => {
                   'bg-gradient-to-br from-primary via-purple-500 to-accent'
                 }`}>
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                  
+                  {/* Slot Badge - Left Corner */}
+                  {assignment.course_slots && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <div className="h-12 w-12 rounded-full bg-white/95 shadow-lg flex items-center justify-center">
+                        <span className="text-xs font-bold text-primary">{assignment.course_slots.slot_name}</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="absolute bottom-4 left-4 right-4">
                     <div className="flex items-center gap-2 text-white/90 text-sm mb-1">
                       <BookOpen className="h-4 w-4" />
@@ -505,7 +563,7 @@ const Assignments = () => {
                   </CardTitle>
                   <CardDescription className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    Due: {format(new Date(assignment.due_date), 'MMM dd, yyyy HH:mm')}
+                    Due: {format(new Date(assignment.due_date), 'MMM dd, yyyy')}
                   </CardDescription>
                 </CardHeader>
 
@@ -591,6 +649,14 @@ const Assignments = () => {
               />
             </div>
             <div>
+              <Label>Slot</Label>
+              <Input
+                value={requestForm.slot_name}
+                onChange={(e) => setRequestForm({ ...requestForm, slot_name: e.target.value })}
+                placeholder="Enter slot (e.g., A1, B1, etc.)"
+              />
+            </div>
+            <div>
               <Label>What To Do</Label>
               <Textarea
                 value={requestForm.what_to_do}
@@ -602,7 +668,7 @@ const Assignments = () => {
             <div>
               <Label>Deadline</Label>
               <Input
-                type="datetime-local"
+                type="date"
                 value={requestForm.deadline}
                 onChange={(e) => setRequestForm({ ...requestForm, deadline: e.target.value })}
               />

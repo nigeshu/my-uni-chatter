@@ -47,6 +47,7 @@ export type Database = {
           deadline: string
           file_url: string | null
           id: string
+          slot_name: string | null
           status: string
           student_id: string
           updated_at: string
@@ -60,6 +61,7 @@ export type Database = {
           deadline: string
           file_url?: string | null
           id?: string
+          slot_name?: string | null
           status?: string
           student_id: string
           updated_at?: string
@@ -73,6 +75,7 @@ export type Database = {
           deadline?: string
           file_url?: string | null
           id?: string
+          slot_name?: string | null
           status?: string
           student_id?: string
           updated_at?: string
@@ -88,6 +91,7 @@ export type Database = {
           due_date: string | null
           id: string
           max_points: number | null
+          slot_id: string | null
           title: string
           updated_at: string
         }
@@ -98,6 +102,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           max_points?: number | null
+          slot_id?: string | null
           title: string
           updated_at?: string
         }
@@ -108,6 +113,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           max_points?: number | null
+          slot_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -117,6 +123,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "course_slots"
             referencedColumns: ["id"]
           },
         ]

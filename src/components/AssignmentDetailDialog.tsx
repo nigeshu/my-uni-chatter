@@ -9,12 +9,16 @@ interface Assignment {
   description: string | null;
   due_date: string | null;
   max_points?: number | null;
+  slot_id?: string | null;
   course?: {
     title: string;
   };
   courses?: {
     title: string;
   };
+  course_slots?: {
+    slot_name: string;
+  } | null;
 }
 
 interface AssignmentDetailDialogProps {
@@ -45,15 +49,22 @@ const AssignmentDetailDialog = ({ assignment, open, onOpenChange }: AssignmentDe
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Course Info */}
-          {(assignment.course || assignment.courses) && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <BookOpen className="h-4 w-4" />
-              <span className="font-semibold">
-                {assignment.course?.title || assignment.courses?.title}
-              </span>
-            </div>
-          )}
+          {/* Course Info and Slot */}
+          <div className="flex items-center gap-4 flex-wrap">
+            {(assignment.course || assignment.courses) && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <BookOpen className="h-4 w-4" />
+                <span className="font-semibold">
+                  {assignment.course?.title || assignment.courses?.title}
+                </span>
+              </div>
+            )}
+            {assignment.course_slots && (
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                <span className="text-sm font-bold text-primary">{assignment.course_slots.slot_name}</span>
+              </div>
+            )}
+          </div>
 
           {/* Due Date */}
           {assignment.due_date && (
@@ -61,7 +72,7 @@ const AssignmentDetailDialog = ({ assignment, open, onOpenChange }: AssignmentDe
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  Due: {format(new Date(assignment.due_date), 'PPP')}
+                  Due: {format(new Date(assignment.due_date), 'MMM dd, yyyy')}
                 </span>
               </div>
               {daysUntilDue !== null && (

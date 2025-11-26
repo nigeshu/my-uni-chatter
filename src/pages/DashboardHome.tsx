@@ -43,7 +43,7 @@ const DashboardHome = () => {
   const [newSemesterText, setNewSemesterText] = useState('');
   const [alerts, setAlerts] = useState<{
     messages: Array<{ id: string; message: string }>;
-    urgentAssignments: Array<{ id: string; title: string; course_title: string; due_date: string }>;
+    urgentAssignments: Array<{ id: string; title: string; course_title: string; due_date: string; slot_name?: string }>;
     upcomingExam?: { id: string; course_name: string; exam_date: string };
   }>({
     messages: [],
@@ -229,7 +229,8 @@ const DashboardHome = () => {
           id,
           title,
           due_date,
-          course:courses!inner (title)
+          course:courses!inner (title),
+          course_slots:slot_id (slot_name)
         `)
         .in('course_id', courseIds)
         .lte('due_date', twoDaysFromNow.toISOString())
@@ -243,6 +244,7 @@ const DashboardHome = () => {
             title: a.title,
             course_title: a.course.title,
             due_date: a.due_date,
+            slot_name: a.course_slots?.slot_name,
           })),
         }));
       }
@@ -650,13 +652,20 @@ const DashboardHome = () => {
                     return (
                       <div 
                         key={assignment.id} 
-                        className={`p-4 rounded-lg border hover:shadow-lg transition-all cursor-pointer ${
+                        className={`p-4 rounded-lg border hover:shadow-lg transition-all cursor-pointer relative ${
                           isOverdue 
                             ? 'bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/40 hover:border-red-500/60' 
                             : 'bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 hover:border-orange-500/40'
                         }`}
                         onClick={() => navigate('/dashboard/assignments')}
                       >
+                        {/* Slot Badge - Left Corner */}
+                        {assignment.slot_name && (
+                          <div className="absolute -top-2 -left-2 h-10 w-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-primary/20">
+                            <span className="text-xs font-bold text-primary">{assignment.slot_name}</span>
+                          </div>
+                        )}
+                        
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm mb-1 truncate">
@@ -669,7 +678,7 @@ const DashboardHome = () => {
                               <Clock className={`h-3 w-3 ${isOverdue ? 'text-red-600' : 'text-orange-600'}`} />
                               <span className={`font-medium ${isOverdue ? 'text-red-600' : 'text-orange-600'}`}>
                                 {isOverdue ? 'OVERDUE: ' : 'Due: '}
-                                {format(dueDate, 'MMM dd, HH:mm')}
+                                {format(dueDate, 'MMM dd, yyyy')}
                               </span>
                             </div>
                           </div>

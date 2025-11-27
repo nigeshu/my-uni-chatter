@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell } from 'lucide-react';
+import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell, Play } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { WeekCalendar } from '@/components/WeekCalendar';
@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { TrailerDialog } from '@/components/TrailerDialog';
 
 interface Stats {
   enrolledCourses: number;
@@ -54,6 +55,7 @@ const DashboardHome = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [viewedNotifications, setViewedNotifications] = useState<string[]>([]);
+  const [trailerOpen, setTrailerOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -64,8 +66,17 @@ const DashboardHome = () => {
       fetchAlerts();
       fetchNotifications();
       loadViewedNotifications();
+      checkFirstLogin();
     }
   }, [user]);
+
+  const checkFirstLogin = () => {
+    const hasSeenTrailer = localStorage.getItem(`trailer_seen_${user?.id}`);
+    if (!hasSeenTrailer) {
+      setTrailerOpen(true);
+      localStorage.setItem(`trailer_seen_${user?.id}`, 'true');
+    }
+  };
 
   const checkAdminRole = async () => {
     const { data } = await supabase
@@ -454,7 +465,15 @@ const DashboardHome = () => {
           )}
           </div>
           {!isAdmin && (
-            <div className="relative">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setTrailerOpen(true)}
+                className="relative"
+              >
+                <Play className="h-5 w-5" />
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -766,6 +785,9 @@ const DashboardHome = () => {
           <WeekCalendar isAdmin={isAdmin} />
         </div>
       </div>
+
+      {/* Trailer Dialog */}
+      <TrailerDialog open={trailerOpen} onOpenChange={setTrailerOpen} />
     </div>
   );
 };

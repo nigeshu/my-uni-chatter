@@ -254,7 +254,7 @@ export const PlanSection = () => {
                     <span
                       className={cn(
                         'font-semibold',
-                        calculateRemainingDays(plan.end_date) === 0 && 'text-destructive'
+                        calculateRemainingDays(plan.end_date) <= 1 && 'text-destructive'
                       )}
                     >
                       {calculateRemainingDays(plan.end_date)} days

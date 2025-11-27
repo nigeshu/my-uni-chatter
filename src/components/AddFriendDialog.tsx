@@ -82,22 +82,13 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
           return;
         }
 
-        // Row exists but is not pending (e.g. rejected/accepted); reuse it to avoid unique constraint error
-        const { error: updateError } = await supabase
+        // Delete old non-pending request and insert new one
+        const { error: deleteError } = await supabase
           .from('friend_requests')
-          .update({ status: 'pending', sender_id: userId, receiver_id: friendProfile.id })
+          .delete()
           .eq('id', existingRequest.id);
 
-        if (updateError) throw updateError;
-
-        toast({
-          title: 'Success!',
-          description: 'Friend request sent successfully.',
-        });
-
-        setFriendName('');
-        onClose();
-        return;
+        if (deleteError) throw deleteError;
       }
 
       const { error } = await supabase.from('friend_requests').insert({

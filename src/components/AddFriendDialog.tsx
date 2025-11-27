@@ -61,6 +61,22 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
         return;
       }
 
+      // Check if friendship already exists
+      const { data: existingFriendship } = await supabase
+        .from('friendships')
+        .select('id')
+        .or(`and(user_id.eq.${userId},friend_id.eq.${friendProfile.id}),and(user_id.eq.${friendProfile.id},friend_id.eq.${userId})`)
+        .maybeSingle();
+
+      if (existingFriendship) {
+        toast({
+          title: 'Already friends',
+          description: 'You are already friends with this user.',
+        });
+        return;
+      }
+
+      // Check if a friend request already exists (any direction, any status)
       const { data: existingRequest } = await supabase
         .from('friend_requests')
         .select('id, sender_id, receiver_id, status')
@@ -82,13 +98,14 @@ const AddFriendDialog = ({ userId, open, onClose }: AddFriendDialogProps) => {
           return;
         }
 
-        // Delete old non-pending request and insert new one
-        const { error: deleteError } = await supabase
+        // Delete any existing non-pending request to avoid unique constraint violation
+        await supabase
           .from('friend_requests')
           .delete()
-          .eq('id', existingRequest.id);
-
-        if (deleteError) throw deleteError;
+          .or(
+            `and(sender_id.eq.${userId},receiver_id.eq.${friendProfile.id}),` +
+              `and(sender_id.eq.${friendProfile.id},receiver_id.eq.${userId})`
+          );
       }
 
       const { error } = await supabase.from('friend_requests').insert({

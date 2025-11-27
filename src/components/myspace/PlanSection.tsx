@@ -130,8 +130,15 @@ export const PlanSection = () => {
   };
 
   const calculateRemainingDays = (endDate: string) => {
-    const remaining = differenceInDays(new Date(endDate), new Date()) + 1;
-    return remaining < 0 ? 0 : remaining;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    
+    const remaining = differenceInDays(end, today);
+    
+    if (remaining < 0) return 0; // Past dates
+    return remaining + 1; // Include both today and end date
   };
 
   return (

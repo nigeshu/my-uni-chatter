@@ -6,9 +6,17 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, FileText, Link, Video, File, Download, Play, Menu, ChevronRight, Search, Plus } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseDetailDialog from '@/components/CourseDetailDialog';
 import ModuleVideosDialog from '@/components/ModuleVideosDialog';
@@ -912,28 +920,31 @@ const CourseMaterials = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add to My Space</DialogTitle>
+            <DialogDescription>
+              Add "{selectedMaterial?.title}" to your notes
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Select Subject</label>
-              <select
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full p-2 border rounded-md bg-background"
-              >
-                <option value="">Select a subject</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </option>
-                ))}
-                <option value="new">+ Create New Subject</option>
-              </select>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Select Subject</Label>
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="new">+ Create New Subject</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {selectedSubject === 'new' && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">New Subject Name</label>
+              <div className="space-y-2">
+                <Label>New Subject Name</Label>
                 <Input
                   value={newSubjectName}
                   onChange={(e) => setNewSubjectName(e.target.value)}
@@ -942,12 +953,16 @@ const CourseMaterials = () => {
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
+            <div className="flex gap-2 pt-4">
+              <Button 
+                onClick={handleAddToSpace}
+                disabled={!selectedSubject || (selectedSubject === 'new' && !newSubjectName.trim())}
+                className="flex-1"
+              >
+                Add to Notes
+              </Button>
               <Button variant="outline" onClick={() => setAddToSpaceOpen(false)}>
                 Cancel
-              </Button>
-              <Button onClick={handleAddToSpace}>
-                Add to Notes
               </Button>
             </div>
           </div>

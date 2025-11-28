@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell, Play } from 'lucide-react';
+import { BookOpen, Award, Clock, GraduationCap, ArrowRight, Edit2, BookMarked, MessageSquare, AlertCircle, Plus, Trash2, Bell, Play, HelpCircle } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { WeekCalendar } from '@/components/WeekCalendar';
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { TrailerDialog } from '@/components/TrailerDialog';
+import { HelpDialog } from '@/components/HelpDialog';
 
 interface Stats {
   enrolledCourses: number;
@@ -56,6 +57,7 @@ const DashboardHome = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [viewedNotifications, setViewedNotifications] = useState<string[]>([]);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -786,7 +788,8 @@ const DashboardHome = () => {
         </div>
       </div>
 
-      {/* Trailer Dialog */}
+      {/* Dialogs */}
+      <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <TrailerDialog open={trailerOpen} onOpenChange={setTrailerOpen} />
     </div>
   );

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, FileText, Link, Video, File, Download, Play, Menu, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, FileText, Link, Video, File, Download, Play, Menu, ChevronRight, Search, Plus } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -83,14 +83,22 @@ const CourseMaterials = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [uploadingPyq, setUploadingPyq] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [addToSpaceOpen, setAddToSpaceOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [newSubjectName, setNewSubjectName] = useState('');
 
   useEffect(() => {
     if (courseId) {
       fetchCourse();
       checkEnrollment();
       fetchUserRole();
+      if (userRole === 'student') {
+        fetchSubjects();
+      }
     }
-  }, [courseId]);
+  }, [courseId, userRole]);
 
   const sortDays = (days: string[]): string[] => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -205,6 +213,139 @@ const CourseMaterials = () => {
     }
     
     if (data) setPyqs(data);
+  };
+
+  const fetchSubjects = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('study_subjects')
+      .select('*')
+      .eq('student_id', user.id)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching subjects:', error);
+      return;
+    }
+
+    if (data) setSubjects(data);
+  };
+
+  const handleAddToSpace = async () => {
+    if (!selectedMaterial) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    let subjectId = selectedSubject;
+
+    // Create new subject if needed
+    if (selectedSubject === 'new' && newSubjectName.trim()) {
+      const { data: newSubject, error: subjectError } = await supabase
+        .from('study_subjects')
+        .insert({
+          name: newSubjectName.trim(),
+          student_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (subjectError) {
+        toast({
+          title: 'Error',
+          description: 'Failed to create subject',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      subjectId = newSubject.id;
+      await fetchSubjects();
+    }
+
+    if (!subjectId || subjectId === 'new') {
+      toast({
+        title: 'Error',
+        description: 'Please select or create a subject',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Get or create notes category for this subject
+    let { data: categories, error: catError } = await supabase
+      .from('study_categories')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .eq('category_type', 'notes')
+      .limit(1);
+
+    if (catError) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch categories',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    let categoryId;
+    if (!categories || categories.length === 0) {
+      // Create notes category
+      const { data: newCategory, error: newCatError } = await supabase
+        .from('study_categories')
+        .insert({
+          subject_id: subjectId,
+          name: 'Notes',
+          category_type: 'notes',
+        })
+        .select()
+        .single();
+
+      if (newCatError) {
+        toast({
+          title: 'Error',
+          description: 'Failed to create category',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      categoryId = newCategory.id;
+    } else {
+      categoryId = categories[0].id;
+    }
+
+    // Add material to study_items
+    const { error: itemError } = await supabase
+      .from('study_items')
+      .insert({
+        category_id: categoryId,
+        title: selectedMaterial.title,
+        content: selectedMaterial.description,
+        file_url: selectedMaterial.file_url,
+      });
+
+    if (itemError) {
+      toast({
+        title: 'Error',
+        description: 'Failed to add to My Space',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Document added to My Space notes',
+    });
+
+    setAddToSpaceOpen(false);
+    setSelectedMaterial(null);
+    setSelectedSubject('');
+    setNewSubjectName('');
   };
 
   const handlePyqUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -563,21 +704,35 @@ const CourseMaterials = () => {
                                   {material.description && (
                                     <p className="text-sm text-muted-foreground">{material.description}</p>
                                   )}
-                                  {material.file_url && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="mt-3"
-                                      onClick={() => {
-                                        setPreviewUrl(material.file_url);
-                                        setPreviewTitle(material.title);
-                                        setPreviewOpen(true);
-                                      }}
-                                    >
-                                      <Download className="h-4 w-4 mr-2" />
-                                      Open
-                                    </Button>
-                                  )}
+                                   {material.file_url && (
+                                    <div className="flex gap-2 mt-3">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setPreviewUrl(material.file_url);
+                                          setPreviewTitle(material.title);
+                                          setPreviewOpen(true);
+                                        }}
+                                      >
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Open
+                                      </Button>
+                                      {userRole === 'student' && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            setSelectedMaterial(material);
+                                            setAddToSpaceOpen(true);
+                                          }}
+                                        >
+                                          <Plus className="h-4 w-4 mr-2" />
+                                          Add to My Space
+                                        </Button>
+                                      )}
+                                    </div>
+                                   )}
                                 </div>
                               </div>
                             </CardContent>
@@ -755,6 +910,53 @@ const CourseMaterials = () => {
         onOpenChange={setVideosDialogOpen}
         module={selectedModule}
       />
+
+      {/* Add to My Space Dialog */}
+      <Dialog open={addToSpaceOpen} onOpenChange={setAddToSpaceOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add to My Space</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Select Subject</label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full p-2 border rounded-md bg-background"
+              >
+                <option value="">Select a subject</option>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </option>
+                ))}
+                <option value="new">+ Create New Subject</option>
+              </select>
+            </div>
+
+            {selectedSubject === 'new' && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">New Subject Name</label>
+                <Input
+                  value={newSubjectName}
+                  onChange={(e) => setNewSubjectName(e.target.value)}
+                  placeholder="Enter subject name"
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAddToSpaceOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddToSpace}>
+                Add to Notes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

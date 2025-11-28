@@ -471,6 +471,14 @@ const DashboardHome = () => {
               <Button
                 variant="outline"
                 size="icon"
+                onClick={() => setHelpOpen(true)}
+                className="relative bg-black text-white hover:bg-black/90 hover:text-white border-black"
+              >
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={() => setTrailerOpen(true)}
                 className="relative"
               >

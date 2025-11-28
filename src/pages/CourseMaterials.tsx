@@ -94,11 +94,9 @@ const CourseMaterials = () => {
       fetchCourse();
       checkEnrollment();
       fetchUserRole();
-      if (userRole === 'student') {
-        fetchSubjects();
-      }
+      fetchSubjects();
     }
-  }, [courseId, userRole]);
+  }, [courseId]);
 
   const sortDays = (days: string[]): string[] => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -718,19 +716,17 @@ const CourseMaterials = () => {
                                         <Download className="h-4 w-4 mr-2" />
                                         Open
                                       </Button>
-                                      {userRole === 'student' && (
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => {
-                                            setSelectedMaterial(material);
-                                            setAddToSpaceOpen(true);
-                                          }}
-                                        >
-                                          <Plus className="h-4 w-4 mr-2" />
-                                          Add to My Space
-                                        </Button>
-                                      )}
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setSelectedMaterial(material);
+                                          setAddToSpaceOpen(true);
+                                        }}
+                                      >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add to My Space
+                                      </Button>
                                     </div>
                                    )}
                                 </div>

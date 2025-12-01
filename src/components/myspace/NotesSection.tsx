@@ -226,6 +226,31 @@ export const NotesSection = () => {
     fetchSubjects();
   };
 
+  const deleteCategory = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when deleting
+    
+    const { error } = await supabase.from('study_categories').delete().eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete category',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Category deleted successfully',
+    });
+
+    if (selectedCategory?.id === id) {
+      setSelectedCategory(null);
+    }
+    fetchCategories();
+  };
+
   if (!selectedSubject) {
     return (
       <div className="space-y-4">
@@ -351,9 +376,17 @@ export const NotesSection = () => {
             {categories.filter(c => c.category_type === 'notes').map((category) => (
               <Card
                 key={category.id}
-                className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105 relative group"
                 onClick={() => setSelectedCategory(category)}
               >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={(e) => deleteCategory(category.id, e)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-primary" />
                   <span className="font-medium">{category.name}</span>
@@ -461,15 +494,24 @@ export const NotesSection = () => {
             <div className="w-1/3 border-r pr-4">
               <div className="space-y-2">
                 {categories.filter(c => c.category_type === 'videos').map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory?.id === category.id ? "default" : "outline"}
-                    className="w-full justify-start text-left h-auto py-3 px-4"
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    <Video className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="line-clamp-2">{category.name}</span>
-                  </Button>
+                  <div key={category.id} className="relative group">
+                    <Button
+                      variant={selectedCategory?.id === category.id ? "default" : "outline"}
+                      className="w-full justify-start text-left h-auto py-3 px-4 pr-10"
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      <Video className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="line-clamp-2">{category.name}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-1/2 -translate-y-1/2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-10"
+                      onClick={(e) => deleteCategory(category.id, e)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 ))}
                 
                 {categories.filter(c => c.category_type === 'videos').length === 0 && (

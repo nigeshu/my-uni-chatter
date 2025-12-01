@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { MessageSquare } from 'lucide-react';
+import studyHeroGraphic from '@/assets/study-hero-graphic.png';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -319,6 +320,25 @@ const Auth = () => {
             <p className="text-xs text-accent font-medium pt-2 border-t border-border/50">
               📖 Syllabus tracker • ✍️ Practice tests • 📊 Readiness score
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Graphic Section */}
+      <div className="flex flex-col items-center gap-6 mb-6 animate-fade-in">
+        <div className="relative group">
+          {/* Glow effect behind image */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-secondary/30 to-accent/30 rounded-2xl blur-2xl opacity-50 group-hover:opacity-70 transition-all duration-500 scale-110" />
+          
+          {/* Image container */}
+          <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/50 hover:scale-105 transition-all duration-500 hover:border-primary/40">
+            <img 
+              src={studyHeroGraphic} 
+              alt="Study Hero Graphic" 
+              className="w-[500px] h-auto object-cover max-w-full"
+            />
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
         </div>
       </div>

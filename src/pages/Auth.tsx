@@ -325,7 +325,7 @@ const Auth = () => {
       </div>
 
       {/* Main Content Container */}
-      <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto relative z-10">
+      <div className="flex flex-col items-center w-full max-w-xl mx-auto relative z-10 mt-8">
         {/* Hero Graphic Section */}
         <div className="w-full flex justify-center mb-8 animate-fade-in">
           <div className="relative group">

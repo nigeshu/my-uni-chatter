@@ -324,26 +324,29 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Hero Graphic Section */}
-      <div className="flex flex-col items-center gap-6 mb-6 animate-fade-in">
-        <div className="relative group">
-          {/* Glow effect behind image */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-secondary/30 to-accent/30 rounded-2xl blur-2xl opacity-50 group-hover:opacity-70 transition-all duration-500 scale-110" />
-          
-          {/* Image container */}
-          <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/50 hover:scale-105 transition-all duration-500 hover:border-primary/40">
-            <img 
-              src={studyHeroGraphic} 
-              alt="Study Hero Graphic" 
-              className="w-[500px] h-auto object-cover max-w-full"
-            />
-            {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      {/* Main Content Container */}
+      <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto relative z-10">
+        {/* Hero Graphic Section */}
+        <div className="w-full flex justify-center mb-8 animate-fade-in">
+          <div className="relative group">
+            {/* Glow effect behind image */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-secondary/30 to-accent/30 rounded-2xl blur-2xl opacity-50 group-hover:opacity-70 transition-all duration-500 scale-110" />
+            
+            {/* Image container */}
+            <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/50 hover:scale-105 transition-all duration-500 hover:border-primary/40">
+              <img 
+                src={studyHeroGraphic} 
+                alt="Study Hero Graphic" 
+                className="w-full max-w-[480px] h-auto object-contain"
+              />
+              {/* Overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <Card className="w-full max-w-md border-2 border-primary/30 shadow-2xl backdrop-blur-md bg-card relative z-10 animate-fade-in hover:border-primary/50 transition-all duration-500 group">
+        {/* Login Card */}
+        <Card className="w-full max-w-md border-2 border-primary/30 shadow-2xl backdrop-blur-md bg-card relative animate-fade-in hover:border-primary/50 transition-all duration-500 group" style={{ animationDelay: '0.2s' }}>
         {/* Glowing border effect - behind content */}
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary via-secondary to-accent opacity-10 blur-xl group-hover:opacity-20 transition-opacity duration-500 -z-10" />
         
@@ -446,6 +449,8 @@ const Auth = () => {
           )}
         </CardContent>
       </Card>
+      </div>
+      {/* End Main Content Container */}
     </div>
   );
 };

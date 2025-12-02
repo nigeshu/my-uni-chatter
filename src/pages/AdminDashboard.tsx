@@ -198,7 +198,13 @@ const AdminDashboard = () => {
                     <DialogHeader>
                       <DialogTitle>Edit Name</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 pt-4">
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSaveName();
+                      }}
+                      className="space-y-4 pt-4"
+                    >
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
                         <Input
@@ -215,10 +221,10 @@ const AdminDashboard = () => {
                           <p className="text-sm text-destructive">{nameError}</p>
                         )}
                       </div>
-                      <Button onClick={handleSaveName} className="w-full">
+                      <Button type="submit" className="w-full">
                         Save Changes
                       </Button>
-                    </div>
+                    </form>
                   </DialogContent>
                 </Dialog>
               </div>

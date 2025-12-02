@@ -23,7 +23,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -165,9 +164,47 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="h-screen flex bg-background">
-      {/* Sidebar */}
-      <div className="w-64 border-r border-border flex flex-col bg-gradient-to-b from-card via-card to-accent/5">
+    <>
+      {/* Edit Name Dialog - placed at root to prevent remounting */}
+      <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Name</DialogTitle>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveName();
+            }}
+            className="space-y-4 pt-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="admin-edit-name">Full Name</Label>
+              <Input
+                id="admin-edit-name"
+                value={newName}
+                onChange={(e) => {
+                  setNewName(e.target.value);
+                  setNameError('');
+                }}
+                placeholder="Enter your name"
+                maxLength={100}
+                autoFocus
+              />
+              {nameError && (
+                <p className="text-sm text-destructive">{nameError}</p>
+              )}
+            </div>
+            <Button type="submit" className="w-full" disabled={savingName}>
+              {savingName ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="h-screen flex bg-background">
+        {/* Sidebar */}
+        <div className="w-64 border-r border-border flex flex-col bg-gradient-to-b from-card via-card to-accent/5">
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-6">
@@ -191,50 +228,14 @@ const AdminDashboard = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-semibold truncate text-sm">{profile?.full_name || 'Admin'}</p>
-                <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0 hover:bg-accent/10"
-                      onClick={handleEditName}
-                    >
-                      <Edit2 className="h-3 w-3" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Name</DialogTitle>
-                    </DialogHeader>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSaveName();
-                      }}
-                      className="space-y-4 pt-4"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          value={newName}
-                          onChange={(e) => {
-                            setNewName(e.target.value);
-                            setNameError('');
-                          }}
-                          placeholder="Enter your name"
-                          maxLength={100}
-                        />
-                        {nameError && (
-                          <p className="text-sm text-destructive">{nameError}</p>
-                        )}
-                      </div>
-                      <Button type="submit" className="w-full" disabled={savingName}>
-                        {savingName ? 'Saving...' : 'Save Changes'}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 hover:bg-accent/10"
+                  onClick={handleEditName}
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
               </div>
               <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Administrator'}</p>
             </div>
@@ -288,6 +289,7 @@ const AdminDashboard = () => {
         <Outlet />
       </div>
     </div>
+    </>
   );
 };
 

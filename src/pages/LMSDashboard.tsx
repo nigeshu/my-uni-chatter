@@ -29,7 +29,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -302,50 +301,14 @@ const LMSDashboard = () => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
-              <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0 hover:bg-primary/10"
-                    onClick={handleEditName}
-                  >
-                    <Edit2 className="h-3 w-3" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Edit Name</DialogTitle>
-                  </DialogHeader>
-                  <form 
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSaveName();
-                    }}
-                    className="space-y-4 pt-4"
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={newName}
-                        onChange={(e) => {
-                          setNewName(e.target.value);
-                          setNameError('');
-                        }}
-                        placeholder="Enter your name"
-                        maxLength={100}
-                      />
-                      {nameError && (
-                        <p className="text-sm text-destructive">{nameError}</p>
-                      )}
-                    </div>
-                    <Button type="submit" className="w-full" disabled={savingName}>
-                      {savingName ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0 hover:bg-primary/10"
+                onClick={handleEditName}
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
           </div>
@@ -419,43 +382,82 @@ const LMSDashboard = () => {
   );
 
   return (
-    <div className="h-screen flex bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex w-64 border-r border-border flex-col bg-gradient-to-b from-card via-card to-primary/5">
-        <SidebarContent />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64">
-              <div className="h-full flex flex-col bg-gradient-to-b from-card via-card to-primary/5">
-                <SidebarContent />
-              </div>
-            </SheetContent>
-          </Sheet>
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gradient-primary rounded-lg">
-              <GraduationCap className="h-5 w-5 text-white" />
+    <>
+      {/* Edit Name Dialog - placed at root to prevent remounting */}
+      <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Name</DialogTitle>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveName();
+            }}
+            className="space-y-4 pt-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={newName}
+                onChange={(e) => {
+                  setNewName(e.target.value);
+                  setNameError('');
+                }}
+                placeholder="Enter your name"
+                maxLength={100}
+                autoFocus
+              />
+              {nameError && (
+                <p className="text-sm text-destructive">{nameError}</p>
+              )}
             </div>
-            <h1 className="text-lg font-bold">Lernet</h1>
-          </div>
-          <div className="w-10" /> {/* Spacer for centering */}
+            <Button type="submit" className="w-full" disabled={savingName}>
+              {savingName ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="h-screen flex bg-background">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:flex w-64 border-r border-border flex-col bg-gradient-to-b from-card via-card to-primary/5">
+          <SidebarContent />
         </div>
 
-        {/* Page Content */}
-        <div className="flex-1 overflow-auto">
-          <Outlet />
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile Header */}
+          <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-64">
+                <div className="h-full flex flex-col bg-gradient-to-b from-card via-card to-primary/5">
+                  <SidebarContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-primary rounded-lg">
+                <GraduationCap className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-lg font-bold">Lernet</h1>
+            </div>
+            <div className="w-10" /> {/* Spacer for centering */}
+          </div>
+
+          {/* Page Content */}
+          <div className="flex-1 overflow-auto">
+            <Outlet />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

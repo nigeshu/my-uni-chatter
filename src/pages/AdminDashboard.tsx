@@ -49,6 +49,7 @@ const AdminDashboard = () => {
   const [editNameOpen, setEditNameOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [nameError, setNameError] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -93,6 +94,8 @@ const AdminDashboard = () => {
   };
 
   const handleSaveName = async () => {
+    if (savingName) return;
+    
     try {
       const validation = nameSchema.safeParse({ full_name: newName });
       
@@ -100,6 +103,8 @@ const AdminDashboard = () => {
         setNameError(validation.error.errors[0].message);
         return;
       }
+
+      setSavingName(true);
 
       // Check if name already exists
       const { data: existingProfile } = await supabase
@@ -111,6 +116,7 @@ const AdminDashboard = () => {
 
       if (existingProfile) {
         setNameError('This name is already taken. Please choose a different name.');
+        setSavingName(false);
         return;
       }
 
@@ -133,6 +139,8 @@ const AdminDashboard = () => {
         description: error.message || 'Failed to update name.',
         variant: 'destructive',
       });
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -221,8 +229,8 @@ const AdminDashboard = () => {
                           <p className="text-sm text-destructive">{nameError}</p>
                         )}
                       </div>
-                      <Button type="submit" className="w-full">
-                        Save Changes
+                      <Button type="submit" className="w-full" disabled={savingName}>
+                        {savingName ? 'Saving...' : 'Save Changes'}
                       </Button>
                     </form>
                   </DialogContent>

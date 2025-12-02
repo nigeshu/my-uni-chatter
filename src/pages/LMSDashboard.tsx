@@ -56,6 +56,7 @@ const LMSDashboard = () => {
   const [editNameOpen, setEditNameOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [nameError, setNameError] = useState('');
+  const [savingName, setSavingName] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -203,6 +204,8 @@ const LMSDashboard = () => {
   };
 
   const handleSaveName = async () => {
+    if (savingName) return;
+    
     try {
       const validation = nameSchema.safeParse({ full_name: newName });
       
@@ -210,6 +213,8 @@ const LMSDashboard = () => {
         setNameError(validation.error.errors[0].message);
         return;
       }
+
+      setSavingName(true);
 
       // Check if name already exists
       const { data: existingProfile } = await supabase
@@ -221,6 +226,7 @@ const LMSDashboard = () => {
 
       if (existingProfile) {
         setNameError('This name is already taken. Please choose a different name.');
+        setSavingName(false);
         return;
       }
 
@@ -243,6 +249,8 @@ const LMSDashboard = () => {
         description: error.message || 'Failed to update name.',
         variant: 'destructive',
       });
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -332,8 +340,8 @@ const LMSDashboard = () => {
                         <p className="text-sm text-destructive">{nameError}</p>
                       )}
                     </div>
-                    <Button type="submit" className="w-full">
-                      Save Changes
+                    <Button type="submit" className="w-full" disabled={savingName}>
+                      {savingName ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </form>
                 </DialogContent>

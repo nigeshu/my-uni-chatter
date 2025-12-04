@@ -626,16 +626,18 @@ const CourseMaterials = () => {
 
       <Tabs value={currentTab} onValueChange={(v) => setCurrentTab(v as 'content' | 'pyqs')} className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger 
-            value="course" 
-            onClick={(e) => {
-              e.preventDefault();
-              setSelectedCourse(course);
-              setShowDetailDialog(true);
-            }}
-          >
-            Course Page
-          </TabsTrigger>
+          {course?.course_type?.toLowerCase() !== 'lab' && (
+            <TabsTrigger 
+              value="course" 
+              onClick={(e) => {
+                e.preventDefault();
+                setSelectedCourse(course);
+                setShowDetailDialog(true);
+              }}
+            >
+              Course Page
+            </TabsTrigger>
+          )}
           <TabsTrigger value="content">Course Content</TabsTrigger>
           {course?.course_type?.toLowerCase() !== 'lab' && (
             <TabsTrigger value="pyqs">PYQs</TabsTrigger>

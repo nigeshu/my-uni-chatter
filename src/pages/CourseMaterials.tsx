@@ -637,7 +637,9 @@ const CourseMaterials = () => {
             Course Page
           </TabsTrigger>
           <TabsTrigger value="content">Course Content</TabsTrigger>
-          <TabsTrigger value="pyqs">PYQs</TabsTrigger>
+          {course?.course_type?.toLowerCase() !== 'lab' && (
+            <TabsTrigger value="pyqs">PYQs</TabsTrigger>
+          )}
         </TabsList>
       </Tabs>
 

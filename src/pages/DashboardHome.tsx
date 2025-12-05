@@ -224,10 +224,7 @@ const DashboardHome = () => {
       }));
     }
 
-    // Fetch urgent and overdue assignments
-    const twoDaysFromNow = new Date();
-    twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
-
+    // Fetch top 3 nearest deadline assignments (upcoming or overdue)
     const { data: enrollments } = await supabase
       .from('enrollments')
       .select('course_id')
@@ -247,14 +244,14 @@ const DashboardHome = () => {
           submissions!left (id, student_id)
         `)
         .in('course_id', courseIds)
-        .lte('due_date', twoDaysFromNow.toISOString())
+        .not('due_date', 'is', null)
         .order('due_date', { ascending: true });
 
       if (assignments) {
         // Filter out completed assignments (those with submissions from current user)
-        const incompleteAssignments = assignments.filter((a: any) => 
-          !a.submissions?.some((s: any) => s.student_id === user.id)
-        );
+        const incompleteAssignments = assignments
+          .filter((a: any) => !a.submissions?.some((s: any) => s.student_id === user.id))
+          .slice(0, 3); // Take top 3 nearest deadlines
         
         setAlerts(prev => ({
           ...prev,

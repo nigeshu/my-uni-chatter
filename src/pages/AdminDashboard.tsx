@@ -14,7 +14,9 @@ import {
   Settings,
   Shield,
   Edit2,
-  BookMarked
+  BookMarked,
+  Menu,
+  X
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -27,6 +29,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { z } from 'zod';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const nameSchema = z.object({
   full_name: z.string().trim().min(1, "Name cannot be empty").max(100, "Name must be less than 100 characters"),
@@ -49,6 +52,7 @@ const AdminDashboard = () => {
   const [newName, setNewName] = useState('');
   const [nameError, setNameError] = useState('');
   const [savingName, setSavingName] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -203,92 +207,190 @@ const AdminDashboard = () => {
       </Dialog>
 
       <div className="h-screen flex bg-background">
-        {/* Sidebar */}
-        <div className="w-64 border-r border-border flex flex-col bg-gradient-to-b from-card via-card to-accent/5">
-        {/* Logo */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-6">
+        {/* Mobile Header */}
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-accent rounded-lg">
-              <GraduationCap className="h-6 w-6 text-white" />
+              <GraduationCap className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">
-                Admin Panel
-              </h1>
-              <p className="text-xs text-muted-foreground">Lernet</p>
-            </div>
+            <h1 className="text-lg font-bold">Admin Panel</h1>
           </div>
-          
-          <div className="flex items-center gap-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
-            <Avatar className="h-10 w-10 border-2 border-accent/20">
-              <AvatarFallback className="bg-gradient-accent text-white font-semibold">
-                {profile?.full_name?.[0] || profile?.email?.[0] || 'A'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold truncate text-sm">{profile?.full_name || 'Admin'}</p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 w-6 p-0 hover:bg-accent/10"
-                  onClick={handleEditName}
-                >
-                  <Edit2 className="h-3 w-3" />
-                </Button>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0">
+              <div className="flex flex-col h-full bg-gradient-to-b from-card via-card to-accent/5">
+                {/* Logo */}
+                <div className="p-6 border-b border-border">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-gradient-accent rounded-lg">
+                      <GraduationCap className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold">Admin Panel</h1>
+                      <p className="text-xs text-muted-foreground">Lernet</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
+                    <Avatar className="h-10 w-10 border-2 border-accent/20">
+                      <AvatarFallback className="bg-gradient-accent text-white font-semibold">
+                        {profile?.full_name?.[0] || profile?.email?.[0] || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold truncate text-sm">{profile?.full_name || 'Admin'}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 hover:bg-accent/10"
+                          onClick={handleEditName}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Administrator'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        end={item.path === '/admin'}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/5 hover:text-accent transition-all duration-200"
+                        activeClassName="bg-gradient-accent text-white hover:text-white shadow-md"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="font-medium">{item.label}</span>
+                      </NavLink>
+                    );
+                  })}
+                  
+                  <div className="pt-4 border-t border-border mt-4">
+                    <NavLink
+                      to="/dashboard"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Users className="h-5 w-5" />
+                      <span className="font-medium">Student View</span>
+                    </NavLink>
+                  </div>
+                </nav>
+
+                {/* Sign Out */}
+                <div className="p-4 border-t border-border">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-5 w-5 mr-3" />
+                    Sign Out
+                  </Button>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Administrator'}</p>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:flex w-64 border-r border-border flex-col bg-gradient-to-b from-card via-card to-accent/5">
+          {/* Logo */}
+          <div className="p-6 border-b border-border">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-accent rounded-lg">
+                <GraduationCap className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">
+                  Admin Panel
+                </h1>
+                <p className="text-xs text-muted-foreground">Lernet</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-accent/10 rounded-lg border border-accent/20">
+              <Avatar className="h-10 w-10 border-2 border-accent/20">
+                <AvatarFallback className="bg-gradient-accent text-white font-semibold">
+                  {profile?.full_name?.[0] || profile?.email?.[0] || 'A'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold truncate text-sm">{profile?.full_name || 'Admin'}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 hover:bg-accent/10"
+                    onClick={handleEditName}
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Administrator'}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === '/admin'}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/5 hover:text-accent transition-all duration-200"
+                  activeClassName="bg-gradient-accent text-white hover:text-white shadow-md"
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="font-medium">{item.label}</span>
+                </NavLink>
+              );
+            })}
+            
+            <div className="pt-4 border-t border-border mt-4">
               <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/admin'}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent/5 hover:text-accent transition-all duration-200"
-                activeClassName="bg-gradient-accent text-white hover:text-white shadow-md"
+                to="/dashboard"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
               >
-                <Icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
+                <Users className="h-5 w-5" />
+                <span className="font-medium">Student View</span>
               </NavLink>
-            );
-          })}
-          
-          <div className="pt-4 border-t border-border mt-4">
-            <NavLink
-              to="/dashboard"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
-            >
-              <Users className="h-5 w-5" />
-              <span className="font-medium">Student View</span>
-            </NavLink>
-          </div>
-        </nav>
+            </div>
+          </nav>
 
-        {/* Sign Out */}
-        <div className="p-4 border-t border-border">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Sign Out
-          </Button>
+          {/* Sign Out */}
+          <div className="p-4 border-t border-border">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto lg:pt-0 pt-16">
+          <Outlet />
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <Outlet />
-      </div>
-    </div>
     </>
   );
 };

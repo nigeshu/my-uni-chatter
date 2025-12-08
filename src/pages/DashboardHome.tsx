@@ -663,9 +663,9 @@ const DashboardHome = () => {
                   <AlertCircle className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <div className="text-xl font-bold">Urgent Assignments</div>
+                  <div className="text-xl font-bold">Assignments Pending</div>
                   <p className="text-sm text-muted-foreground font-normal">
-                    Due within 2 days
+                    Upcoming deadlines
                   </p>
                 </div>
               </CardTitle>
@@ -674,7 +674,7 @@ const DashboardHome = () => {
               <div className="space-y-3">
                 {alerts.urgentAssignments.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    No urgent assignments
+                    No pending assignments
                   </p>
                 ) : (
                   alerts.urgentAssignments.map((assignment) => {

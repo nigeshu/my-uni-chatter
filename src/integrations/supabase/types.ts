@@ -89,6 +89,7 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string | null
+          file_url: string | null
           id: string
           max_points: number | null
           slot_id: string | null
@@ -100,6 +101,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          file_url?: string | null
           id?: string
           max_points?: number | null
           slot_id?: string | null
@@ -111,6 +113,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          file_url?: string | null
           id?: string
           max_points?: number | null
           slot_id?: string | null

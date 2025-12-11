@@ -29,6 +29,7 @@ interface Assignment {
   due_date: string;
   course_id: string;
   slot_id?: string | null;
+  file_url?: string | null;
   courses: Course;
   course_slots?: Slot | null;
   submissions?: Array<{ id: string; student_id: string }>;
@@ -55,6 +56,9 @@ const Assignments = () => {
     due_date: '',
     slot_id: '',
   });
+  const [sampleFile, setSampleFile] = useState<File | null>(null);
+  const [existingFileUrl, setExistingFileUrl] = useState<string | null>(null);
+  const [uploadingAssignment, setUploadingAssignment] = useState(false);
 
   const [requestForm, setRequestForm] = useState({
     course_name: '',
@@ -161,31 +165,58 @@ const Assignments = () => {
       return;
     }
 
-    const { error } = await supabase
-      .from('assignments')
-      .insert({
-        course_id: formData.course_id,
-        title: formData.title,
-        description: formData.description,
-        due_date: formData.due_date,
-        slot_id: formData.slot_id || null,
-      });
+    setUploadingAssignment(true);
 
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create assignment',
-        variant: 'destructive',
-      });
-    } else {
+    try {
+      let fileUrl = null;
+
+      // Upload sample file if provided
+      if (sampleFile) {
+        const fileExt = sampleFile.name.split('.').pop();
+        const fileName = `assignments/${Date.now()}-${sampleFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('course_materials')
+          .upload(fileName, sampleFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('course_materials')
+          .getPublicUrl(fileName);
+
+        fileUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('assignments')
+        .insert({
+          course_id: formData.course_id,
+          title: formData.title,
+          description: formData.description,
+          due_date: formData.due_date,
+          slot_id: formData.slot_id || null,
+          file_url: fileUrl,
+        });
+
+      if (error) throw error;
+
       toast({
         title: 'Success',
         description: 'Assignment created successfully',
       });
       setDialogOpen(false);
       setFormData({ course_id: '', title: '', description: '', due_date: '', slot_id: '' });
+      setSampleFile(null);
       setSlots([]);
       fetchAssignments();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create assignment',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingAssignment(false);
     }
   };
 
@@ -351,33 +382,61 @@ const Assignments = () => {
       return;
     }
 
-    const { error } = await supabase
-      .from('assignments')
-      .update({
-        course_id: formData.course_id,
-        title: formData.title,
-        description: formData.description,
-        due_date: formData.due_date,
-        slot_id: formData.slot_id || null,
-      })
-      .eq('id', selectedAssignment.id);
+    setUploadingAssignment(true);
 
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update assignment',
-        variant: 'destructive',
-      });
-    } else {
+    try {
+      let fileUrl = existingFileUrl;
+
+      // Upload new sample file if provided
+      if (sampleFile) {
+        const fileExt = sampleFile.name.split('.').pop();
+        const fileName = `assignments/${Date.now()}-${sampleFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('course_materials')
+          .upload(fileName, sampleFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('course_materials')
+          .getPublicUrl(fileName);
+
+        fileUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('assignments')
+        .update({
+          course_id: formData.course_id,
+          title: formData.title,
+          description: formData.description,
+          due_date: formData.due_date,
+          slot_id: formData.slot_id || null,
+          file_url: fileUrl,
+        })
+        .eq('id', selectedAssignment.id);
+
+      if (error) throw error;
+
       toast({
         title: 'Success',
         description: 'Assignment updated successfully',
       });
       setEditDialogOpen(false);
       setFormData({ course_id: '', title: '', description: '', due_date: '', slot_id: '' });
+      setSampleFile(null);
+      setExistingFileUrl(null);
       setSlots([]);
       setSelectedAssignment(null);
       fetchAssignments();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update assignment',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingAssignment(false);
     }
   };
 
@@ -505,13 +564,34 @@ const Assignments = () => {
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sample_doc">Sample Document (Optional)</Label>
+                    <Input
+                      id="sample_doc"
+                      type="file"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSampleFile(e.target.files[0]);
+                        }
+                      }}
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.xlsx,.xls"
+                    />
+                    {sampleFile && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected: {sampleFile.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  <Button variant="outline" onClick={() => {
+                    setDialogOpen(false);
+                    setSampleFile(null);
+                  }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateAssignment}>
-                    Create Assignment
+                  <Button onClick={handleCreateAssignment} disabled={uploadingAssignment}>
+                    {uploadingAssignment ? 'Creating...' : 'Create Assignment'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -650,6 +730,8 @@ const Assignments = () => {
                             due_date: assignment.due_date.split('T')[0],
                             slot_id: assignment.slot_id || '',
                           });
+                          setExistingFileUrl(assignment.file_url || null);
+                          setSampleFile(null);
                           fetchSlots(assignment.course_id);
                           setEditDialogOpen(true);
                         }}
@@ -774,18 +856,46 @@ const Assignments = () => {
                 onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit_sample_doc">Sample Document (Optional)</Label>
+              {existingFileUrl && !sampleFile && (
+                <div className="flex items-center gap-2 p-2 bg-muted rounded-lg mb-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <a href={existingFileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
+                    Current document
+                  </a>
+                </div>
+              )}
+              <Input
+                id="edit_sample_doc"
+                type="file"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setSampleFile(e.target.files[0]);
+                  }
+                }}
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.xlsx,.xls"
+              />
+              {sampleFile && (
+                <p className="text-sm text-muted-foreground">
+                  New file: {sampleFile.name}
+                </p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
               setEditDialogOpen(false);
               setFormData({ course_id: '', title: '', description: '', due_date: '', slot_id: '' });
+              setSampleFile(null);
+              setExistingFileUrl(null);
               setSlots([]);
               setSelectedAssignment(null);
             }}>
               Cancel
             </Button>
-            <Button onClick={handleEditAssignment}>
-              Update Assignment
+            <Button onClick={handleEditAssignment} disabled={uploadingAssignment}>
+              {uploadingAssignment ? 'Updating...' : 'Update Assignment'}
             </Button>
           </DialogFooter>
         </DialogContent>

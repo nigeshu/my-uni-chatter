@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, BookOpen, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, BookOpen, FileText, Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Assignment {
@@ -10,6 +11,7 @@ interface Assignment {
   due_date: string | null;
   max_points?: number | null;
   slot_id?: string | null;
+  file_url?: string | null;
   course?: {
     title: string;
   };
@@ -100,6 +102,30 @@ const AssignmentDetailDialog = ({ assignment, open, onOpenChange }: AssignmentDe
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">Max Points: {assignment.max_points}</span>
+            </div>
+          )}
+
+          {/* Sample Document */}
+          {assignment.file_url && (
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Sample Document
+              </h3>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href={assignment.file_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={assignment.file_url} download>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </a>
+                </Button>
+              </div>
             </div>
           )}
 

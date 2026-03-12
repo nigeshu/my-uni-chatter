@@ -300,27 +300,37 @@ const LMSDashboard = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-          <Avatar className="h-10 w-10 border-2 border-primary/20">
-            <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-              {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
+        {isTrialMode ? (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <div className="flex items-center gap-2">
-              <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 w-6 p-0 hover:bg-primary/10"
-                onClick={handleEditName}
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
+              <Eye className="h-4 w-4 text-amber-500" />
+              <p className="font-semibold text-sm text-amber-600 dark:text-amber-400">Trial Mode</p>
             </div>
-            <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
+            <p className="text-xs text-muted-foreground mt-1">Browse only — sign in for full access</p>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+            <Avatar className="h-10 w-10 border-2 border-primary/20">
+              <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+                {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 hover:bg-primary/10"
+                  onClick={handleEditName}
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}

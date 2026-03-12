@@ -470,6 +470,26 @@ const LMSDashboard = () => {
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
 
+          {/* Trial Mode Banner */}
+          {isTrialMode && (
+            <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                  Trial Mode — You're browsing as a guest. Data modifications are disabled.
+                </span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10 h-7 text-xs"
+                onClick={() => { exitTrialMode(); navigate('/'); }}
+              >
+                Sign In
+              </Button>
+            </div>
+          )}
+
           {/* Page Content */}
           <div className="flex-1 overflow-auto">
             <Outlet />

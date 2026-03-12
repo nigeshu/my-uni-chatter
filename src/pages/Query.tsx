@@ -30,6 +30,7 @@ interface Query {
 
 const Query = () => {
   const { user } = useAuth();
+  const { guardAction } = useTrialMode();
   const { toast } = useToast();
   const [queries, setQueries] = useState<Query[]>([]);
   const [showNewQueryDialog, setShowNewQueryDialog] = useState(false);

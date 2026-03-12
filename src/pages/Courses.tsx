@@ -85,6 +85,20 @@ const Courses = () => {
       .eq('is_published', true);
 
     if (publishedCourses) {
+      // In trial mode, show all courses as not enrolled
+      if (isTrialMode || !user) {
+        const coursesWithDefaults = publishedCourses.map(course => ({
+          ...course,
+          isEnrolled: false,
+          isCompleted: false,
+          enrollmentId: undefined,
+          enrollmentDays: [],
+          slotName: undefined,
+        }));
+        setCourses(coursesWithDefaults);
+        return;
+      }
+
       const { data: enrollments } = await supabase
         .from('enrollments')
         .select(`

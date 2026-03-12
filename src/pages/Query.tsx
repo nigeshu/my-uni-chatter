@@ -59,6 +59,7 @@ const Query = () => {
   };
 
   const handleSubmit = async () => {
+    if (!guardAction('Submit query')) return;
     if (!form.subject || !form.message) {
       toast({
         title: 'Error',

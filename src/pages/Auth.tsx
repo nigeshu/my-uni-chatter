@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Eye } from 'lucide-react';
+import { useTrialMode } from '@/lib/trial-mode';
 
 const Auth = () => {
   const navigate = useNavigate();

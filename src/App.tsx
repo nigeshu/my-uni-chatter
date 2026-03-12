@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/supabase";
+import { TrialModeProvider } from "@/lib/trial-mode";
 import Auth from "./pages/Auth";
 import LMSDashboard from "./pages/LMSDashboard";
 import DashboardHome from "./pages/DashboardHome";

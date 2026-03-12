@@ -59,6 +59,15 @@ const Auth = () => {
     checkSession();
   }, [navigate, toast]);
 
+  const handleTrialMode = () => {
+    enterTrialMode();
+    navigate('/dashboard', { replace: true });
+    toast({
+      title: '👀 Trial Mode Active',
+      description: 'You are browsing in trial mode. Some features are restricted.',
+    });
+  };
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {

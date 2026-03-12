@@ -68,7 +68,7 @@ const Courses = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [user]);
+  }, [user, isTrialMode]);
 
   const sortDays = (days: string[]): string[] => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

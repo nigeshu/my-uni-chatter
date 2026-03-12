@@ -158,6 +158,7 @@ const Assignments = () => {
   };
 
   const handleCreateAssignment = async () => {
+    if (!guardAction('Create assignment')) return;
     if (!formData.course_id || !formData.title || !formData.due_date) {
       toast({
         title: 'Error',

@@ -37,6 +37,7 @@ interface Assignment {
 }
 
 const Assignments = () => {
+  const { guardAction } = useTrialMode();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);

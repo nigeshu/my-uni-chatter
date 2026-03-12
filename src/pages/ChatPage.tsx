@@ -19,6 +19,7 @@ interface Profile {
 
 const ChatPage = () => {
   const { user } = useAuth();
+  const { isTrialMode, guardAction } = useTrialMode();
   const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);

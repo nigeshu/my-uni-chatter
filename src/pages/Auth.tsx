@@ -13,6 +13,7 @@ import { useTrialMode } from '@/lib/trial-mode';
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { enterTrialMode } = useTrialMode();
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState<'student' | 'admin'>('student');
 

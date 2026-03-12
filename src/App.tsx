@@ -33,39 +33,41 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Router>
-          <Routes>
-            <Route path="/" element={<Auth />} />
-            <Route path="/maintenance" element={<Maintenance />} />
-            <Route path="/dashboard" element={<LMSDashboard />}>
-              <Route index element={<DashboardHome />} />
-              <Route path="courses" element={<Courses />} />
-              <Route path="courses/:courseId/materials" element={<CourseMaterials />} />
-              <Route path="assignments" element={<Assignments />} />
-              <Route path="progress" element={<Progress />} />
-              <Route path="myspace" element={<MySpace />} />
-              <Route path="exams" element={<Exams />} />
-              <Route path="query" element={<Query />} />
-              <Route path="calendar" element={<Calendar />} />
-              <Route path="chat" element={<ChatPage />} />
-            </Route>
-            <Route path="/admin" element={<AdminDashboard />}>
-              <Route index element={<AdminHome />} />
-              <Route path="courses" element={<AdminCourses />} />
-              <Route path="courses/:courseId/materials" element={<AdminCourseMaterials />} />
-              <Route path="students" element={<AdminStudents />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="exams" element={<AdminExams />} />
-              <Route path="control-center" element={<AdminControlCenter />} />
-            </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
-      </TooltipProvider>
+      <TrialModeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Router>
+            <Routes>
+              <Route path="/" element={<Auth />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/dashboard" element={<LMSDashboard />}>
+                <Route index element={<DashboardHome />} />
+                <Route path="courses" element={<Courses />} />
+                <Route path="courses/:courseId/materials" element={<CourseMaterials />} />
+                <Route path="assignments" element={<Assignments />} />
+                <Route path="progress" element={<Progress />} />
+                <Route path="myspace" element={<MySpace />} />
+                <Route path="exams" element={<Exams />} />
+                <Route path="query" element={<Query />} />
+                <Route path="calendar" element={<Calendar />} />
+                <Route path="chat" element={<ChatPage />} />
+              </Route>
+              <Route path="/admin" element={<AdminDashboard />}>
+                <Route index element={<AdminHome />} />
+                <Route path="courses" element={<AdminCourses />} />
+                <Route path="courses/:courseId/materials" element={<AdminCourseMaterials />} />
+                <Route path="students" element={<AdminStudents />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="exams" element={<AdminExams />} />
+                <Route path="control-center" element={<AdminControlCenter />} />
+              </Route>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Router>
+        </TooltipProvider>
+      </TrialModeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase';
+import { useTrialMode } from '@/lib/trial-mode';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import FriendsList from '@/components/FriendsList';
@@ -18,6 +19,7 @@ interface Profile {
 
 const ChatPage = () => {
   const { user } = useAuth();
+  const { isTrialMode, guardAction } = useTrialMode();
   const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
@@ -65,7 +67,7 @@ const ChatPage = () => {
             <h2 className="text-xl font-bold">Let's Talk</h2>
           </div>
 
-          <Button onClick={() => setShowAddFriend(true)} className="w-full bg-gradient-primary hover:opacity-90" size="lg">
+          <Button onClick={() => { if (!guardAction('Add friend')) return; setShowAddFriend(true); }} className="w-full bg-gradient-primary hover:opacity-90" size="lg">
             <UserPlus className="h-4 w-4 mr-2" />
             Add Friend
           </Button>

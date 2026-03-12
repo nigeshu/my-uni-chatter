@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTrialMode } from '@/lib/trial-mode';
 import { format } from 'date-fns';
 import AssignmentDetailDialog from '@/components/AssignmentDetailDialog';
 
@@ -36,6 +37,7 @@ interface Assignment {
 }
 
 const Assignments = () => {
+  const { guardAction } = useTrialMode();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -156,6 +158,7 @@ const Assignments = () => {
   };
 
   const handleCreateAssignment = async () => {
+    if (!guardAction('Create assignment')) return;
     if (!formData.course_id || !formData.title || !formData.due_date) {
       toast({
         title: 'Error',
@@ -221,6 +224,7 @@ const Assignments = () => {
   };
 
   const handleSubmitRequest = async () => {
+    if (!guardAction('Submit assignment request')) return;
     if (!requestForm.course_name || !requestForm.assignment_title || !requestForm.what_to_do || !requestForm.deadline || !requestForm.slot_name) {
       toast({
         title: 'Error',

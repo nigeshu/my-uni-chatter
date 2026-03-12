@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase';
+import { useTrialMode } from '@/lib/trial-mode';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ interface Course {
 
 const Courses = () => {
   const { user } = useAuth();
+  const { guardAction } = useTrialMode();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -133,6 +135,7 @@ const Courses = () => {
   };
 
   const handleEnrollClick = (course: Course) => {
+    if (!guardAction('Enroll in course')) return;
     setCourseToEnroll(course);
     setShowEnrollDialog(true);
   };

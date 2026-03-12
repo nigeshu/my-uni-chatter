@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
+import { useTrialMode } from '@/lib/trial-mode';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +21,8 @@ import {
   Sparkles,
   BookMarked,
   Menu,
-  CalendarDays
+  CalendarDays,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
@@ -47,6 +49,7 @@ interface Profile {
 
 const LMSDashboard = () => {
   const { user, loading } = useAuth();
+  const { isTrialMode, exitTrialMode, guardAction } = useTrialMode();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -59,7 +62,7 @@ const LMSDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isTrialMode) {
       navigate('/');
       return;
     }
@@ -71,7 +74,7 @@ const LMSDashboard = () => {
       checkMaintenanceMode();
       subscribeToMaintenanceChanges();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isTrialMode]);
 
   const checkMaintenanceMode = async () => {
     // Check if user is admin first
@@ -188,6 +191,11 @@ const LMSDashboard = () => {
   };
 
   const handleSignOut = async () => {
+    if (isTrialMode) {
+      exitTrialMode();
+      navigate('/');
+      return;
+    }
     await supabase.auth.signOut();
     navigate('/');
     toast({
@@ -197,6 +205,7 @@ const LMSDashboard = () => {
   };
 
   const handleEditName = () => {
+    if (!guardAction('Edit name')) return;
     setNewName(profile?.full_name || '');
     setNameError('');
     setEditNameOpen(true);
@@ -292,27 +301,37 @@ const LMSDashboard = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-          <Avatar className="h-10 w-10 border-2 border-primary/20">
-            <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-              {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
+        {isTrialMode ? (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <div className="flex items-center gap-2">
-              <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 w-6 p-0 hover:bg-primary/10"
-                onClick={handleEditName}
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
+              <Eye className="h-4 w-4 text-amber-500" />
+              <p className="font-semibold text-sm text-amber-600 dark:text-amber-400">Trial Mode</p>
             </div>
-            <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
+            <p className="text-xs text-muted-foreground mt-1">Browse only — sign in for full access</p>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+            <Avatar className="h-10 w-10 border-2 border-primary/20">
+              <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+                {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold truncate text-sm">{profile?.full_name || 'User'}</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 hover:bg-primary/10"
+                  onClick={handleEditName}
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'Student'}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
@@ -374,7 +393,7 @@ const LMSDashboard = () => {
             onClick={handleSignOut}
           >
             <LogOut className="h-5 w-5 mr-3 transition-transform duration-500 group-hover:rotate-12" />
-            <span className="transition-all duration-500">Sign Out</span>
+            <span className="transition-all duration-500">{isTrialMode ? 'Exit Trial' : 'Sign Out'}</span>
           </Button>
         </div>
       </div>
@@ -450,6 +469,26 @@ const LMSDashboard = () => {
             </div>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
+
+          {/* Trial Mode Banner */}
+          {isTrialMode && (
+            <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                  Trial Mode — You're browsing as a guest. Data modifications are disabled.
+                </span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10 h-7 text-xs"
+                onClick={() => { exitTrialMode(); navigate('/'); }}
+              >
+                Sign In
+              </Button>
+            </div>
+          )}
 
           {/* Page Content */}
           <div className="flex-1 overflow-auto">

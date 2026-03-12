@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/supabase';
+import { useTrialMode } from '@/lib/trial-mode';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ interface Query {
 
 const Query = () => {
   const { user } = useAuth();
+  const { guardAction } = useTrialMode();
   const { toast } = useToast();
   const [queries, setQueries] = useState<Query[]>([]);
   const [showNewQueryDialog, setShowNewQueryDialog] = useState(false);
@@ -57,6 +59,7 @@ const Query = () => {
   };
 
   const handleSubmit = async () => {
+    if (!guardAction('Submit query')) return;
     if (!form.subject || !form.message) {
       toast({
         title: 'Error',

@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Eye } from 'lucide-react';
+import { useTrialMode } from '@/lib/trial-mode';
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { enterTrialMode } = useTrialMode();
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState<'student' | 'admin'>('student');
 
@@ -56,6 +58,15 @@ const Auth = () => {
     
     checkSession();
   }, [navigate, toast]);
+
+  const handleTrialMode = () => {
+    enterTrialMode();
+    navigate('/dashboard', { replace: true });
+    toast({
+      title: '👀 Trial Mode Active',
+      description: 'You are browsing in trial mode. Some features are restricted.',
+    });
+  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -424,6 +435,20 @@ const Auth = () => {
               </Button>
             </form>
           )}
+          
+          {/* Trial Mode */}
+          <div className="mt-6 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all group"
+              onClick={handleTrialMode}
+              disabled={loading}
+            >
+              <Eye className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium">Trial Mode — Browse without signing in</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

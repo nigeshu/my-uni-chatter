@@ -204,6 +204,7 @@ const LMSDashboard = () => {
   };
 
   const handleEditName = () => {
+    if (!guardAction('Edit name')) return;
     setNewName(profile?.full_name || '');
     setNameError('');
     setEditNameOpen(true);

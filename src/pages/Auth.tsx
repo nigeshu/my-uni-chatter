@@ -435,6 +435,20 @@ const Auth = () => {
               </Button>
             </form>
           )}
+          
+          {/* Trial Mode */}
+          <div className="mt-6 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all group"
+              onClick={handleTrialMode}
+              disabled={loading}
+            >
+              <Eye className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium">Trial Mode — Browse without signing in</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

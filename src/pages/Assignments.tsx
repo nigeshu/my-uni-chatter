@@ -224,6 +224,7 @@ const Assignments = () => {
   };
 
   const handleSubmitRequest = async () => {
+    if (!guardAction('Submit assignment request')) return;
     if (!requestForm.course_name || !requestForm.assignment_title || !requestForm.what_to_do || !requestForm.deadline || !requestForm.slot_name) {
       toast({
         title: 'Error',

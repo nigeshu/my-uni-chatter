@@ -61,7 +61,7 @@ const LMSDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isTrialMode) {
       navigate('/');
       return;
     }
@@ -73,7 +73,7 @@ const LMSDashboard = () => {
       checkMaintenanceMode();
       subscribeToMaintenanceChanges();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isTrialMode]);
 
   const checkMaintenanceMode = async () => {
     // Check if user is admin first

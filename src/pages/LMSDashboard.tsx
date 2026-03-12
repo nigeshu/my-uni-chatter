@@ -393,7 +393,7 @@ const LMSDashboard = () => {
             onClick={handleSignOut}
           >
             <LogOut className="h-5 w-5 mr-3 transition-transform duration-500 group-hover:rotate-12" />
-            <span className="transition-all duration-500">Sign Out</span>
+            <span className="transition-all duration-500">{isTrialMode ? 'Exit Trial' : 'Sign Out'}</span>
           </Button>
         </div>
       </div>

@@ -438,16 +438,25 @@ const Auth = () => {
           
           {/* Trial Mode */}
           <div className="mt-6 pt-4 border-t border-border">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all group"
+            <div 
               onClick={handleTrialMode}
-              disabled={loading}
+              className="w-full cursor-pointer rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 p-4 shadow-lg hover:shadow-orange-500/30 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 group"
             >
-              <Eye className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">Trial Mode — Browse without signing in</span>
-            </Button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                    <Eye className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm">👀 Trial Mode</p>
+                    <p className="text-white/80 text-xs">Browse courses without signing in</p>
+                  </div>
+                </div>
+                <div className="text-white/80 group-hover:translate-x-1 transition-transform">
+                  →
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

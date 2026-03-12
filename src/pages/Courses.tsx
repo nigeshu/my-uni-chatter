@@ -43,7 +43,7 @@ interface Course {
 
 const Courses = () => {
   const { user } = useAuth();
-  const { guardAction } = useTrialMode();
+  const { isTrialMode, guardAction } = useTrialMode();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -68,7 +68,7 @@ const Courses = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [user]);
+  }, [user, isTrialMode]);
 
   const sortDays = (days: string[]): string[] => {
     const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -85,6 +85,20 @@ const Courses = () => {
       .eq('is_published', true);
 
     if (publishedCourses) {
+      // In trial mode, show all courses as not enrolled
+      if (isTrialMode || !user) {
+        const coursesWithDefaults = publishedCourses.map(course => ({
+          ...course,
+          isEnrolled: false,
+          isCompleted: false,
+          enrollmentId: undefined,
+          enrollmentDays: [],
+          slotName: undefined,
+        }));
+        setCourses(coursesWithDefaults);
+        return;
+      }
+
       const { data: enrollments } = await supabase
         .from('enrollments')
         .select(`

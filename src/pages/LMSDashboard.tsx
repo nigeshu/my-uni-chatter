@@ -190,6 +190,11 @@ const LMSDashboard = () => {
   };
 
   const handleSignOut = async () => {
+    if (isTrialMode) {
+      exitTrialMode();
+      navigate('/');
+      return;
+    }
     await supabase.auth.signOut();
     navigate('/');
     toast({

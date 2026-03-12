@@ -48,6 +48,7 @@ interface Profile {
 
 const LMSDashboard = () => {
   const { user, loading } = useAuth();
+  const { isTrialMode, exitTrialMode, guardAction } = useTrialMode();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();

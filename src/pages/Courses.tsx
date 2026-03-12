@@ -134,6 +134,7 @@ const Courses = () => {
   };
 
   const handleEnrollClick = (course: Course) => {
+    if (!guardAction('Enroll in course')) return;
     setCourseToEnroll(course);
     setShowEnrollDialog(true);
   };

@@ -43,7 +43,7 @@ interface Course {
 
 const Courses = () => {
   const { user } = useAuth();
-  const { guardAction } = useTrialMode();
+  const { isTrialMode, guardAction } = useTrialMode();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);

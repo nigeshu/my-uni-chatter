@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase';
 import { supabase } from '@/integrations/supabase/client';
+import { useTrialMode } from '@/lib/trial-mode';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';

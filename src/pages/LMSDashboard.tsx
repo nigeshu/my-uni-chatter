@@ -21,7 +21,8 @@ import {
   Sparkles,
   BookMarked,
   Menu,
-  CalendarDays
+  CalendarDays,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NavLink } from '@/components/NavLink';
